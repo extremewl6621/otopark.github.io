@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY PARK - Official</title>
+    <title>iSTAY PARK - Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -15,6 +15,7 @@
         .logo-wrapper { display: flex; align-items: center; gap: 2px; color: white; font-weight: 800; font-size: 20px; }
         .logo-p-badge { background-color: #e11d48; color: white; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin: 0 2px; font-style: italic; }
         .rapor-btn-top { background: #444; color: white; padding: 5px 12px; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .tab-btn.active { background-color: #e11d48; color: white; }
     </style>
 </head>
 <body class="pb-20">
@@ -25,32 +26,36 @@
             <div class="logo-p-badge">P</div>
             <span class="italic">ARK</span>
         </div>
-        <button onclick="raporuGoster()" class="rapor-btn-top"><i class="fas fa-chart-line"></i> Rapor</button>
+        <button onclick="raporuGoster()" class="rapor-btn-top"><i class="fas fa-cog"></i> Panel</button>
     </div>
 
     <div class="max-w-md mx-auto p-4">
         <div class="bg-white rounded-2xl p-4 shadow-sm mb-6 no-print">
-            <div class="flex flex-row gap-2">
-                <input type="text" id="plakaInput" placeholder="PLAKA GİRİNİZ" class="flex-1 min-w-0 px-4 py-3 border-2 border-gray-200 rounded-xl font-bold uppercase text-lg">
-                <button onclick="aracGiris()" class="bg-[#e11d48] text-white px-6 py-3 rounded-xl font-bold active:scale-95 transition">GİRİŞ</button>
+            <input type="text" id="plakaInput" placeholder="PLAKA GİRİNİZ" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-bold uppercase text-lg mb-3 text-center">
+            
+            <div class="flex gap-2 mb-3">
+                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white transition">OTOMOBİL</button>
+                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-gray-200 text-gray-500 transition">MİNİBÜS/MİDİ</button>
             </div>
+
+            <button onclick="aracGiris()" class="w-full bg-zinc-900 text-white py-4 rounded-xl font-black text-lg active:scale-95 transition">SİSTEME GİRİŞ YAP</button>
         </div>
 
         <div class="relative mb-4 no-print text-center">
             <i class="fas fa-search absolute left-4 top-4 text-gray-400"></i>
-            <input type="text" id="searchInput" onkeyup="renderList()" placeholder="Plaka ara..." class="w-full pl-11 pr-4 py-3.5 rounded-xl border-2 border-gray-900 shadow-sm focus:ring-2 focus:ring-rose-500 font-bold">
+            <input type="text" id="searchInput" onkeyup="renderList()" placeholder="Plaka ara..." class="w-full pl-11 pr-4 py-3.5 rounded-xl border-2 border-gray-900 shadow-sm font-bold">
         </div>
 
         <div id="aracListesi" class="space-y-4"></div>
     </div>
 
     <div id="editModal" class="hidden fixed inset-0 bg-black/80 z-[70] flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl p-6">
-            <h3 class="font-bold text-gray-800 mb-4">Giriş Tarih/Saat Düzenle</h3>
-            <input type="datetime-local" id="editDateTime" class="w-full border-2 border-gray-200 rounded-xl p-3 mb-4 font-bold">
+        <div class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl">
+            <h3 class="font-bold text-gray-800 mb-4 text-center text-sm uppercase">Giriş Düzenle</h3>
+            <input type="datetime-local" id="editDateTime" class="w-full border-2 border-gray-200 rounded-xl p-3 mb-4 font-bold text-sm">
             <div class="flex gap-2">
-                <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-200 rounded-xl font-bold text-gray-600 uppercase text-xs">İptal</button>
-                <button id="saveEditBtn" class="flex-1 py-3 bg-rose-600 rounded-xl font-bold text-white uppercase text-xs shadow-lg">Kaydet</button>
+                <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-400 text-xs uppercase">Vazgeç</button>
+                <button id="saveEditBtn" class="flex-1 py-3 bg-rose-600 rounded-xl font-bold text-white text-xs uppercase shadow-lg">Güncelle</button>
             </div>
         </div>
     </div>
@@ -58,26 +63,46 @@
     <div id="raporModal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-end sm:items-center justify-center no-print">
         <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[95vh] flex flex-col">
             <div class="bg-zinc-900 p-5 text-white flex justify-between items-center">
-                <h2 class="font-bold text-lg">Sistem Paneli</h2>
+                <h2 class="font-bold text-lg">Yönetim Paneli</h2>
                 <div class="flex gap-2">
                     <button onclick="pdfIndir()" class="bg-green-600 w-10 h-10 rounded-full flex items-center justify-center"><i class="fas fa-file-pdf"></i></button>
                     <button onclick="raporuKapat()" class="bg-zinc-800 w-10 h-10 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
                 </div>
             </div>
+            
             <div class="overflow-y-auto flex-1 bg-white">
-                <div id="pdfContent">
-                    <div id="raporIcerik" class="p-4"></div>
-                    <div id="raporOzet" class="p-5 bg-gray-50 border-t"></div>
+                <div class="flex border-b">
+                    <button onclick="switchTab('rapor')" id="tab_rapor" class="flex-1 py-4 font-bold text-xs border-b-2 border-rose-600 text-rose-600 uppercase">Rapor</button>
+                    <button onclick="switchTab('fiyat')" id="tab_fiyat" class="flex-1 py-4 font-bold text-xs text-gray-400 uppercase">Tarife Ayarları</button>
+                    <button onclick="switchTab('veri')" id="tab_veri" class="flex-1 py-4 font-bold text-xs text-gray-400 uppercase">Yedekle</button>
                 </div>
-                <div class="p-5 border-t bg-zinc-50">
-                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Veri Yönetimi</h3>
+
+                <div id="pane_rapor" class="p-4">
+                    <div id="pdfContent">
+                        <div id="raporIcerik"></div>
+                        <div id="raporOzet" class="mt-4"></div>
+                    </div>
+                </div>
+
+                <div id="pane_fiyat" class="hidden p-4">
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-rose-600 font-black text-xs uppercase mb-3 border-l-4 border-rose-600 pl-2">Otomobil Tarifesi (TL)</h3>
+                            <div id="oto_inputs" class="grid grid-cols-2 gap-2 text-[11px]"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-blue-600 font-black text-xs uppercase mb-3 border-l-4 border-blue-600 pl-2">Minibüs/Midibüs Tarifesi (TL)</h3>
+                            <div id="mini_inputs" class="grid grid-cols-2 gap-2 text-[11px]"></div>
+                        </div>
+                        <button onclick="tarifeleriKaydet()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold mt-4 shadow-lg uppercase text-xs">Fiyatları Güncelle</button>
+                    </div>
+                </div>
+
+                <div id="pane_veri" class="hidden p-5 bg-zinc-50">
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="veriyiDisaAktar()" class="bg-zinc-800 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
-                            <i class="fas fa-download"></i> DIŞA AKTAR
-                        </button>
-                        <label class="bg-zinc-200 text-zinc-800 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer text-center">
-                            <i class="fas fa-upload"></i> İÇERİ AKTAR
-                            <input type="file" id="importFile" class="hidden" onchange="veriyiIceriAktar(event)">
+                        <button onclick="veriyiDisaAktar()" class="bg-zinc-800 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 uppercase">Dışa Aktar</button>
+                        <label class="bg-zinc-200 text-zinc-800 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer text-center uppercase">
+                            İçeri Aktar <input type="file" id="importFile" class="hidden" onchange="veriyiIceriAktar(event)">
                         </label>
                     </div>
                 </div>
@@ -86,112 +111,93 @@
     </div>
 
     <script>
-        const tarife = [ { min: 0, max: 1, ucret: 170 }, { min: 1, max: 2, ucret: 210 }, { min: 2, max: 4, ucret: 290 }, { min: 4, max: 6, ucret: 360 }, { min: 6, max: 8, ucret: 420 }, { min: 8, max: 12, ucret: 500 }, { min: 12, max: 24, ucret: 600 } ];
-        let araclar = JSON.parse(localStorage.getItem('istay_park_data')) || [];
-        let editingAracId = null;
+        // Varsayılan Tarifeler
+        let varsayilanTarife = {
+            otomobil: [
+                { min: 0, max: 1, ucret: 170 }, { min: 1, max: 2, ucret: 210 }, { min: 2, max: 4, ucret: 290 },
+                { min: 4, max: 6, ucret: 360 }, { min: 6, max: 8, ucret: 420 }, { min: 8, max: 12, ucret: 500 },
+                { min: 12, max: 24, ucret: 600 }
+            ],
+            minibus: [
+                { min: 0, max: 1, ucret: 250 }, { min: 1, max: 2, ucret: 300 }, { min: 2, max: 4, ucret: 400 },
+                { min: 4, max: 6, ucret: 500 }, { min: 6, max: 8, ucret: 600 }, { min: 8, max: 12, ucret: 750 },
+                { min: 12, max: 24, ucret: 900 }
+            ]
+        };
 
-        function sureHesapla(giris) {
-            const fark = new Date() - new Date(giris);
-            if(fark < 0) return "Gelecek Zaman";
-            const saat = Math.floor(fark / (1000 * 60 * 60));
-            const dk = Math.floor((fark / (1000 * 60)) % 60);
-            return `${saat}s ${dk}dk`;
+        let aktifTarife = JSON.parse(localStorage.getItem('istay_tarifeler')) || varsayilanTarife;
+        let araclar = JSON.parse(localStorage.getItem('istay_park_data')) || [];
+        let seciliAracTipi = 'otomobil';
+
+        function setAracTipi(tip) {
+            seciliAracTipi = tip;
+            document.getElementById('type_oto').className = tip === 'otomobil' ? 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white transition' : 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-gray-200 text-gray-500 transition';
+            document.getElementById('type_mini').className = tip === 'minibus' ? 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-blue-600 bg-blue-600 text-white transition' : 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-gray-200 text-gray-500 transition';
         }
 
-        function ucretHesapla(girisTarihi) {
+        function ucretHesapla(girisTarihi, tip) {
             const farkMs = new Date() - new Date(girisTarihi);
             if(farkMs <= 0) return 0;
             const toplamSaat = farkMs / (1000 * 60 * 60);
             const tamGun = Math.floor(toplamSaat / 24);
             const kalanSaat = toplamSaat % 24;
-            let toplamUcret = tamGun * 600;
+            
+            const t = aktifTarife[tip] || aktifTarife.otomobil;
+            const gunlukUcret = t[t.length - 1].ucret;
+            
+            let toplamUcret = tamGun * gunlukUcret;
             if (kalanSaat > 0) {
-                let ekUcret = 170; 
-                for (let t of tarife) { if (kalanSaat > t.min && kalanSaat <= t.max) { ekUcret = t.ucret; break; } }
+                let ekUcret = t[0].ucret; 
+                for (let kademe of t) { if (kalanSaat > kademe.min && kalanSaat <= kademe.max) { ekUcret = kademe.ucret; break; } }
                 toplamUcret += ekUcret;
             }
             return toplamUcret;
+        }
+
+        function switchTab(target) {
+            ['rapor', 'fiyat', 'veri'].forEach(p => {
+                document.getElementById('pane_' + p).classList.add('hidden');
+                document.getElementById('tab_' + p).className = "flex-1 py-4 font-bold text-xs text-gray-400 uppercase";
+            });
+            document.getElementById('pane_' + target).classList.remove('hidden');
+            document.getElementById('tab_' + target).className = "flex-1 py-4 font-bold text-xs border-b-2 border-rose-600 text-rose-600 uppercase";
+            if(target === 'fiyat') tarifeInputlariniDoldur();
+        }
+
+        function tarifeInputlariniDoldur() {
+            const buildInputs = (tip, containerId) => {
+                const cont = document.getElementById(containerId);
+                cont.innerHTML = '';
+                aktifTarife[tip].forEach((k, index) => {
+                    cont.innerHTML += `
+                        <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border">
+                            <span class="w-16 font-bold text-gray-400">${k.min}-${k.max} Saat:</span>
+                            <input type="number" data-tip="${tip}" data-idx="${index}" value="${k.ucret}" class="tarife-input w-full bg-white border rounded px-2 py-1 font-black text-zinc-800">
+                        </div>`;
+                });
+            };
+            buildInputs('otomobil', 'oto_inputs');
+            buildInputs('minibus', 'mini_inputs');
+        }
+
+        function tarifeleriKaydet() {
+            document.querySelectorAll('.tarife-input').forEach(input => {
+                const tip = input.dataset.tip;
+                const idx = input.dataset.idx;
+                aktifTarife[tip][idx].ucret = parseInt(input.value);
+            });
+            localStorage.setItem('istay_tarifeler', JSON.stringify(aktifTarife));
+            alert("Fiyatlar Güncellendi!");
+            renderList();
         }
 
         function aracGiris() {
             const input = document.getElementById('plakaInput');
             const plaka = input.value.trim().toUpperCase();
             if (!plaka) return;
-            araclar.unshift({ id: Date.now(), plaka, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' });
-            dataKaydet();
-            input.value = "";
-        }
-
-        function openEditModal(id) {
-            editingAracId = id;
-            const a = araclar.find(a => a.id === id);
-            const girisTarihi = new Date(a.giris);
-            
-            // DateTime-local inputu için format: YYYY-MM-DDThh:mm
-            const year = girisTarihi.getFullYear();
-            const month = String(girisTarihi.getMonth() + 1).padStart(2, '0');
-            const day = String(girisTarihi.getDate()).padStart(2, '0');
-            const hours = String(girisTarihi.getHours()).padStart(2, '0');
-            const minutes = String(girisTarihi.getMinutes()).padStart(2, '0');
-            
-            document.getElementById('editDateTime').value = `${year}-${month}-${day}T${hours}:${minutes}`;
-            document.getElementById('editModal').classList.remove('hidden');
-            
-            document.getElementById('saveEditBtn').onclick = function() {
-                const newVal = document.getElementById('editDateTime').value;
-                if(newVal) {
-                    const d = new Date(newVal);
-                    a.giris = d.toISOString();
-                    dataKaydet();
-                    closeEditModal();
-                }
-            };
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            editingAracId = null;
-        }
-
-        function cikisYap(id, yontem) {
-            const a = araclar.find(a => a.id === id);
-            a.tutar = ucretHesapla(a.giris);
-            a.cikis = new Date().toISOString();
-            a.odemeYontemi = yontem;
-            a.durum = 'tamamlandi';
-            dataKaydet();
-        }
-
-        function sil(id) { if(confirm('Kaydı sil?')) { araclar = araclar.filter(a => a.id !== id); dataKaydet(); } }
-
-        function dataKaydet() {
+            araclar.unshift({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' });
             localStorage.setItem('istay_park_data', JSON.stringify(araclar));
-            renderList();
-        }
-
-        function veriyiDisaAktar() {
-            const dataStr = JSON.stringify(araclar, null, 2);
-            const blob = new Blob([dataStr], { type: "text/plain" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `istay_park_yedek.txt`;
-            a.click();
-        }
-
-        function veriyiIceriAktar(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    araclar = [...data, ...araclar];
-                    dataKaydet();
-                    alert("Yedek başarıyla yüklendi!");
-                } catch (err) { alert("Hata!"); }
-            };
-            reader.readAsText(file);
+            input.value = ""; renderList();
         }
 
         function renderList() {
@@ -199,67 +205,63 @@
             const arama = document.getElementById('searchInput').value.toUpperCase();
             liste.innerHTML = '';
             araclar.filter(a => a.plaka.includes(arama)).forEach(arac => {
-                const ucret = arac.durum === 'aktif' ? ucretHesapla(arac.giris) : arac.tutar;
+                const ucret = arac.durum === 'aktif' ? ucretHesapla(arac.giris, arac.tip) : arac.tutar;
                 const card = document.createElement('div');
                 card.className = `bg-white p-4 rounded-2xl shadow-sm park-card relative ${arac.durum === 'tamamlandi' ? 'opacity-60' : ''}`;
                 card.innerHTML = `
                     <button onclick="sil(${arac.id})" class="absolute top-4 right-4 text-gray-300 no-print"><i class="fas fa-trash"></i></button>
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[10px] font-bold ${arac.durum === 'aktif' ? 'text-rose-600' : 'text-gray-400'} uppercase">● ${arac.durum === 'aktif' ? 'İçeride' : 'Çıktı'}</span>
-                            <h3 class="text-xl font-black text-zinc-800">${arac.plaka}</h3>
-                            <p class="text-[11px] text-gray-500 font-bold mt-1">Süre: <span class="text-blue-600">${arac.durum === 'aktif' ? sureHesapla(arac.giris) : 'Tamamlandı'}</span></p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <p class="text-[9px] text-gray-400">Giriş: ${new Date(arac.giris).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</p>
-                                ${arac.durum === 'aktif' ? `<button onclick="openEditModal(${arac.id})" class="text-blue-500 text-[10px] font-bold no-print uppercase underline"><i class="fas fa-edit"></i> Düzelt</button>` : ''}
-                            </div>
+                            <span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase ${arac.tip === 'minibus' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'}">
+                                ${arac.tip === 'minibus' ? 'MİNİBÜS' : 'OTOMOBİL'}
+                            </span>
+                            <h3 class="text-xl font-black text-zinc-800 mt-1">${arac.plaka}</h3>
+                            <p class="text-[11px] text-gray-500 font-bold">Süre: <span class="text-blue-600">${arac.durum === 'aktif' ? sureHesapla(arac.giris) : 'Tamamlandı'}</span></p>
+                            <button onclick="openEditModal(${arac.id})" class="text-[9px] text-gray-400 mt-1 font-bold no-print underline uppercase italic">
+                                Giriş: ${new Date(arac.giris).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} - Düzelt
+                            </button>
                         </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-black text-[#e11d48]">${ucret} <small class="text-xs">TL</small></div>
-                        </div>
+                        <div class="text-right"><div class="text-2xl font-black text-[#e11d48]">${ucret} <small class="text-xs">TL</small></div></div>
                     </div>
                     ${arac.durum === 'aktif' ? `
                         <div class="grid grid-cols-3 gap-2 mt-4">
-                            <button onclick="cikisYap(${arac.id}, 'HGS')" class="bg-blue-50 text-blue-600 py-2.5 rounded-lg font-bold text-xs border border-blue-100 uppercase">HGS</button>
-                            <button onclick="cikisYap(${arac.id}, 'KART')" class="bg-green-50 text-green-600 py-2.5 rounded-lg font-bold text-xs border border-green-100 uppercase">Kart</button>
-                            <button onclick="cikisYap(${arac.id}, 'NAKİT')" class="bg-orange-50 text-orange-600 py-2.5 rounded-lg font-bold text-xs border border-orange-100 uppercase">Nakit</button>
-                        </div>` : `<div class="mt-2 text-[10px] text-gray-500 font-bold uppercase italic font-black">Ödeme: ${arac.odemeYontemi} | Çıkış: ${new Date(arac.cikis).toLocaleTimeString()}</div>`}
+                            <button onclick="cikisYap(${arac.id}, 'HGS')" class="bg-zinc-50 py-3 rounded-xl font-bold text-[10px] border border-gray-200 uppercase">HGS</button>
+                            <button onclick="cikisYap(${arac.id}, 'KART')" class="bg-zinc-50 py-3 rounded-xl font-bold text-[10px] border border-gray-200 uppercase">Kart</button>
+                            <button onclick="cikisYap(${arac.id}, 'NAKİT')" class="bg-zinc-50 py-3 rounded-xl font-bold text-[10px] border border-gray-200 uppercase">Nakit</button>
+                        </div>` : `<div class="mt-2 text-[10px] text-gray-400 font-bold uppercase italic">Ödeme: ${arac.odemeYontemi}</div>`}
                 `;
                 liste.appendChild(card);
             });
         }
 
-        function raporuGoster() {
+        // Yardımcı Fonksiyonlar (Önceki kodlardan korunanlar)
+        function sureHesapla(giris) { const fark = new Date() - new Date(giris); if(fark < 0) return "Bekliyor"; const saat = Math.floor(fark / (1000 * 60 * 60)); const dk = Math.floor((fark / (1000 * 60)) % 60); return `${saat}s ${dk}dk`; }
+        function cikisYap(id, yontem) { const a = araclar.find(a => a.id === id); a.tutar = ucretHesapla(a.giris, a.tip); a.cikis = new Date().toISOString(); a.odemeYontemi = yontem; a.durum = 'tamamlandi'; localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); }
+        function sil(id) { if(confirm('Silinsin mi?')) { araclar = araclar.filter(a => a.id !== id); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); } }
+        function raporuGoster() { 
             const bugunStr = new Date().toLocaleDateString('tr-TR');
             const raporListe = araclar.filter(a => new Date(a.giris).toLocaleDateString('tr-TR') === bugunStr || (a.cikis && new Date(a.cikis).toLocaleDateString('tr-TR') === bugunStr));
-            let html = `<table class="w-full text-xs text-left"><thead><tr class="text-gray-400 border-b"><th>PLAKA</th><th>GİRİŞ</th><th>ÖDEME</th><th>TL</th></tr></thead><tbody>`;
-            let hgs = 0, kart = 0, nakit = 0, aktif = 0;
+            let html = `<table class="w-full text-[10px] text-left"><thead><tr class="text-gray-400 border-b"><th>PLAKA</th><th>TİP</th><th>ÖDEME</th><th>TL</th></tr></thead><tbody>`;
+            let hgs = 0, kart = 0, nakit = 0;
             raporListe.forEach(a => {
-                const u = a.durum === 'aktif' ? ucretHesapla(a.giris) : a.tutar;
-                if(a.durum === 'aktif') aktif += u;
-                else if(a.odemeYontemi === 'HGS') hgs += u;
-                else if(a.odemeYontemi === 'KART') kart += u;
-                else if(a.odemeYontemi === 'NAKİT') nakit += u;
-                html += `<tr class="border-b"><td class="py-2 font-bold">${a.plaka}</td><td>${new Date(a.giris).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td><td class="font-bold uppercase">${a.durum === 'aktif' ? 'İçeride' : a.odemeYontemi}</td><td>${u}</td></tr>`;
+                const u = a.durum === 'aktif' ? ucretHesapla(a.giris, a.tip) : a.tutar;
+                if(a.durum !== 'aktif') { if(a.odemeYontemi==='HGS') hgs+=u; else if(a.odemeYontemi==='KART') kart+=u; else if(a.odemeYontemi==='NAKİT') nakit+=u; }
+                html += `<tr class="border-b"><td class="py-2 font-bold">${a.plaka}</td><td class="uppercase text-[8px]">${a.tip.slice(0,3)}</td><td class="font-bold uppercase">${a.durum==='aktif'?'İÇERİDE':a.odemeYontemi}</td><td>${u}</td></tr>`;
             });
             document.getElementById('raporIcerik').innerHTML = html + `</tbody></table>`;
-            document.getElementById('raporOzet').innerHTML = `
-                <div class="grid grid-cols-2 gap-2 text-[10px] font-bold uppercase text-gray-600">
-                    <div>HGS: ${hgs} TL</div><div>KART: ${kart} TL</div><div>NAKİT: ${nakit} TL</div><div class="text-rose-600">AKTİF: ${aktif} TL</div>
-                </div>
-                <div class="mt-4 pt-3 border-t flex justify-between items-center"><span class="font-black text-sm uppercase">TOPLAM TAHSİLAT:</span><span class="text-2xl font-black text-[#e11d48]">${hgs+kart+nakit} TL</span></div>`;
-            document.getElementById('raporModal').classList.remove('hidden');
+            document.getElementById('raporOzet').innerHTML = `<div class="bg-gray-100 p-4 rounded-xl"><div class="flex justify-between text-xs font-bold mb-1 text-gray-500"><span>HGS+KART+NAKİT:</span><span>${hgs+kart+nakit} TL</span></div><div class="flex justify-between text-lg font-black text-rose-600 uppercase"><span>Net Kasa:</span><span>${hgs+kart+nakit} TL</span></div></div>`;
+            document.getElementById('raporModal').classList.remove('hidden'); 
+            switchTab('rapor');
         }
-
-        function pdfIndir() {
-            const element = document.getElementById('pdfContent');
-            const opt = { margin: 10, filename: 'iSTAY_PARK_RAPOR.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            html2pdf().set(opt).from(element).save();
-        }
-
+        function openEditModal(id) { const a = araclar.find(a => a.id === id); const g = new Date(a.giris); document.getElementById('editDateTime').value = new Date(g.getTime() - g.getTimezoneOffset() * 60000).toISOString().slice(0, 16); document.getElementById('editModal').classList.remove('hidden'); document.getElementById('saveEditBtn').onclick = () => { a.giris = new Date(document.getElementById('editDateTime').value).toISOString(); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); closeEditModal(); }; }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
         function raporuKapat() { document.getElementById('raporModal').classList.add('hidden'); }
+        function pdfIndir() { const element = document.getElementById('pdfContent'); html2pdf().set({ margin: 10, filename: 'iSTAY_RAPOR.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } }).from(element).save(); }
+        function veriyiDisaAktar() { const blob = new Blob([JSON.stringify(araclar)], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "park_yedek.txt"; a.click(); }
+        function veriyiIceriAktar(e) { const reader = new FileReader(); reader.onload = (ev) => { araclar = JSON.parse(ev.target.result); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); alert("Yükleme Tamam"); }; reader.readAsText(e.target.files[0]); }
+        
         renderList();
-        setInterval(renderList, 30000); 
+        setInterval(renderList, 60000);
     </script>
 </body>
 </html>
