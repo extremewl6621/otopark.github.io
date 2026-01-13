@@ -58,8 +58,8 @@
         <div class="bg-white rounded-2xl p-5 shadow-sm mb-6 no-print">
             <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA GİRİN VEYA ARA" class="w-full px-4 py-4 border-2 border-gray-100 rounded-2xl font-black uppercase text-2xl mb-4 text-center focus:border-rose-500 outline-none transition-all">
             <div class="flex gap-3 mb-4">
-                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white transition">OTOMOBİL</button>
-                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500 transition">MİNİBÜS</button>
+                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white shadow-md">OTOMOBİL</button>
+                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500">MİNİBÜS</button>
             </div>
             <button onclick="aracGiris()" class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition">GİRİŞİ KAYDET</button>
         </div>
@@ -258,7 +258,23 @@
             });
         }
 
-        function aracGiris() { const inp = document.getElementById('plakaInput'); const plaka = inp.value.trim().toUpperCase(); if(!plaka) return; araclar.push({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' }); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); inp.value = ""; renderList(); }
+        function aracGiris() { 
+            const inp = document.getElementById('plakaInput'); 
+            const plaka = inp.value.trim().toUpperCase(); 
+            if(!plaka) return; 
+
+            // AYNI PLAKA KONTROLÜ (AKTİF OLANLAR İÇİNDE)
+            const varMi = araclar.some(a => a.plaka === plaka && a.durum === 'aktif');
+            if(varMi) {
+                alert("Bu araç zaten içeride! Tekrar kaydedilemez.");
+                return;
+            }
+
+            araclar.push({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' }); 
+            localStorage.setItem('istay_park_data', JSON.stringify(araclar)); 
+            inp.value = ""; renderList(); 
+        }
+
         function cikisYap(id, yontem) { const a = araclar.find(x => x.id === id); a.tutar = ucretHesapla(a.giris, a.tip); a.cikis = new Date().toISOString(); a.odemeYontemi = yontem; a.durum = 'tamamlandi'; localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); }
         function sureHesapla(g) { const f = new Date() - new Date(g); return Math.floor(f/3600000) + "s " + Math.floor((f%3600000)/60000) + "dk"; }
         function setAracTipi(t) { seciliAracTipi = t; document.getElementById('type_oto').className = t === 'otomobil' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white shadow-md' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; document.getElementById('type_mini').className = t === 'minibus' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-blue-600 bg-blue-600 text-white shadow-md' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; }
@@ -268,7 +284,6 @@
         function sil(id) { if(confirm('Bu kayıt silinecek?')) { araclar = araclar.filter(a => a.id !== id); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); } }
         function raporuSifirla() { if(confirm("TÜM VERİLER SIFIRLANACAK?")) { araclar = []; localStorage.setItem('istay_park_data', "[]"); renderList(); raporuKapat(); } }
         
-        // --- RAPOR & PDF & YEDEK (İyileştirildi) ---
         function raporuGoster() { 
             const bugun = new Date().toLocaleDateString('tr-TR'); 
             const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun); 
