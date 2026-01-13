@@ -20,7 +20,6 @@
         .pdf-table th { background: #1a1a1a; color: white; border: 1px solid #333; padding: 10px; text-align: left; font-size: 12px; }
         .pdf-table td { border: 1px solid #ddd; padding: 8px; font-size: 11px; }
 
-        /* Kamera ve Tarama Tasarımı */
         #cameraModal, #autoExitModal { background: rgba(0,0,0,0.9); z-index: 100; }
         .scan-focus-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 90px; border: 2px solid #22c55e; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6); }
         .scan-line { position: absolute; width: 100%; height: 2px; background: #22c55e; box-shadow: 0 0 15px #22c55e; animation: scanAnim 2s infinite; }
@@ -59,8 +58,8 @@
         <div class="bg-white rounded-2xl p-5 shadow-sm mb-6 no-print">
             <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA GİRİN VEYA ARA" class="w-full px-4 py-4 border-2 border-gray-100 rounded-2xl font-black uppercase text-2xl mb-4 text-center focus:border-rose-500 outline-none transition-all">
             <div class="flex gap-3 mb-4">
-                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white">OTOMOBİL</button>
-                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500">MİNİBÜS</button>
+                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white transition">OTOMOBİL</button>
+                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500 transition">MİNİBÜS</button>
             </div>
             <button onclick="aracGiris()" class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition">GİRİŞİ KAYDET</button>
         </div>
@@ -75,7 +74,7 @@
                     <div class="scan-focus-box"><div class="scan-line"></div></div>
                 </div>
                 <div id="ocrStatus" class="text-center font-bold text-gray-500 mb-4 text-xs uppercase">Plakayı yeşil alana getirin</div>
-                <button onclick="fotografCek()" class="w-full bg-rose-600 text-white py-4 rounded-2xl font-black text-lg">PLAKAYI OKU</button>
+                <button onclick="fotografCek()" class="w-full bg-rose-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl">PLAKAYI OKU</button>
                 <button onclick="kamerayiKapat()" class="w-full mt-2 text-gray-400 font-bold py-2">KAPAT</button>
             </div>
         </div>
@@ -127,6 +126,10 @@
                 <div class="mt-6 grid grid-cols-2 gap-2">
                     <button id="btnTarife" onclick="toggleView('tarife')" class="bg-white border py-3 rounded-xl font-bold text-[10px] uppercase">Fiyat Düzenle</button>
                     <button onclick="raporuSifirla()" class="bg-rose-50 text-rose-600 border border-rose-100 py-3 rounded-xl font-bold text-[10px] uppercase">Sistemi Sıfırla</button>
+                    <button onclick="veriyiDisaAktar()" class="bg-zinc-800 text-white py-3 rounded-xl font-bold text-[10px] uppercase">Dışa Aktar</button>
+                    <label class="bg-zinc-100 text-zinc-600 py-3 rounded-xl font-bold text-[10px] uppercase text-center cursor-pointer border border-zinc-200">
+                        İçe Aktar <input type="file" id="importFile" class="hidden" onchange="veriyiIceriAktar(event)">
+                    </label>
                 </div>
             </div>
         </div>
@@ -144,7 +147,6 @@
     </div>
 
     <script>
-        // Orijinal Veri Yapısı (Değişmedi)
         let varsayilanTarife = {
             otomobil: [ { min: 0, max: 1, ucret: 170 }, { min: 1, max: 2, ucret: 210 }, { min: 2, max: 4, ucret: 290 }, { min: 4, max: 6, ucret: 360 }, { min: 6, max: 8, ucret: 420 }, { min: 8, max: 12, ucret: 500 }, { min: 12, max: 24, ucret: 600 } ],
             minibus: [ { min: 0, max: 1, ucret: 250 }, { min: 1, max: 2, ucret: 300 }, { min: 2, max: 4, ucret: 400 }, { min: 4, max: 6, ucret: 500 }, { min: 6, max: 8, ucret: 600 }, { min: 8, max: 12, ucret: 750 }, { min: 12, max: 24, ucret: 900 } ]
@@ -155,7 +157,7 @@
         let cameraStream = null;
         let aktifExitId = null;
 
-        // --- KAMERA FONKSİYONLARI ---
+        // --- KAMERA ---
         async function kamerayiAc() {
             document.getElementById('cameraModal').classList.remove('hidden');
             try {
@@ -212,10 +214,10 @@
             document.getElementById('autoExitModal').classList.add('hidden');
         }
 
-        // --- ORİJİNAL FONKSİYONLAR (Değişmedi) ---
+        // --- HESAPLAMA ---
         function ucretHesapla(girisTarihi, tip) {
             const farkMs = new Date() - new Date(girisTarihi);
-            if (farkMs / 60000 <= 4) return 0; // İLK 4 DAKİKA ÜCRETSİZ
+            if (farkMs / 60000 <= 4) return 0;
             const toplamSaat = farkMs / 3600000;
             const tamGun = Math.floor(toplamSaat / 24);
             const kalanSaat = toplamSaat % 24;
@@ -251,26 +253,74 @@
                             <div class="text-[10px] font-bold uppercase">${isComp ? 'ÖDENDİ ('+arac.odemeYontemi+')' : (isFree ? 'ÜCRETSİZ' : sureHesapla(arac.giris))}</div>
                         </div>
                     </div>
-                    ${!isComp ? `<div class="grid grid-cols-3 gap-2 mt-4"><button onclick="cikisYap(${arac.id}, 'HGS')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase">HGS</button><button onclick="cikisYap(${arac.id}, 'KART')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[10px] uppercase">KART</button><button onclick="cikisYap(${arac.id}, 'NAKİT')" class="bg-amber-500 text-white py-3 rounded-xl font-black text-[10px] uppercase">NAKİT</button></div>` : ''}`;
+                    ${!isComp ? `<div class="grid grid-cols-3 gap-2 mt-4"><button onclick="cikisYap(${arac.id}, 'HGS')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-lg">HGS</button><button onclick="cikisYap(${arac.id}, 'KART')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-lg">KART</button><button onclick="cikisYap(${arac.id}, 'NAKİT')" class="bg-amber-500 text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-lg">NAKİT</button></div>` : ''}`;
                 liste.appendChild(card);
             });
         }
 
-        // Diğer Sabit Fonksiyonlar (AracGiris, CikisYap, RaporGoster, PDF, vb. hepsi dosyadaki orijinal haliyle korundu)
         function aracGiris() { const inp = document.getElementById('plakaInput'); const plaka = inp.value.trim().toUpperCase(); if(!plaka) return; araclar.push({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' }); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); inp.value = ""; renderList(); }
         function cikisYap(id, yontem) { const a = araclar.find(x => x.id === id); a.tutar = ucretHesapla(a.giris, a.tip); a.cikis = new Date().toISOString(); a.odemeYontemi = yontem; a.durum = 'tamamlandi'; localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); }
         function sureHesapla(g) { const f = new Date() - new Date(g); return Math.floor(f/3600000) + "s " + Math.floor((f%3600000)/60000) + "dk"; }
-        function setAracTipi(t) { seciliAracTipi = t; document.getElementById('type_oto').className = t === 'otomobil' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; document.getElementById('type_mini').className = t === 'minibus' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-blue-600 bg-blue-600 text-white' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; }
+        function setAracTipi(t) { seciliAracTipi = t; document.getElementById('type_oto').className = t === 'otomobil' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white shadow-md' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; document.getElementById('type_mini').className = t === 'minibus' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-blue-600 bg-blue-600 text-white shadow-md' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; }
         function openEditModal(id) { const a = araclar.find(a => a.id === id); if(a.durum === 'tamamlandi') return; const g = new Date(a.giris); document.getElementById('editDateTime').value = new Date(g.getTime() - g.getTimezoneOffset() * 60000).toISOString().slice(0, 16); document.getElementById('editModal').classList.remove('hidden'); document.getElementById('saveEditBtn').onclick = () => { a.giris = new Date(document.getElementById('editDateTime').value).toISOString(); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); closeEditModal(); }; }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
         function raporuKapat() { document.getElementById('raporModal').classList.add('hidden'); }
-        function sil(id) { if(confirm('Silinsin mi?')) { araclar = araclar.filter(a => a.id !== id); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); } }
-        function raporuSifirla() { if(confirm("SIFIRLANSIN MI?")) { araclar = []; localStorage.setItem('istay_park_data', "[]"); renderList(); raporuKapat(); } }
-        function raporuGoster() { /* Orijinal rapor kodları buraya */ const bugun = new Date().toLocaleDateString('tr-TR'); const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun); let hgs = 0, kart = 0, nakit = 0, tabloHtml = ""; bugunCikislar.forEach(a => { if(a.odemeYontemi === 'HGS') hgs += a.tutar; else if(a.odemeYontemi === 'KART') kart += a.tutar; else if(a.odemeYontemi === 'NAKİT') nakit += a.tutar; tabloHtml += `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100"><span class="font-bold text-xs">${a.plaka}</span><span class="text-[9px] font-bold text-gray-400">${a.odemeYontemi}</span><span class="font-black text-xs">${a.tutar} TL</span></div>`; }); document.getElementById('ozetKartlari').innerHTML = `<div class="bg-blue-600 p-4 rounded-2xl text-white"><div class="text-[8px] font-bold opacity-70">HGS</div><div class="text-lg font-black">${hgs}</div></div><div class="bg-emerald-600 p-4 rounded-2xl text-white"><div class="text-[8px] font-bold opacity-70">KART</div><div class="text-lg font-black">${kart}</div></div><div class="bg-amber-500 p-4 rounded-2xl text-white"><div class="text-[8px] font-bold opacity-70">NAKİT</div><div class="text-lg font-black">${nakit}</div></div>`; document.getElementById('raporTablo').innerHTML = tabloHtml || `<p class="text-center text-gray-400 py-4 text-xs font-bold">İŞLEM YOK</p>`; document.getElementById('netCiroBox').innerHTML = `<div><h4 class="text-[10px] font-bold text-gray-400 uppercase">Tahsilat</h4><p class="text-2xl font-black">${hgs+kart+nakit} TL</p></div><i class="fas fa-wallet text-3xl opacity-20"></i>`; document.getElementById('raporModal').classList.remove('hidden'); toggleView('rapor'); }
+        function sil(id) { if(confirm('Bu kayıt silinecek?')) { araclar = araclar.filter(a => a.id !== id); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); } }
+        function raporuSifirla() { if(confirm("TÜM VERİLER SIFIRLANACAK?")) { araclar = []; localStorage.setItem('istay_park_data', "[]"); renderList(); raporuKapat(); } }
+        
+        // --- RAPOR & PDF & YEDEK (İyileştirildi) ---
+        function raporuGoster() { 
+            const bugun = new Date().toLocaleDateString('tr-TR'); 
+            const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun); 
+            let hgs = 0, kart = 0, nakit = 0, tabloHtml = ""; 
+            bugunCikislar.forEach(a => { 
+                if(a.odemeYontemi === 'HGS') hgs += a.tutar; 
+                else if(a.odemeYontemi === 'KART') kart += a.tutar; 
+                else if(a.odemeYontemi === 'NAKİT') nakit += a.tutar; 
+                tabloHtml += `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100"><span class="font-bold text-xs">${a.plaka}</span><span class="text-[9px] font-bold text-gray-400">${a.odemeYontemi}</span><span class="font-black text-xs">${a.tutar} TL</span></div>`; 
+            }); 
+            document.getElementById('ozetKartlari').innerHTML = `<div class="bg-blue-600 p-4 rounded-2xl text-white shadow-lg"><div class="text-[8px] font-bold opacity-70 uppercase">HGS</div><div class="text-lg font-black">${hgs}</div></div><div class="bg-emerald-600 p-4 rounded-2xl text-white shadow-lg"><div class="text-[8px] font-bold opacity-70 uppercase">KART</div><div class="text-lg font-black">${kart}</div></div><div class="bg-amber-500 p-4 rounded-2xl text-white shadow-lg"><div class="text-[8px] font-bold opacity-70 uppercase">NAKİT</div><div class="text-lg font-black">${nakit}</div></div>`; 
+            document.getElementById('raporTablo').innerHTML = tabloHtml || `<p class="text-center text-gray-400 py-4 text-xs font-bold">İŞLEM YOK</p>`; 
+            document.getElementById('netCiroBox').innerHTML = `<div><h4 class="text-[10px] font-bold text-gray-400 uppercase">Toplam Tahsilat</h4><p class="text-2xl font-black">${hgs+kart+nakit} TL</p></div><i class="fas fa-wallet text-3xl opacity-20"></i>`; 
+            document.getElementById('raporModal').classList.remove('hidden'); 
+            toggleView('rapor'); 
+        }
+
         function toggleView(v) { const isT = v === 'tarife'; document.getElementById('raporGorunumu').style.display = isT ? 'none' : 'block'; document.getElementById('tarifeGorunumu').style.display = isT ? 'block' : 'none'; if(isT) renderTarifeInputs(); }
-        function renderTarifeInputs() { const gen = (tip, target) => { let html = `<h4 class="col-span-2 font-black text-[10px] text-gray-400 uppercase mb-2">${tip} Fiyatlar</h4>`; aktifTarife[tip].forEach((k, i) => { html += `<div class="bg-white p-2 rounded-xl border flex items-center justify-between"><span class="text-[10px] font-bold">${k.min}-${k.max}S:</span><input type="number" value="${k.ucret}" class="fiyat-input w-16 text-right font-black" data-tip="${tip}" data-idx="${i}"></div>`; }); document.getElementById(target).innerHTML = html; }; gen('otomobil', 'oto_fiyat_list'); gen('minibus', 'mini_fiyat_list'); }
-        function tarifeleriKaydet() { document.querySelectorAll('.fiyat-input').forEach(input => { aktifTarife[input.dataset.tip][input.dataset.idx].ucret = parseInt(input.value); }); localStorage.setItem('istay_tarifeler', JSON.stringify(aktifTarife)); alert("Güncellendi!"); toggleView('rapor'); renderList(); }
-        function generatePDF() { /* Orijinal PDF fonksiyonu buraya */ const bugun = new Date().toLocaleDateString('tr-TR'); const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun); document.getElementById('pdfDate').innerText = "Rapor Tarihi: " + bugun; let hgs = 0, kart = 0, nakit = 0, rows = ""; bugunCikislar.forEach(a => { if(a.odemeYontemi==='HGS') hgs+=a.tutar; else if(a.odemeYontemi==='KART') kart+=a.tutar; else if(a.odemeYontemi==='NAKİT') nakit+=a.tutar; rows += `<tr><td>${a.plaka}</td><td>${a.tip.toUpperCase()}</td><td>${new Date(a.giris).toLocaleTimeString()}</td><td>${new Date(a.cikis).toLocaleTimeString()}</td><td>${a.odemeYontemi}</td><td>${a.tutar} TL</td></tr>`; }); document.getElementById('pdfBody').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;">İşlem yok.</td></tr>'; document.getElementById('pdfSummaryArea').innerHTML = `<p><b>Toplam:</b> ${hgs+kart+nakit} TL</p>`; const el = document.getElementById('pdfTemplate'); el.style.display = 'block'; html2pdf().from(el).save().then(() => el.style.display = 'none'); }
+        function renderTarifeInputs() { const gen = (tip, target) => { let html = `<h4 class="col-span-2 font-black text-[10px] text-gray-400 uppercase mb-2">${tip} Fiyatlar</h4>`; aktifTarife[tip].forEach((k, i) => { html += `<div class="bg-white p-2 rounded-xl border flex items-center justify-between"><span class="text-[10px] font-bold">${k.min}-${k.max}S:</span><input type="number" value="${k.ucret}" class="fiyat-input w-16 text-right font-black text-rose-600 outline-none" data-tip="${tip}" data-idx="${i}"></div>`; }); document.getElementById(target).innerHTML = html; }; gen('otomobil', 'oto_fiyat_list'); gen('minibus', 'mini_fiyat_list'); }
+        function tarifeleriKaydet() { document.querySelectorAll('.fiyat-input').forEach(input => { aktifTarife[input.dataset.tip][input.dataset.idx].ucret = parseInt(input.value); }); localStorage.setItem('istay_tarifeler', JSON.stringify(aktifTarife)); alert("Fiyatlar güncellendi!"); toggleView('rapor'); renderList(); }
+        
+        function veriyiDisaAktar() { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(araclar)], {type: "text/plain"})); a.download = `istay_yedek_${new Date().toLocaleDateString()}.txt`; a.click(); }
+        function veriyiIceriAktar(e) { const r = new FileReader(); r.onload = (v) => { try { const data = JSON.parse(v.target.result); if(Array.isArray(data)) { araclar = data; localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); alert("Yedek yüklendi!"); raporuKapat(); } } catch(err) { alert("Dosya hatalı!"); } }; r.readAsText(e.target.files[0]); }
+
+        function generatePDF() { 
+            const bugun = new Date().toLocaleDateString('tr-TR'); 
+            const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun); 
+            document.getElementById('pdfDate').innerText = "Rapor Tarihi: " + bugun + " " + new Date().toLocaleTimeString(); 
+            let hgs = 0, kart = 0, nakit = 0, rows = ""; 
+            bugunCikislar.forEach(a => { 
+                if(a.odemeYontemi==='HGS') hgs+=a.tutar; else if(a.odemeYontemi==='KART') kart+=a.tutar; else if(a.odemeYontemi==='NAKİT') nakit+=a.tutar; 
+                rows += `<tr><td>${a.plaka}</td><td>${a.tip.toUpperCase()}</td><td>${new Date(a.giris).toLocaleTimeString()}</td><td>${new Date(a.cikis).toLocaleTimeString()}</td><td>${a.odemeYontemi}</td><td>${a.tutar} TL</td></tr>`; 
+            }); 
+            document.getElementById('pdfBody').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;">Bugün henüz işlem yapılmadı.</td></tr>'; 
+            document.getElementById('pdfSummaryArea').innerHTML = `
+                <table style="width: 100%; border: 0;">
+                    <tr>
+                        <td style="width: 50%; font-size: 14px; line-height: 1.8;">
+                            <b>HGS TOPLAM:</b> ${hgs} TL<br>
+                            <b>KART TOPLAM:</b> ${kart} TL<br>
+                            <b>NAKİT TOPLAM:</b> ${nakit} TL
+                        </td>
+                        <td style="text-align: right; background: #f4f4f4; padding: 20px; border-radius: 10px;">
+                            <span style="font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase;">Toplam Tahsilat</span><br>
+                            <span style="font-size: 32px; font-weight: 900; color: #e11d48;">${hgs+kart+nakit} TL</span>
+                        </td>
+                    </tr>
+                </table>`; 
+            const el = document.getElementById('pdfTemplate'); 
+            el.style.display = 'block'; 
+            html2pdf().set({ margin: 0.3, filename: `istay_rapor_${bugun}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(el).save().then(() => el.style.display = 'none'); 
+        }
 
         renderList();
         setInterval(renderList, 30000);
