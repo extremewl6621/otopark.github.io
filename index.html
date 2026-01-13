@@ -3,143 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY PARK - Final Fix</title>
+    <title>iSTAY PARK AI PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/tesseract.js@v5.0.3/dist/tesseract.min.js"></script>
     <style>
-        body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica; }
+        body { background: #0f172a; font-family: sans-serif; color: white; }
         #cameraOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
         #videoStream { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* PLAKA ODAK ÇERÇEVESİ - Daha Dar */
-        .focus-box {
+        .focus-frame { 
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            width: 80%; height: 80px; border: 4px solid #ef4444; border-radius: 8px;
-            box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.8); z-index: 1010;
+            width: 85%; height: 80px; border: 4px solid #34d399; border-radius: 12px;
+            box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.85); z-index: 1010;
         }
-        .scan-anim { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, #ef4444); height: 2px; animation: scan 1.5s infinite; }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .laser-scan { position: absolute; inset: 0; background: rgba(52, 211, 153, 0.2); height: 2px; border-bottom: 2px solid #34d399; animation: scan 2s infinite; }
+        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
     </style>
 </head>
-<body class="pb-10">
+<body class="p-4">
 
-<div id="cameraOverlay">
-    <video id="videoStream" autoplay playsinline></video>
-    <div class="focus-box"><div class="scan-anim"></div></div>
-    <div class="absolute bottom-10 inset-x-0 flex flex-col items-center gap-4 z-[1100]">
-        <div id="status" class="bg-red-600 text-white text-[10px] px-4 py-1 rounded font-bold uppercase">SADECE PLAKAYI KUTUYA ALIN</div>
-        <div class="flex items-center gap-10">
-            <button onclick="closeCam()" class="text-white opacity-50 font-bold">İPTAL</button>
-            <button onclick="captureAndRead()" class="w-20 h-20 bg-white rounded-full border-8 border-red-600 shadow-2xl flex items-center justify-center">
-                <i class="fas fa-camera text-2xl"></i>
-            </button>
-            <div class="w-10"></div>
-        </div>
-    </div>
-    <canvas id="hiddenCanvas" style="display:none;"></canvas>
-</div>
-
-<div class="max-w-md mx-auto p-4">
-    <div class="bg-white rounded-3xl p-6 shadow-xl mb-6 border border-gray-100">
-        <div class="relative mb-4">
-            <input type="text" id="plakaInp" placeholder="PLAKA" class="w-full py-4 text-3xl font-black text-center border-2 border-gray-100 rounded-2xl focus:border-red-500 outline-none uppercase">
-            <button onclick="openCam()" class="absolute right-2 top-2 bottom-2 w-12 bg-red-600 text-white rounded-xl shadow-lg">
-                <i class="fas fa-camera"></i>
-            </button>
-        </div>
-        <button onclick="saveCar()" class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black text-xl">KAYDET</button>
-    </div>
-    <div id="carList" class="space-y-3"></div>
-</div>
-
-<script>
-let cars = JSON.parse(localStorage.getItem('istay_v3')) || [];
-let vStream = null;
-
-async function openCam() {
-    try {
-        vStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: 1280 } });
-        document.getElementById('videoStream').srcObject = vStream;
-        document.getElementById('cameraOverlay').style.display = 'block';
-    } catch(e) { alert("Kamera Hatası: İzin verilmedi."); }
-}
-
-function closeCam() {
-    if(vStream) vStream.getTracks().forEach(t => t.stop());
-    document.getElementById('cameraOverlay').style.display = 'none';
-}
-
-async function captureAndRead() {
-    const video = document.getElementById('videoStream');
-    const canvas = document.getElementById('hiddenCanvas');
-    const ctx = canvas.getContext('2d');
-    const status = document.getElementById('status');
-
-    // Sadece kutu içini kes
-    const scale = video.videoWidth / video.clientWidth;
-    const w = 80 * (video.clientWidth / 100) * scale;
-    const h = 80 * scale;
-    const x = (video.videoWidth - w) / 2;
-    const y = (video.videoHeight * 0.4) - (h / 2);
-
-    canvas.width = w; canvas.height = h;
-    
-    // Görüntü İşleme: Çok yüksek kontrast (Siyah-Beyaz)
-    ctx.filter = 'grayscale(1) contrast(4) brightness(0.9)';
-    ctx.drawImage(video, x, y, w, h, 0, 0, w, h);
-
-    status.innerText = "OKUNUYOR...";
-
-    try {
-        const worker = await Tesseract.createWorker('eng');
-        await worker.setParameters({ tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' });
-        const { data: { text } } = await worker.recognize(canvas);
-        await worker.terminate();
-
-        // TEMİZLİK: Gelen uzun metinden sadece plaka formatını bul
-        // Örn: 34ABC123 veya 06A1234 gibi yapıları yakalar
-        let raw = text.replace(/[^A-Z0-9]/g, "");
-        let match = raw.match(/[0-9]{2}[A-Z]{1,3}[0-9]{2,4}/); // TR Plaka Regex
-        
-        let finalPlaka = match ? match[0] : (raw.length > 4 ? raw.substring(0, 8) : null);
-
-        if(finalPlaka) {
-            document.getElementById('plakaInp').value = finalPlaka;
-            closeCam();
-            render();
-        } else {
-            status.innerText = "TEKRAR DENEYİN (NETLEŞTİRİN)";
-        }
-    } catch(e) { status.innerText = "HATA OLUŞTU"; }
-}
-
-function saveCar() {
-    let p = document.getElementById('plakaInp').value.toUpperCase().trim();
-    if(!p) return;
-    cars.unshift({ id: Date.now(), plaka: p, giris: new Date().toISOString() });
-    localStorage.setItem('istay_v3', JSON.stringify(cars));
-    document.getElementById('plakaInp').value = '';
-    render();
-}
-
-function render() {
-    const div = document.getElementById('carList');
-    div.innerHTML = '';
-    cars.forEach(c => {
-        div.innerHTML += `
-            <div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border-l-8 border-red-600">
-                <div>
-                    <div class="text-2xl font-black">${c.plaka}</div>
-                    <div class="text-[10px] text-gray-400 font-bold">${new Date(c.giris).toLocaleTimeString()}</div>
-                </div>
-                <button onclick="delCar(${c.id})" class="text-gray-300"><i class="fas fa-trash"></i></button>
+    <div id="cameraOverlay">
+        <video id="videoStream" autoplay playsinline></video>
+        <div class="focus-frame"><div class="laser-scan"></div></div>
+        <div class="absolute bottom-10 inset-x-0 flex flex-col items-center gap-6 z-[1100]">
+            <div id="status" class="bg-emerald-600 text-[11px] px-6 py-2 rounded-full font-bold">PLAKAYI ÇERÇEVEYE SIĞDIRIN</div>
+            <div class="flex items-center gap-10">
+                <button onclick="closeCam()" class="opacity-50 font-bold uppercase text-xs">Kapat</button>
+                <button onclick="processPlate()" class="w-20 h-20 bg-white rounded-full border-8 border-emerald-500 shadow-2xl flex items-center justify-center active:scale-90">
+                    <i class="fas fa-camera text-2xl text-emerald-600"></i>
+                </button>
+                <div class="w-10"></div>
             </div>
-        `;
-    });
-}
-function delCar(id) { cars = cars.filter(c => c.id !== id); localStorage.setItem('istay_v3', JSON.stringify(cars)); render(); }
-render();
-</script>
+        </div>
+        <canvas id="cropCanvas" style="display:none;"></canvas>
+    </div>
+
+    <div class="max-w-md mx-auto space-y-6 pt-10">
+        <div class="bg-slate-800 p-6 rounded-[2.5rem] shadow-2xl border border-slate-700">
+            <div class="relative mb-6">
+                <input type="text" id="plateInput" placeholder="00 AAA 000" class="w-full py-6 text-4xl font-black text-center bg-slate-900 border-2 border-slate-700 rounded-2xl focus:border-emerald-500 outline-none uppercase text-white tracking-tighter">
+                <button onclick="openCam()" class="absolute right-3 top-3 bottom-3 w-14 bg-emerald-600 rounded-xl shadow-lg active:scale-95 flex items-center justify-center text-white">
+                    <i class="fas fa-camera text-xl"></i>
+                </button>
+            </div>
+            <button onclick="addCar()" class="w-full bg-white text-slate-900 py-5 rounded-2xl font-black text-xl hover:bg-emerald-500 transition-all">GİRİŞİ KAYDET</button>
+        </div>
+
+        <div id="carList" class="space-y-3"></div>
+    </div>
+
+    <script>
+        let cars = JSON.parse(localStorage.getItem('istay_park_ai')) || [];
+        let stream = null;
+
+        // KARAKTER DÜZELTME TABLOSU (OCR Hataları için)
+        const corrections = { 'M': '3', 'S': '5', 'G': '6', 'B': '8', 'O': '0', 'I': '1', 'Z': '2', 'Q': '0' };
+
+        async function openCam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: 1280 } });
+                document.getElementById('videoStream').srcObject = stream;
+                document.getElementById('cameraOverlay').style.display = 'block';
+            } catch(e) { alert("Kamera izni gerekiyor."); }
+        }
+
+        function closeCam() {
+            if(stream) stream.getTracks().forEach(t => t.stop());
+            document.getElementById('cameraOverlay').style.display = 'none';
+        }
+
+        async function processPlate() {
+            const video = document.getElementById('videoStream');
+            const canvas = document.getElementById('cropCanvas');
+            const ctx = canvas.getContext('2d');
+            const status = document.getElementById('status');
+
+            const scale = video.videoWidth / video.clientWidth;
+            const w = 85 * (video.clientWidth / 100) * scale;
+            const h = 80 * scale;
+            const x = (video.videoWidth - w) / 2;
+            const y = (video.videoHeight * 0.4) - (h / 2);
+
+            canvas.width = w; canvas.height = h;
+            // Keskinleştirme ve kontrast
+            ctx.filter = 'grayscale(1) contrast(3.5) brightness(1.1)';
+            ctx.drawImage(video, x, y, w, h, 0, 0, w, h);
+
+            status.innerHTML = '<i class="fas fa-sync fa-spin"></i> OKUNUYOR...';
+
+            try {
+                const worker = await Tesseract.createWorker('eng');
+                await worker.setParameters({ 
+                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_LINE
+                });
+                const { data: { text } } = await worker.recognize(canvas);
+                await worker.terminate();
+
+                let raw = text.replace(/[^A-Z0-9]/g, "").trim();
+                
+                // --- AKILLI DÜZELTME MANTİĞI ---
+                // Eğer plaka bir harfle başlıyorsa (Örn: M3L yerine 38L) ilk karakteri düzelt
+                if (raw.length > 2 && isNaN(raw[0])) {
+                    let firstChar = raw[0];
+                    if (corrections[firstChar]) {
+                        raw = corrections[firstChar] + raw.substring(1);
+                    }
+                }
+
+                // Türkiye formatına uygun kısmını kes (Max 9 karakter)
+                let final = raw.length > 9 ? raw.substring(0, 9) : raw;
+
+                if(final.length >= 5) {
+                    document.getElementById('plateInput').value = final;
+                    closeCam();
+                    render();
+                } else {
+                    status.innerText = "TEKRAR DENEYİN (NET DEĞİL)";
+                }
+            } catch(e) { status.innerText = "HATA!"; }
+        }
+
+        function addCar() {
+            let p = document.getElementById('plateInput').value.trim().toUpperCase();
+            if(!p) return;
+            // Mükerrer Kayıt Engeli
+            if(cars.some(c => c.p === p && c.s === 'aktif')) return alert("ARAÇ İÇERİDE!");
+
+            cars.unshift({ id: Date.now(), p: p, t: new Date().toISOString(), s: 'aktif' });
+            saveData();
+            document.getElementById('plateInput').value = '';
+            render();
+        }
+
+        function exitCar(id) {
+            let c = cars.find(x => x.id === id);
+            c.s = 'bitti';
+            c.ct = new Date().toISOString();
+            saveData();
+            render();
+        }
+
+        function render() {
+            const list = document.getElementById('carList');
+            list.innerHTML = '';
+            
+            // Aktifler üstte, bitenler altta
+            let sorted = [...cars.filter(x => x.s === 'aktif'), ...cars.filter(x => x.s === 'bitti')];
+
+            sorted.forEach(c => {
+                const isAktif = c.s === 'aktif';
+                list.innerHTML += `
+                    <div class="p-5 rounded-2xl border ${isAktif ? 'bg-slate-800 border-slate-700' : 'bg-slate-900 border-slate-800 opacity-60'} flex justify-between items-center shadow-lg">
+                        <div>
+                            <div class="text-2xl font-black ${isAktif ? 'text-white' : 'text-slate-500'}">${c.p}</div>
+                            <div class="text-[10px] font-bold text-slate-500 mt-1 uppercase">${new Date(c.t).toLocaleString()}</div>
+                        </div>
+                        ${isAktif ? 
+                            `<button onclick="exitCar(${c.id})" class="bg-emerald-600/20 text-emerald-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase">ÇIKIŞ YAP</button>` : 
+                            `<span class="text-slate-600 text-[10px] font-black uppercase">ÇIKTI</span>`
+                        }
+                    </div>
+                `;
+            });
+        }
+
+        function saveData() { localStorage.setItem('istay_park_ai', JSON.stringify(cars)); }
+        render();
+    </script>
 </body>
 </html>
