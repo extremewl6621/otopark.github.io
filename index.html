@@ -3,48 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY PARK PRO - Kesin Çözüm</title>
+    <title>iSTAY PARK PRO - AI Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        body { background-color: #f4f4f4; font-family: sans-serif; overflow-x: hidden; }
-        .park-card { border-left: 6px solid #e11d48; border-radius: 12px; background: white; margin-bottom: 10px; }
-        .completed-card { border-left: 6px solid #9ca3af; opacity: 0.8; background: #fdfdfd; }
+        body { background-color: #f8fafc; font-family: sans-serif; }
+        .park-card { border-left: 6px solid #e11d48; border-radius: 1.5rem; background: white; margin-bottom: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .completed-card { border-left: 6px solid #94a3b8; opacity: 0.75; background: #f1f5f9; }
         
-        /* Kamera Gelişmiş Tasarım */
+        /* Kamera Arayüzü */
         #cameraOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 100; }
         #videoStream { width: 100%; height: 100%; object-fit: cover; }
         .cam-frame { 
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; height: 120px; border: 4px solid #3b82f6; border-radius: 15px;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); z-index: 110;
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; height: 130px; border: 4px solid #ef4444; border-radius: 1rem;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7); z-index: 110;
         }
-        .scan-line { position: absolute; width: 100%; height: 3px; background: #3b82f6; top: 0; animation: scan 2s infinite linear; box-shadow: 0 0 15px #3b82f6; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: #ef4444; top: 0; animation: scan 2s infinite linear; box-shadow: 0 0 10px #ef4444; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-
-        #paymentPopup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
     </style>
 </head>
-<body>
+<body class="pb-24">
 
     <div class="bg-zinc-900 p-4 flex justify-between items-center sticky top-0 z-50">
-        <div class="text-white font-black italic text-xl">iSTAY <span class="bg-rose-600 px-2 rounded italic">P</span> ARK</div>
-        <button onclick="location.reload()" class="text-white/50 text-xs font-bold uppercase">Yenile</button>
+        <div class="text-white font-bold text-lg italic">iSTAY <span class="text-rose-600 italic">P</span> ARK</div>
+        <button onclick="location.reload()" class="bg-zinc-800 text-white px-3 py-1 rounded-lg text-xs font-bold">YENİLE</button>
     </div>
 
     <div id="cameraOverlay">
         <video id="videoStream" autoplay playsinline></video>
-        <div class="cam-frame">
-            <div class="scan-line"></div>
-            <div class="absolute -top-8 left-0 text-blue-400 font-bold text-[10px] uppercase tracking-widest">TR Plaka Odaklama</div>
-        </div>
+        <div class="cam-frame"><div class="scan-line"></div></div>
         <div class="absolute bottom-12 inset-x-0 flex flex-col items-center gap-6 z-[120]">
-            <div id="camStatus" class="text-white text-xs font-bold bg-blue-600/80 backdrop-blur px-6 py-2 rounded-full">PLAKAYI KUTUYA ORTALAYIN</div>
-            <div class="flex gap-12 items-center">
-                <button onclick="kapatKamera()" class="text-white/60 font-black uppercase text-xs">İPTAL</button>
-                <button onclick="yakalaVeOku()" class="w-20 h-20 bg-white rounded-full border-[6px] border-blue-500 flex items-center justify-center active:scale-90 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-                    <i class="fas fa-camera text-3xl text-blue-600"></i>
+            <div id="camStatus" class="bg-white/10 backdrop-blur text-white text-xs px-6 py-2 rounded-full font-bold">PLAKAYI KIRMIZI KUTUYA ALIN</div>
+            <div class="flex gap-10 items-center">
+                <button onclick="kapatKamera()" class="text-white/50 font-bold text-xs uppercase">VAZGEÇ</button>
+                <button onclick="yakalaVeOku()" class="w-20 h-20 bg-white rounded-full border-8 border-rose-600 flex items-center justify-center shadow-2xl active:scale-90">
+                    <i class="fas fa-camera text-3xl text-zinc-900"></i>
                 </button>
                 <div class="w-10"></div>
             </div>
@@ -52,58 +47,49 @@
         <canvas id="procCanvas" style="display:none;"></canvas>
     </div>
 
-    <div id="paymentPopup">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="text-center mb-8">
-                <h2 id="popPlaka" class="text-4xl font-black text-zinc-800 tracking-tighter">---</h2>
-                <div id="popTutar" class="text-6xl font-black text-rose-600 mt-4">0<small class="text-xl">TL</small></div>
-            </div>
-            <div class="flex flex-col gap-3">
-                <button onclick="sonucCikis('HGS')" class="bg-blue-600 text-white py-5 rounded-2xl font-black uppercase shadow-lg">HGS ÇIKIŞ</button>
-                <button onclick="sonucCikis('KART')" class="bg-zinc-900 text-white py-5 rounded-2xl font-black uppercase shadow-lg">KART ÖDEME</button>
-                <button onclick="sonucCikis('NAKİT')" class="bg-emerald-600 text-white py-5 rounded-2xl font-black uppercase shadow-lg">NAKİT ÖDEME</button>
-                <button onclick="document.getElementById('paymentPopup').style.display='none'" class="text-zinc-400 font-bold mt-2">KAPAT</button>
+    <div id="paymentPopup" class="hidden fixed inset-0 bg-black/90 z-[200] items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 text-center">
+            <h2 id="popPlaka" class="text-4xl font-black text-zinc-900 tracking-tight">---</h2>
+            <div id="popTutar" class="text-6xl font-black text-rose-600 my-6">0<small class="text-xl">TL</small></div>
+            <div class="grid gap-3">
+                <button onclick="sonucCikis('HGS')" class="bg-blue-600 text-white py-4 rounded-2xl font-black uppercase">HGS İLE ÇIK</button>
+                <button onclick="sonucCikis('KART')" class="bg-zinc-900 text-white py-4 rounded-2xl font-black uppercase">KART ÖDEME</button>
+                <button onclick="sonucCikis('NAKİT')" class="bg-emerald-600 text-white py-4 rounded-2xl font-black uppercase">NAKİT ÖDEME</button>
+                <button onclick="document.getElementById('paymentPopup').classList.add('hidden')" class="text-zinc-400 font-bold mt-2">İPTAL</button>
             </div>
         </div>
     </div>
 
     <div class="max-w-md mx-auto p-4">
-        <div class="bg-white rounded-3xl p-6 shadow-sm mb-6">
+        <div class="bg-white rounded-[2rem] p-6 shadow-sm mb-6 border border-zinc-100">
             <div class="relative mb-4">
-                <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA GİRİN" class="w-full px-4 py-5 border-2 border-zinc-100 bg-zinc-50 rounded-2xl font-black uppercase text-3xl text-center focus:border-rose-500 outline-none transition-all">
-                <button onclick="kameraAc()" class="absolute right-2 top-2 bottom-2 w-14 bg-rose-600 text-white rounded-xl shadow-lg active:scale-95"><i class="fas fa-camera text-xl"></i></button>
+                <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA VEYA ARA" class="w-full px-4 py-5 bg-zinc-50 border-2 border-zinc-50 rounded-2xl font-black uppercase text-3xl text-center focus:border-rose-500 outline-none transition-all">
+                <button onclick="kameraAc()" class="absolute right-2 top-2 bottom-2 w-14 bg-rose-600 text-white rounded-xl active:scale-95 transition-all shadow-lg"><i class="fas fa-camera text-xl"></i></button>
             </div>
-            <div class="flex gap-3 mb-4">
-                <button id="t_oto" onclick="secTip('otomobil')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white">OTOMOBİL</button>
-                <button id="t_mini" onclick="secTip('minibus')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-zinc-100 text-zinc-500">MİNİBÜS</button>
+            <div class="flex gap-2 mb-4">
+                <button id="btn_oto" onclick="secTip('otomobil')" class="flex-1 py-4 rounded-xl font-bold text-[10px] border-2 border-rose-600 bg-rose-600 text-white uppercase">Otomobil</button>
+                <button id="btn_mini" onclick="secTip('minibus')" class="flex-1 py-4 rounded-xl font-bold text-[10px] border-2 border-zinc-100 text-zinc-400 uppercase">Minibüs</button>
             </div>
-            <button onclick="kaydet()" class="w-full bg-zinc-900 text-white py-5 rounded-2xl font-black text-xl shadow-xl">GİRİŞİ KAYDET</button>
+            <button onclick="kaydet()" class="w-full bg-zinc-900 text-white py-5 rounded-2xl font-black text-xl shadow-xl active:scale-95">KAYDET</button>
         </div>
 
         <div id="liste" class="space-y-3"></div>
     </div>
 
     <script>
-        let araclar = JSON.parse(localStorage.getItem('istay_data')) || [];
+        let araclar = JSON.parse(localStorage.getItem('istay_park_v2')) || [];
         let tip = 'otomobil';
         let stream = null;
         let aktifId = null;
 
-        // --- KAMERA SİSTEMİ (GELİŞTİRİLMİŞ) ---
         async function kameraAc() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment', focusMode: 'continuous', width: { ideal: 1280 } } 
+                    video: { facingMode: 'environment', width: { ideal: 1280 } } 
                 });
                 document.getElementById('videoStream').srcObject = stream;
                 document.getElementById('cameraOverlay').style.display = 'block';
-            } catch (err) {
-                if(err.name === 'NotAllowedError') {
-                    alert("HATA: Kamera izni reddedildi. Lütfen tarayıcı ayarlarından kamera iznini açın.");
-                } else {
-                    alert("Kamera başlatılamadı: " + err.message);
-                }
-            }
+            } catch (err) { alert("Kamera izni verilmedi."); }
         }
 
         function kapatKamera() {
@@ -116,78 +102,74 @@
             const canvas = document.getElementById('procCanvas');
             const ctx = canvas.getContext('2d');
             
-            // Plaka alanını kes (Crop)
+            // Plaka alanını kes
             const scale = video.videoWidth / video.clientWidth;
             const w = 85 * (video.clientWidth / 100) * scale;
-            const h = 120 * scale;
+            const h = 130 * scale;
             const x = (video.videoWidth - w) / 2;
             const y = (video.videoHeight - h) / 2;
 
             canvas.width = w; canvas.height = h;
 
-            // GÖRÜNTÜ İŞLEME: Kontrast ve Eşikleme (Saçma karakterleri engeller)
-            ctx.filter = 'contrast(200%) brightness(120%) grayscale(100%)';
+            // --- GÖRÜNTÜ ÖN İŞLEME (KRİTİK ADIM) ---
+            ctx.filter = 'grayscale(100%) contrast(300%) brightness(110%)'; 
             ctx.drawImage(video, x, y, w, h, 0, 0, w, h);
 
-            document.getElementById('camStatus').innerText = "AI ANALİZ EDİYOR...";
+            document.getElementById('camStatus').innerText = "PLAKA ANALİZ EDİLİYOR...";
 
             try {
                 const worker = await Tesseract.createWorker('eng');
-                // Sadece büyük harf ve rakamları tanıması için kısıtla
                 await worker.setParameters({
-                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', // Sadece harf ve rakam
                 });
                 
                 const { data: { text } } = await worker.recognize(canvas);
                 await worker.terminate();
 
-                // Temizlik: Gereksiz boşlukları sil ve TR plaka formatına yaklaştır
-                let plaka = text.toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
+                // Saçma karakterleri temizle ve Türkiye plaka uzunluğuna (min 5) bak
+                let plaka = text.replace(/[^A-Z0-9]/g, "").trim();
                 
                 if(plaka.length >= 5) {
                     kapatKamera();
-                    islemYap(plaka);
+                    plakaIsle(plaka);
                 } else {
-                    document.getElementById('camStatus').innerText = "OKUNAMADI! DAHA YAKINDAN DENEYİN";
+                    document.getElementById('camStatus').innerText = "ANLAŞILAMADI, TEKRAR DENEYİN";
                 }
-            } catch (e) {
-                alert("Okuma hatası: " + e.message);
-            }
+            } catch (e) { alert("Sistem hatası: " + e.message); }
         }
 
-        function islemYap(plaka) {
-            const icerideki = araclar.find(a => a.plaka === plaka && a.durum === 'aktif');
-            if(icerideki) {
-                aktifId = icerideki.id;
-                document.getElementById('popPlaka').innerText = plaka;
-                document.getElementById('popTutar').innerHTML = hesapla(icerideki.giris, icerideki.tip) + '<small class="text-xl">TL</small>';
-                document.getElementById('paymentPopup').style.display = 'flex';
+        function plakaIsle(p) {
+            const arac = araclar.find(a => a.plaka === p && a.durum === 'aktif');
+            if(arac) {
+                aktifId = arac.id;
+                document.getElementById('popPlaka').innerText = p;
+                document.getElementById('popTutar').innerHTML = ucret(arac.giris, arac.tip) + '<small class="text-xl">TL</small>';
+                document.getElementById('paymentPopup').classList.remove('hidden');
             } else {
-                document.getElementById('plakaInput').value = plaka;
+                document.getElementById('plakaInput').value = p;
                 renderList();
             }
         }
 
-        // --- MANTIK SİSTEMİ ---
         function kaydet() {
             const p = document.getElementById('plakaInput').value.trim().toUpperCase();
             if(!p) return;
-            if(araclar.some(a => a.plaka === p && a.durum === 'aktif')) return alert("ARAÇ ZATEN İÇERİDE!");
+            if(araclar.some(a => a.plaka === p && a.durum === 'aktif')) return alert("Bu araç zaten içeride!");
 
-            araclar.push({ id: Date.now(), plaka: p, tip: tip, giris: new Date().toISOString(), durum: 'aktif', tutar: 0, odeme: '' });
+            araclar.push({ id: Date.now(), plaka: p, tip: tip, giris: new Date().toISOString(), durum: 'aktif', tutar: 0, cikis: null, odeme: '' });
             veriyiKaydet();
             document.getElementById('plakaInput').value = '';
             renderList();
         }
 
-        function sonucCikis(yontem) {
+        function sonucCikis(o) {
             const a = araclar.find(x => x.id === aktifId);
             a.durum = 'tamamlandi';
-            a.odeme = yontem;
-            a.tutar = hesapla(a.giris, a.tip);
+            a.odeme = o;
+            a.tutar = ucret(a.giris, a.tip);
             a.cikis = new Date().toISOString();
             veriyiKaydet();
-            document.getElementById('paymentPopup').style.display = 'none';
+            document.getElementById('paymentPopup').classList.add('hidden');
             renderList();
         }
 
@@ -196,61 +178,54 @@
             const div = document.getElementById('liste');
             div.innerHTML = '';
 
-            // SIRALAMA: Aktifler A-Z (Üstte), Tamamlananlar (En altta)
-            let aktifler = araclar.filter(a => a.durum === 'aktif' && a.plaka.includes(ara))
-                                 .sort((a,b) => a.plaka.localeCompare(b.plaka));
-            
-            let bitenler = araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(ara))
-                                 .sort((a,b) => new Date(b.cikis) - new Date(a.cikis));
+            let aktifler = araclar.filter(a => a.durum === 'aktif' && a.plaka.includes(ara)).sort((a,b) => a.plaka.localeCompare(b.plaka));
+            let bitenler = araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(ara)).sort((a,b) => new Date(b.cikis) - new Date(a.cikis));
 
             [...aktifler, ...bitenler].forEach(a => {
-                const isBitti = a.durum === 'tamamlandi';
-                const tl = isBitti ? a.tutar : hesapla(a.giris, a.tip);
-                
+                const bitti = a.durum === 'tamamlandi';
+                const tl = bitti ? a.tutar : ucret(a.giris, a.tip);
                 div.innerHTML += `
-                    <div class="p-4 ${isBitti ? 'completed-card' : 'park-card shadow-sm'} relative">
+                    <div class="p-5 ${bitti ? 'completed-card' : 'park-card'}">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[9px] font-bold text-gray-400 uppercase">${a.tip}</span>
-                                <h3 class="text-2xl font-black text-zinc-800">${a.plaka}</h3>
-                                <p class="text-[10px] text-gray-400 font-bold">${new Date(a.giris).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} Giriş</p>
+                                <span class="text-[8px] font-black bg-zinc-100 px-2 py-1 rounded-md uppercase">${a.tip}</span>
+                                <h3 class="text-2xl font-black text-zinc-900 mt-1">${a.plaka}</h3>
+                                <p class="text-[10px] font-bold text-zinc-400 mt-1">${new Date(a.giris).toLocaleTimeString()}</p>
                             </div>
                             <div class="text-right">
-                                <div class="text-2xl font-black ${isBitti ? 'text-zinc-400' : 'text-rose-600'}">${tl} TL</div>
-                                <div class="text-[9px] font-bold uppercase">${isBitti ? 'ÖDENDİ ('+a.odeme+')' : 'İÇERİDE'}</div>
+                                <div class="text-2xl font-black ${bitti ? 'text-zinc-400' : 'text-rose-600'}">${tl} TL</div>
+                                <div class="text-[9px] font-black uppercase text-zinc-400">${bitti ? 'ÖDENDİ ('+a.odeme+')' : 'Süre: ' + sure(a.giris)}</div>
                             </div>
                         </div>
-                        ${!isBitti ? `
-                        <div class="flex gap-2 mt-3">
-                            <button onclick="hizliOdemeAc(${a.id})" class="flex-1 bg-zinc-900 text-white text-[10px] py-2 rounded-lg font-bold">ÖDEME AL</button>
-                            <button onclick="sil(${a.id})" class="w-10 bg-gray-100 text-gray-400 py-2 rounded-lg"><i class="fas fa-trash"></i></button>
+                        ${!bitti ? `
+                        <div class="flex gap-2 mt-4">
+                            <button onclick="plakaIsle('${a.plaka}')" class="flex-1 bg-zinc-900 text-white text-[10px] py-2 rounded-xl font-bold uppercase">Çıkış Yap</button>
+                            <button onclick="sil(${a.id})" class="w-12 bg-zinc-50 text-zinc-300 rounded-xl"><i class="fas fa-trash"></i></button>
                         </div>` : ''}
                     </div>
                 `;
             });
         }
 
-        function hizliOdemeAc(id) {
-            const a = araclar.find(x => x.id === id);
-            aktifId = id;
-            islemYap(a.plaka);
+        function ucret(g, t) {
+            const s = (new Date() - new Date(g)) / 3600000;
+            if(s < 0.06) return 0; // İlk 4 dk ücretsiz
+            return t === 'otomobil' ? (s <= 1 ? 170 : 250) : (s <= 1 ? 250 : 350);
         }
 
-        function hesapla(giris, t) {
-            const fark = (new Date() - new Date(giris)) / 3600000;
-            // Basit Tarife Örneği (Kendi tarifene göre güncelle)
-            if(t === 'otomobil') return fark <= 1 ? 170 : 250;
-            return fark <= 1 ? 250 : 350;
+        function sure(g) {
+            const f = new Date() - new Date(g);
+            return Math.floor(f/3600000) + "s " + Math.floor((f%3600000)/60000) + "dk";
         }
 
         function secTip(s) {
             tip = s;
-            document.getElementById('t_oto').className = s === 'otomobil' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-zinc-100 text-zinc-500';
-            document.getElementById('t_mini').className = s === 'minibus' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-zinc-100 text-zinc-500';
+            document.getElementById('btn_oto').className = s === 'otomobil' ? 'flex-1 py-4 rounded-xl font-bold text-[10px] border-2 border-rose-600 bg-rose-600 text-white uppercase' : 'flex-1 py-4 rounded-xl font-bold text-[10px] border-2 border-zinc-100 text-zinc-400 uppercase';
+            document.getElementById('btn_mini').className = s === 'minibus' ? 'flex-1 py-4 rounded-xl font-bold text-[10px] border-2 border-rose-600 bg-rose-600 text-white uppercase' : 'flex-1 py-4 rounded-xl font-bold text-[10px] border-2 border-zinc-100 text-zinc-400 uppercase';
         }
 
-        function sil(id) { if(confirm('Silinsin mi?')) { araclar = araclar.filter(a => a.id !== id); veriyiKaydet(); renderList(); } }
-        function veriyiKaydet() { localStorage.setItem('istay_data', JSON.stringify(araclar)); }
+        function sil(id) { if(confirm('Kaydı sil?')) { araclar = araclar.filter(a => a.id !== id); veriyiKaydet(); renderList(); } }
+        function veriyiKaydet() { localStorage.setItem('istay_park_v2', JSON.stringify(araclar)); }
 
         renderList();
     </script>
