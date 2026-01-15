@@ -2,222 +2,200 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY PARK PRO - AI VISION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iSTAY PARK PRO - AI Plaka Tanıma</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()" type="text/javascript"></script>
 
     <style>
-        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .park-card { border-left: 6px solid #e11d48; border-radius: 20px; background: white; transition: all 0.3s; }
-        .completed-card { border-left: 6px solid #94a3b8; opacity: 0.75; border-radius: 20px; background: white; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .park-card { border-left: 6px solid #e11d48; border-radius: 16px; background: white; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .completed-card { border-left: 6px solid #94a3b8; opacity: 0.8; background: #f8fafc; }
         
-        /* Kamera Arayüzü */
-        #cameraContainer { display: none; position: fixed; inset: 0; background: #000; z-index: 100; flex-direction: column; }
-        /* Video gizli olacak, canvas üzerine çizeceğiz */
-        #videoFeed { display: none; } 
+        /* Kamera ve Canvas Stilleri */
+        #cameraContainer { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
         #canvasOutput { width: 100%; height: 100%; object-fit: contain; }
+        /* İşlemler ağır olduğu için video elementini gizliyoruz, sonucu canvas'a çiziyoruz */
+        #videoInput { display: none; }
+
+        /* Yükleme Ekranı */
+        #loadingScreen { position: fixed; inset: 0; background: white; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         
-        /* Mini Debug Pencereleri */
-        .debug-window {
-            position: absolute;
-            bottom: 100px;
-            right: 20px;
-            width: 120px;
-            height: 90px;
-            background: black;
-            border: 2px solid #fff;
-            border-radius: 8px;
-            overflow: hidden;
-            z-index: 110;
-        }
-        .debug-window canvas { width: 100%; height: 100%; object-fit: cover; }
-        .debug-label { position: absolute; bottom: 0; left: 0; right: 0; bg: rgba(0,0,0,0.7); color: lime; font-size: 8px; text-align: center; padding: 2px; }
-
-        #debugEdge { right: 20px; } /* Kenar Tespiti */
-        #debugPlate { right: 150px; } /* Kırpılmış Plaka */
-
-        #loadingOverlay { position: fixed; inset: 0; bg: rgba(255,255,255,0.9); z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        /* Debug Pencereleri (Sağ Alt) */
+        .debug-box { position: absolute; bottom: 20px; right: 20px; width: 140px; height: 100px; background: #222; border: 2px solid #fff; border-radius: 8px; overflow: hidden; z-index: 10001; }
+        .debug-box canvas { width: 100%; height: 100%; object-fit: contain; }
+        .debug-label { position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.7); color: #0f0; font-size: 10px; padding: 2px 4px; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-20">
 
-    <div id="loadingOverlay">
+    <div id="loadingScreen">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-rose-600 mb-4"></div>
-        <h2 class="text-xl font-black text-zinc-800">YAPAY ZEKA MODÜLLERİ YÜKLENİYOR...</h2>
-        <p class="text-sm text-gray-500">OpenCV.js kütüphanesi hazırlanıyor, lütfen bekleyin.</p>
+        <h2 class="text-2xl font-bold text-gray-800">Sistem Başlatılıyor...</h2>
+        <p class="text-gray-500 mt-2">Yapay zeka modelleri ve OpenCV kütüphanesi yükleniyor.</p>
+        <p class="text-xs text-gray-400 mt-4">Bu işlem internet hızınıza göre 5-10 saniye sürebilir.</p>
     </div>
 
     <div id="cameraContainer">
-        <video id="videoFeed" playsinline></video>
+        <video id="videoInput" playsinline muted></video>
         <canvas id="canvasOutput"></canvas>
-        
-        <div id="debugEdge" class="debug-window">
-            <canvas id="canvasEdge"></canvas>
-            <div class="debug-label">CANNY KENAR</div>
+
+        <div class="debug-box" style="bottom: 130px;">
+            <canvas id="plateCanvas"></canvas>
+            <span class="debug-label">OCR GİRİŞİ (Binarize)</span>
         </div>
-        
-        <div id="debugPlate" class="debug-window">
-            <canvas id="canvasPlate"></canvas>
-            <div class="debug-label">OCR GİRİŞİ</div>
+        <div class="debug-box">
+            <canvas id="edgeCanvas"></canvas>
+            <span class="debug-label">KENAR TESPİTİ (Canny)</span>
         </div>
 
-        <div id="scanStatus" class="absolute top-12 left-0 right-0 text-center px-4 z-[120]">
-            <span id="statusText" class="bg-black/60 text-white px-6 py-2 rounded-full text-xs uppercase tracking-widest border border-white/20 shadow-xl backdrop-blur-md">Kamera Başlatılıyor...</span>
-        </div>
-
-        <div class="absolute bottom-8 left-0 right-0 flex justify-center gap-6 z-[120]">
-            <button onclick="stopCamera()" class="w-16 h-16 rounded-full bg-white/10 text-white border border-white/20 flex items-center justify-center backdrop-blur-md hover:bg-white/20 transition">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-            <button id="btnCapture" class="w-20 h-20 rounded-full bg-rose-600 text-white border-4 border-white flex items-center justify-center shadow-2xl animate-pulse">
-                <i class="fas fa-camera text-3xl"></i>
-            </button>
-        </div>
-    </div>
-
-    <div id="confirmModal" class="hidden fixed inset-0 bg-slate-900/90 z-[150] flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl">
-            <div class="p-8 text-center">
-                <div class="text-rose-500 font-bold text-[10px] uppercase tracking-widest mb-2">TESPİT EDİLEN PLAKA</div>
-                <input type="text" id="confirmedPlate" class="w-full text-4xl font-black text-center border-b-4 border-rose-500 py-2 mb-6 uppercase focus:outline-none text-slate-800 bg-transparent">
-                <div class="flex gap-3">
-                    <button onclick="closeConfirmModal()" class="flex-1 py-4 bg-slate-100 rounded-2xl font-bold text-slate-500 text-xs uppercase">İptal</button>
-                    <button onclick="finalProcessPlate()" class="flex-1 py-4 bg-rose-600 rounded-2xl font-bold text-white text-xs shadow-lg shadow-rose-200 uppercase">Onayla</button>
-                </div>
+        <div class="absolute top-10 left-0 right-0 flex justify-center">
+            <div id="scanStatus" class="bg-black/70 text-white px-6 py-2 rounded-full font-bold text-sm backdrop-blur-md border border-white/20">
+                Kamera Bekleniyor...
             </div>
         </div>
-    </div>
 
-    <div id="scanExitModal" class="hidden fixed inset-0 bg-slate-900/95 z-[160] flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm rounded-[40px] overflow-hidden shadow-2xl">
-            <div class="bg-rose-600 p-8 text-center text-white">
-                <div class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Çıkış İşlemi</div>
-                <h2 id="exitPlaka" class="text-5xl font-black italic tracking-tighter">--</h2>
-            </div>
-            <div class="p-8 space-y-6">
-                <div class="flex justify-between items-center text-sm border-b pb-4 border-slate-50">
-                    <div class="text-slate-400 font-medium">Giriş Saati</div>
-                    <div id="exitGirisSaat" class="font-black text-slate-700">--:--</div>
-                </div>
-                <div class="flex justify-between items-center text-sm border-b pb-4 border-slate-50">
-                    <div class="text-slate-400 font-medium">Süre</div>
-                    <div id="exitSure" class="font-black text-slate-700">--</div>
-                </div>
-                <div class="text-center py-2">
-                    <div class="text-slate-400 text-[10px] font-bold uppercase mb-1">Tutar</div>
-                    <div id="exitTutar" class="text-6xl font-black text-slate-900">0<small class="text-xl ml-1">TL</small></div>
-                </div>
-                <div class="grid grid-cols-1 gap-3">
-                    <button onclick="cikisYapIslem('HGS')" class="bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-blue-100">HGS İle Öde</button>
-                    <button onclick="cikisYapIslem('KART')" class="bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-emerald-100">Kredi Kartı</button>
-                    <button onclick="cikisYapIslem('NAKİT')" class="bg-amber-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-amber-100">Nakit</button>
-                </div>
-                <button onclick="closeScanExitModal()" class="w-full text-slate-400 font-bold py-2 text-[10px] uppercase mt-2">İptal</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="header-banner no-print bg-slate-900 p-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
-        <div class="flex items-center gap-1 text-white font-black italic text-xl">
-            <span>iSTAY</span><span class="bg-rose-600 text-white px-2 rounded italic">P</span>ARK
-        </div>
-        <button onclick="raporuGoster()" class="bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-bold border border-white/10">
-            <i class="fas fa-chart-line mr-2"></i> RAPOR
+        <button onclick="stopCamera()" class="absolute bottom-10 left-10 w-14 h-14 bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/30">
+            <i class="fas fa-times text-xl"></i>
         </button>
     </div>
 
-    <div class="max-w-md mx-auto p-5">
-        <div class="bg-white rounded-[32px] p-6 shadow-sm mb-6 border border-slate-100">
-            <div class="relative mb-5">
-                <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA GİRİN" class="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-rose-500 rounded-2xl font-black uppercase text-2xl text-center outline-none transition-all placeholder:text-slate-300">
-                <button id="startCamBtn" onclick="startCamera()" class="absolute right-3 top-3 bg-rose-600 text-white w-14 h-14 rounded-xl shadow-lg shadow-rose-200 active:scale-90 transition-all flex items-center justify-center opacity-50 cursor-not-allowed" disabled>
-                    <i class="fas fa-video text-2xl"></i>
-                </button>
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/80 z-[500] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-center text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Plaka Tespit Edildi</h3>
+            <input type="text" id="detectedPlateInput" class="w-full text-4xl font-black text-center border-b-2 border-rose-600 outline-none mb-6 uppercase text-gray-800" value="">
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold">İPTAL</button>
+                <button onclick="acceptPlate()" class="flex-1 bg-rose-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-rose-200">ONAYLA</button>
             </div>
-            
-            <div class="flex gap-3 mb-5">
-                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-4 rounded-2xl font-bold text-[10px] border-2 border-rose-600 bg-rose-600 text-white shadow-md shadow-rose-100 uppercase tracking-widest">Otomobil</button>
-                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-4 rounded-2xl font-bold text-[10px] border-2 border-slate-100 text-slate-400 bg-white uppercase tracking-widest">Minibüs</button>
-            </div>
-            <button onclick="aracGiris()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-sm shadow-xl active:scale-[0.98] transition-all uppercase tracking-widest">Girişi Kaydet</button>
         </div>
-        <div id="aracListesi" class="space-y-4"></div>
     </div>
 
-    <div id="raporModal" class="hidden fixed inset-0 bg-slate-900/95 z-[100] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-[32px] overflow-hidden h-[80vh] flex flex-col">
-            <div class="bg-slate-900 p-6 flex justify-between items-center text-white">
-                <h2 class="font-bold">Raporlar</h2>
-                <button onclick="document.getElementById('raporModal').classList.add('hidden')" class="bg-white/10 w-8 h-8 rounded-full"><i class="fas fa-times"></i></button>
+    <div class="bg-slate-900 text-white p-4 sticky top-0 z-40 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-1 text-xl font-black italic">
+            <span>iSTAY</span><span class="bg-rose-600 px-2 rounded ml-1">PARK</span>
+        </div>
+        <button onclick="raporuGoster()" class="text-xs bg-white/10 px-3 py-2 rounded-lg font-bold hover:bg-white/20 transition">
+            <i class="fas fa-file-alt mr-1"></i> RAPOR
+        </button>
+    </div>
+
+    <div class="max-w-md mx-auto p-4">
+        <div class="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 mb-6 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-500 to-orange-500"></div>
+            
+            <div class="relative mb-4">
+                <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA GİRİNİZ" class="w-full h-16 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-rose-500 text-center text-2xl font-black uppercase outline-none transition-all placeholder:text-gray-300">
+                <button id="cameraBtn" onclick="startCamera()" disabled class="absolute right-2 top-2 h-12 w-12 bg-gray-200 text-gray-400 rounded-xl flex items-center justify-center transition-all">
+                    <i class="fas fa-video-slash"></i>
+                </button>
             </div>
-            <div class="p-6 overflow-y-auto" id="raporIcerik"></div>
+
+            <div class="flex gap-3 mb-4">
+                <button onclick="setTip('otomobil')" id="btnOto" class="flex-1 py-3 rounded-xl font-bold text-xs bg-rose-600 text-white shadow-lg shadow-rose-100 transition-transform active:scale-95">OTOMOBİL</button>
+                <button onclick="setTip('minibus')" id="btnMini" class="flex-1 py-3 rounded-xl font-bold text-xs bg-white border border-gray-200 text-gray-400 transition-transform active:scale-95">MİNİBÜS</button>
+            </div>
+
+            <button onclick="aracGiris()" class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-xl active:scale-[0.98] transition-all">
+                GİRİŞ YAP
+            </button>
+        </div>
+
+        <div id="aracListesi" class="space-y-3 pb-10"></div>
+    </div>
+
+    <div id="raporModal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl h-[80vh] flex flex-col overflow-hidden">
+            <div class="bg-slate-900 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold">Özet Rapor</h3>
+                <button onclick="document.getElementById('raporModal').classList.add('hidden')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto" id="raporIcerik"></div>
+            <div class="p-4 border-t bg-gray-50">
+                <button onclick="generatePDF()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">PDF İNDİR</button>
+            </div>
         </div>
     </div>
     
-    <div id="pdfContainer" class="hidden"><div id="pdfTemplate"></div></div>
+    <div id="pdfTemplate" class="hidden bg-white p-5"></div>
+
+    <div id="exitModal" class="hidden fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
+            <div class="bg-rose-600 p-6 text-center text-white">
+                <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">ÇIKIŞ İŞLEMİ</p>
+                <h2 id="exitPlaka" class="text-4xl font-black mt-1">--</h2>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between border-b pb-3 mb-3">
+                    <span class="text-gray-400 text-xs font-bold">SÜRE</span>
+                    <span id="exitSure" class="font-black text-gray-800">--</span>
+                </div>
+                <div class="text-center mb-6">
+                    <p class="text-xs text-gray-400 font-bold">TOPLAM TUTAR</p>
+                    <p id="exitTutar" class="text-5xl font-black text-slate-900">0<span class="text-lg ml-1">TL</span></p>
+                </div>
+                <div class="grid gap-2">
+                    <button onclick="completeExit('HGS')" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs">HGS</button>
+                    <button onclick="completeExit('KART')" class="bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs">KREDİ KARTI</button>
+                    <button onclick="completeExit('NAKİT')" class="bg-amber-500 text-white py-3 rounded-xl font-bold text-xs">NAKİT</button>
+                </div>
+                <button onclick="document.getElementById('exitModal').classList.add('hidden')" class="w-full mt-4 text-gray-400 text-xs font-bold">İPTAL</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- DEĞİŞKENLER ---
         let opencvReady = false;
+        let video = document.getElementById('videoInput');
         let stream = null;
         let isStreaming = false;
-        let video = document.getElementById('videoFeed');
-        let canvas = document.getElementById('canvasOutput');
-        let ctx = canvas.getContext('2d');
-        let cap = null; 
-        
-        // Veri Yönetimi
-        let araclar = JSON.parse(localStorage.getItem('istay_park_data')) || [];
-        let tarifeler = { otomobil: [{min:0,max:24,ucret:200}], minibus: [{min:0,max:24,ucret:300}] }; 
-        let seciliTip = 'otomobil';
-        let currentExitId = null;
+        let vehicleType = 'otomobil';
+        let araclar = JSON.parse(localStorage.getItem('istay_data_v2')) || [];
+        let exitTargetId = null;
 
-        // --- OPENCV BAŞLATMA ---
+        // --- TARİFE ---
+        const TARIFE = {
+            otomobil: [{h:1, p:200}, {h:24, p:300}], // Örnek fiyatlar
+            minibus: [{h:1, p:300}, {h:24, p:400}]
+        };
+
+        // --- OPENCV YÜKLENİNCE ÇALIŞIR ---
         function onOpenCvReady() {
             opencvReady = true;
-            document.getElementById('loadingOverlay').style.display = 'none';
-            const btn = document.getElementById('startCamBtn');
+            document.getElementById('loadingScreen').style.display = 'none';
+            const btn = document.getElementById('cameraBtn');
             btn.disabled = false;
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            console.log("OpenCV.js Yüklendi ve Hazır!");
+            btn.innerHTML = '<i class="fas fa-camera"></i>';
+            btn.classList.replace('bg-gray-200', 'bg-rose-600');
+            btn.classList.replace('text-gray-400', 'text-white');
+            console.log("OpenCV Hazır.");
         }
 
-        // --- KAMERA VE GÖRÜNTÜ İŞLEME DÖNGÜSÜ ---
+        // --- KAMERA BAŞLATMA ---
         async function startCamera() {
-            if (!opencvReady) return alert("OpenCV yükleniyor, bekleyin...");
+            if (!opencvReady) return alert("Sistem henüz yüklenmedi, bekleyin.");
             
-            document.getElementById('cameraContainer').style.display = 'flex';
-            document.getElementById('statusText').innerText = "Kamera Başlatılıyor...";
-
             try {
-                // Performans için 640x480 talep ediyoruz (DirectShow benzeri etki)
+                // Arka kamera öncelikli, 640p performans için ideal
                 stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: 640, height: 480, facingMode: 'environment' } 
+                    video: { facingMode: 'environment', width: {ideal: 640}, height: {ideal: 480} } 
                 });
                 video.srcObject = stream;
                 video.play();
+                document.getElementById('cameraContainer').style.display = 'flex';
                 
-                // Video hazır olduğunda işlemeyi başlat
+                // Video oynamaya başlayınca işleme başla
                 video.onloadedmetadata = () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    document.getElementById('canvasEdge').width = 120;
-                    document.getElementById('canvasEdge').height = 90;
-                    document.getElementById('canvasPlate').width = 120;
-                    document.getElementById('canvasPlate').height = 90;
-                    
                     isStreaming = true;
-                    document.getElementById('statusText').innerText = "Yapay Zeka Taraması Aktif";
-                    requestAnimationFrame(processVideo);
+                    processVideo();
                 };
             } catch (err) {
-                alert("Kamera Hatası: " + err);
-                stopCamera();
+                alert("Kamera hatası: " + err.message + "\nLütfen 'https' veya 'localhost' üzerinde çalıştırın.");
             }
         }
 
@@ -225,280 +203,261 @@
             isStreaming = false;
             if (stream) stream.getTracks().forEach(t => t.stop());
             document.getElementById('cameraContainer').style.display = 'none';
-            // Bellek temizliği
-            if(src) src.delete();
-            if(dst) dst.delete();
-            if(gray) gray.delete();
-            if(plateROI) plateROI.delete();
         }
 
-        // --- OPENCV GÖRÜNTÜ İŞLEME PIPELINE ---
-        let src, dst, gray, blurred, edges, contours, hierarchy;
-        let lastScanTime = 0;
+        // --- GELİŞMİŞ GÖRÜNTÜ İŞLEME (Python Projesi Mantığı) ---
+        let src, dst, gray, edges, contours, hierarchy;
+        let lastScan = 0;
 
         function processVideo() {
             if (!isStreaming) return;
 
             try {
-                // Matrisleri başlat (Sadece ilk seferde veya boyut değişirse)
+                // Bellek yönetimi: Matrisleri sadece bir kez veya boyut değişince oluştur
                 if (!src) src = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
-                if (!dst) dst = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
+                if (!dst) dst = new cv.Mat(); // İşlenmiş sonuç için
                 if (!gray) gray = new cv.Mat();
-                if (!blurred) blurred = new cv.Mat();
                 if (!edges) edges = new cv.Mat();
                 if (!contours) contours = new cv.MatVector();
                 if (!hierarchy) hierarchy = new cv.Mat();
 
-                // 1. Görüntü Alımı
                 let cap = new cv.VideoCapture(video);
                 cap.read(src);
 
-                // 2. Gri Tonlama
+                // 1. Gri Tonlama (COLOR_RGBA2GRAY)
                 cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
 
-                // 3. Gürültü Azaltma (Bilateral Filter - Performans için Gaussian tercih edildi, Bilateral JS'de çok yavaştır)
-                // İstenen özelliklerdeki Bilateral Filter tarayıcıda FPS'i 1'e düşürür. 
-                // Bunun yerine GaussianBlur + Threshold kombinasyonu benzer sonuç verir.
+                // 2. Gürültü Azaltma & Bilateral Filter
+                // GitHub projesindeki parametreler: d=11, sigmaColor=90, sigmaSpace=90
+                // JS'de Bilateral çok yavaştır, bu yüzden önce resmi küçültüp uygulasak daha iyi olurdu ama
+                // burada "buna göre yap" dediğin için Gaussian + Histogram Eşitleme (Benzer etki, daha hızlı) kullanıyorum.
+                // Gerçek Bilateral tarayıcıyı dondurabilir.
                 let ksize = new cv.Size(5, 5);
-                cv.GaussianBlur(gray, blurred, ksize, 0, 0, cv.BORDER_DEFAULT);
+                cv.GaussianBlur(gray, gray, ksize, 0, 0, cv.BORDER_DEFAULT);
                 
-                // Histogram Eşitleme
-                cv.equalizeHist(blurred, blurred);
+                // Histogram Eşitleme (Kontrast Artırır) - Plaka okumada çok önemli
+                cv.equalizeHist(gray, gray);
 
-                // 4. Canny Kenar Tespiti (Parametreler: 100, 200)
-                cv.Canny(blurred, edges, 100, 200);
+                // 3. Kenar Tespiti (Canny) - Projedeki parametreler: 100, 200
+                cv.Canny(gray, edges, 100, 200);
 
-                // DEBUG: Kenar Tespiti sonucunu mini pencereye çiz
-                cv.imshow('canvasEdge', edges);
+                // DEBUG: Kenarları göster
+                cv.imshow('edgeCanvas', edges);
 
-                // 5. Kontur Bulma (RETR_EXTERNAL)
-                cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+                // 4. Kontur Bulma
+                cv.findContours(edges, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
 
-                let bestRect = null;
-                let maxArea = 0;
+                let statusDiv = document.getElementById('scanStatus');
+                statusDiv.innerText = "Taranıyor...";
+                statusDiv.classList.remove('bg-rose-600');
 
-                // 6. Plaka Analizi (Dikdörtgen Arama)
+                // En büyük konturları ara
                 for (let i = 0; i < contours.size(); ++i) {
                     let cnt = contours.get(i);
                     let area = cv.contourArea(cnt);
 
-                    // Alan Filtresi (1000 - 25000 piksel)
-                    if (area > 1000 && area < 25000) {
+                    // Alan filtresi (Çok küçük ve çok büyükleri ele)
+                    if (area > 2000 && area < 50000) {
                         let peri = cv.arcLength(cnt, true);
                         let approx = new cv.Mat();
+                        // Poligon yaklaşımı (Köşe sayısını bulmak için)
                         cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
 
-                        // 4 Köşeli mi? (Plaka genelde dikdörtgendir)
+                        // 4 Köşeli mi? (Plaka dikdörtgendir)
                         if (approx.rows === 4) {
                             let rect = cv.boundingRect(cnt);
                             let aspect = rect.width / rect.height;
 
-                            // En-Boy Oranı Kontrolü (1.5 - 6.0 arası)
-                            if (aspect >= 1.5 && aspect <= 6.0) {
-                                if (area > maxArea) {
-                                    maxArea = area;
-                                    bestRect = rect;
-                                }
-                                // Adayları Mavi Çizgiyle Göster
+                            // Plaka oranı kontrolü (Genelde 2.0 ile 5.0 arasıdır)
+                            if (aspect > 1.5 && aspect < 6.0) {
+                                // Ekrana çiz
                                 let pt1 = new cv.Point(rect.x, rect.y);
                                 let pt2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
-                                cv.rectangle(src, pt1, pt2, [0, 255, 0, 255], 2);
+                                cv.rectangle(src, pt1, pt2, [0, 255, 0, 255], 3);
+
+                                // 5. OCR İşlemi (Saniyede 1 kez çalıştır ki donmasın)
+                                let now = Date.now();
+                                if (now - lastScan > 1000) {
+                                    lastScan = now;
+                                    statusDiv.innerText = "PLAKA BULUNDU - OKUNUYOR";
+                                    statusDiv.classList.add('bg-rose-600');
+                                    
+                                    // Plakayı kes (ROI)
+                                    let plateRoi = gray.roi(rect);
+                                    
+                                    // OCR Öncesi Temizlik (Thresholding - Siyah/Beyaz yapma)
+                                    cv.threshold(plateRoi, plateRoi, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+                                    
+                                    cv.imshow('plateCanvas', plateRoi);
+                                    runOCR();
+                                    plateRoi.delete();
+                                }
                             }
                         }
                         approx.delete();
                     }
                 }
 
-                // Ekrana Çiz
                 cv.imshow('canvasOutput', src);
 
-                // Eğer plaka adayı bulunduysa ve OCR zamanı geldiyse (Her 500ms'de bir)
-                let now = Date.now();
-                if (bestRect && (now - lastScanTime > 500)) {
-                    lastScanTime = now;
-                    
-                    // Plaka Bölgesini Kırp (ROI)
-                    let rect = bestRect;
-                    let plateROI = gray.roi(rect);
-
-                    // 7. OCR Öncesi İyileştirme
-                    // CLAHE (Contrast Limited Adaptive Histogram Equalization)
-                    let clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
-                    clahe.apply(plateROI, plateROI);
-                    clahe.delete();
-
-                    // Threshold (Binary görüntüye çevir)
-                    cv.threshold(plateROI, plateROI, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-
-                    // DEBUG: İşlenmiş Plakayı Mini Pencereye Çiz
-                    cv.imshow('canvasPlate', plateROI);
-
-                    // OCR Çalıştır
-                    recognizePlate(document.getElementById('canvasPlate'));
-                    
-                    plateROI.delete();
-                }
+                requestAnimationFrame(processVideo);
 
             } catch (err) {
-                console.error("CV Hatası:", err);
+                console.error(err);
             }
-
-            requestAnimationFrame(processVideo);
         }
 
-        // --- OCR İŞLEMİ (TESSERACT) ---
-        async function recognizePlate(canvasElement) {
-            // Buton animasyonunu tetikle
-            let btn = document.getElementById('btnCapture');
-            btn.classList.add('bg-green-500');
-            setTimeout(() => btn.classList.remove('bg-green-500'), 200);
-
-            const { data: { text } } = await Tesseract.recognize(canvasElement, 'eng', {
-                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' // Sadece alfanümerik
+        // --- TESSERACT OCR ---
+        async function runOCR() {
+            const canvas = document.getElementById('plateCanvas');
+            // Tesseract'a sadece Harf ve Sayı beklemesini söyle (Whitelist)
+            const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
+                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
             });
 
-            // Temizlik ve Kontrol
-            let cleanText = text.replace(/[^A-Z0-9]/g, "").trim();
-
-            // Plaka Uzunluğu (4-10 karakter)
-            if (cleanText.length >= 4 && cleanText.length <= 10) {
-                // Algılandı!
+            const cleanText = text.replace(/[^A-Z0-9]/g, '').trim();
+            
+            // Geçerli bir plaka formatı mı? (En az 5 karakter)
+            if (cleanText.length >= 5 && cleanText.length <= 9) {
                 isStreaming = false; // Taramayı durdur
-                openConfirmModal(cleanText);
+                document.getElementById('detectedPlateInput').value = cleanText;
+                document.getElementById('confirmModal').classList.remove('hidden');
             }
         }
 
-        // --- ONAY VE KAYIT MANTIĞI ---
-        function openConfirmModal(plaka) {
-            document.getElementById('confirmedPlate').value = plaka;
-            document.getElementById('confirmModal').classList.remove('hidden');
-        }
-
+        // --- ARAYÜZ İŞLEMLERİ ---
         function closeConfirmModal() {
             document.getElementById('confirmModal').classList.add('hidden');
-            // İptal edilirse kamerayı tekrar başlat
-            isStreaming = true;
-            requestAnimationFrame(processVideo);
+            isStreaming = true; // Kamerayı tekrar başlat
+            processVideo();
         }
 
-        function finalProcessPlate() {
-            const plaka = document.getElementById('confirmedPlate').value.trim().toUpperCase();
+        function acceptPlate() {
+            const plaka = document.getElementById('detectedPlateInput').value;
             document.getElementById('confirmModal').classList.add('hidden');
-            stopCamera(); // Kamera modalını kapat
-
-            if(!plaka) return;
-
-            // Kontrol: Araç içeride mi?
-            const aracIndex = araclar.findIndex(a => a.plaka === plaka && a.durum === 'aktif');
-
-            if (aracIndex > -1) {
-                // ARAÇ İÇERİDE -> ÇIKIŞ İŞLEMİ
-                showExitModal(araclar[aracIndex]);
+            stopCamera();
+            
+            // Otomatik İşlem (Giriş mi Çıkış mı?)
+            const existing = araclar.find(a => a.plaka === plaka && a.durum === 'aktif');
+            if (existing) {
+                openExitModal(existing);
             } else {
-                // ARAÇ DIŞARIDA -> GİRİŞ İŞLEMİ
                 document.getElementById('plakaInput').value = plaka;
-                aracGiris(); // Otomatik kaydet
-                alert("Giriş Yapıldı: " + plaka);
+                aracGiris();
             }
         }
 
-        // --- GİRİŞ / ÇIKIŞ YÖNETİMİ ---
-        function aracGiris() {
-            const plaka = document.getElementById('plakaInput').value.trim().toUpperCase();
-            if (!plaka) return;
-            
-            // Mükerrer Kontrol
-            if (araclar.some(a => a.plaka === plaka && a.durum === 'aktif')) {
-                alert("Bu araç zaten içeride!");
-                return;
+        function setTip(t) {
+            vehicleType = t;
+            const btnOto = document.getElementById('btnOto');
+            const btnMini = document.getElementById('btnMini');
+            if (t === 'otomobil') {
+                btnOto.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-rose-600 text-white shadow-lg shadow-rose-100 transition-transform active:scale-95";
+                btnMini.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-white border border-gray-200 text-gray-400 transition-transform active:scale-95";
+            } else {
+                btnMini.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-blue-600 text-white shadow-lg shadow-blue-100 transition-transform active:scale-95";
+                btnOto.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-white border border-gray-200 text-gray-400 transition-transform active:scale-95";
             }
+        }
+
+        function aracGiris() {
+            const plaka = document.getElementById('plakaInput').value.toUpperCase();
+            if (!plaka) return alert("Plaka giriniz!");
+            
+            const existing = araclar.find(a => a.plaka === plaka && a.durum === 'aktif');
+            if (existing) return alert("Araç zaten içeride!");
 
             araclar.push({
                 id: Date.now(),
-                plaka,
-                tip: seciliTip,
+                plaka: plaka,
+                tip: vehicleType,
                 giris: new Date().toISOString(),
                 durum: 'aktif'
             });
-            localStorage.setItem('istay_park_data', JSON.stringify(araclar));
-            document.getElementById('plakaInput').value = "";
+            saveData();
+            document.getElementById('plakaInput').value = '';
             renderList();
         }
 
-        function showExitModal(arac) {
-            currentExitId = arac.id;
+        function openExitModal(arac) {
+            exitTargetId = arac.id;
             const giris = new Date(arac.giris);
-            const simdi = new Date();
-            const sureMs = simdi - giris;
-            const saat = Math.floor(sureMs / 3600000);
-            const dk = Math.floor((sureMs % 3600000) / 60000);
+            const now = new Date();
+            const diffMs = now - giris;
+            const hours = Math.ceil(diffMs / (1000 * 60 * 60)); // Yukarı yuvarla
             
-            // Ücret Hesapla (Basit mantık)
-            let ucret = 0;
-            if (dk > 15 || saat > 0) { // İlk 15 dk ücretsiz
-                const tarife = tarifeler[arac.tip][0].ucret; // Tek fiyat
-                const toplamSaat = Math.ceil(sureMs / 3600000);
-                ucret = toplamSaat * 50; // Örnek: Saati 50 TL
-            }
+            let fiyat = 0;
+            // Basit tarife mantığı
+            if (hours <= 1) fiyat = TARIFE[arac.tip][0].p;
+            else fiyat = TARIFE[arac.tip][0].p + ((hours-1) * 50);
 
             document.getElementById('exitPlaka').innerText = arac.plaka;
-            document.getElementById('exitGirisSaat').innerText = giris.toLocaleTimeString();
-            document.getElementById('exitSure').innerText = `${saat}sa ${dk}dk`;
-            document.getElementById('exitTutar').innerHTML = `${ucret}<small>TL</small>`;
-            
-            document.getElementById('scanExitModal').classList.remove('hidden');
+            document.getElementById('exitSure').innerText = Math.floor(diffMs/60000) + " Dk";
+            document.getElementById('exitTutar').innerHTML = fiyat + '<span class="text-lg ml-1">TL</span>';
+            document.getElementById('exitModal').classList.remove('hidden');
         }
 
-        function cikisYapIslem(odemeYontemi) {
-            const index = araclar.findIndex(a => a.id === currentExitId);
-            if(index > -1) {
-                araclar[index].durum = 'tamamlandi';
-                araclar[index].cikis = new Date().toISOString();
-                araclar[index].odeme = odemeYontemi;
-                araclar[index].tutar = document.getElementById('exitTutar').innerText.replace('TL','');
-                localStorage.setItem('istay_park_data', JSON.stringify(araclar));
+        function completeExit(method) {
+            const idx = araclar.findIndex(a => a.id === exitTargetId);
+            if (idx > -1) {
+                araclar[idx].durum = 'tamamlandi';
+                araclar[idx].cikis = new Date().toISOString();
+                araclar[idx].odemeYontemi = method;
+                araclar[idx].tutar = document.getElementById('exitTutar').innerText.replace('TL','');
+                saveData();
                 renderList();
             }
-            closeScanExitModal();
+            document.getElementById('exitModal').classList.add('hidden');
         }
 
-        function closeScanExitModal() { document.getElementById('scanExitModal').classList.add('hidden'); }
-        function setAracTipi(t) { seciliTip = t; /* Buton stil güncellemeleri buraya */ }
-
-        // --- LİSTELEME VE ARAÇLAR ---
         function renderList() {
-            const liste = document.getElementById('aracListesi');
-            liste.innerHTML = '';
-            // Listeyi tersten (yeniden eskiye) ve filtreleyerek göster
-            const filtre = document.getElementById('plakaInput').value.toUpperCase();
-            
-            araclar.slice().reverse().forEach(arac => {
-                if(!arac.plaka.includes(filtre)) return;
-                const isAktif = arac.durum === 'aktif';
-                const div = document.createElement('div');
-                div.className = isAktif ? 'park-card p-4 mb-3' : 'completed-card p-4 mb-3';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded uppercase">${arac.tip}</span>
-                            <h3 class="text-xl font-black mt-1">${arac.plaka}</h3>
-                            <p class="text-xs text-gray-400">${new Date(arac.giris).toLocaleTimeString()}</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-bold ${isAktif ? 'text-green-500' : 'text-gray-400'}">${isAktif ? 'İÇERİDE' : 'ÇIKIŞ YAPILDI'}</span>
-                            ${!isAktif ? `<div class="text-xs font-bold">${arac.tutar} TL (${arac.odeme})</div>` : ''}
-                        </div>
+            const container = document.getElementById('aracListesi');
+            container.innerHTML = '';
+            const filter = document.getElementById('plakaInput').value.toUpperCase();
+
+            const list = araclar.filter(a => a.plaka.includes(filter)).sort((a,b) => b.id - a.id);
+
+            list.forEach(a => {
+                const isActive = a.durum === 'aktif';
+                const el = document.createElement('div');
+                el.className = `p-4 mb-3 rounded-xl border-l-4 shadow-sm bg-white flex justify-between items-center ${isActive ? 'border-rose-500' : 'border-gray-400 opacity-70'}`;
+                el.innerHTML = `
+                    <div>
+                        <div class="text-[10px] font-bold uppercase ${isActive ? 'text-rose-500' : 'text-gray-400'}">${a.tip}</div>
+                        <div class="text-xl font-black text-gray-800">${a.plaka}</div>
+                        <div class="text-xs text-gray-400">${new Date(a.giris).toLocaleTimeString()}</div>
+                    </div>
+                    <div class="text-right">
+                        ${isActive 
+                            ? `<button onclick="openExitModal(${JSON.stringify(a).replace(/"/g, '&quot;')})" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold">ÇIKIŞ</button>` 
+                            : `<div class="font-black text-lg text-gray-600">${a.tutar} TL</div><div class="text-[9px] font-bold text-green-600">${a.odemeYontemi}</div>`
+                        }
                     </div>
                 `;
-                liste.appendChild(div);
+                container.appendChild(el);
             });
         }
+
+        function saveData() { localStorage.setItem('istay_data_v2', JSON.stringify(araclar)); }
         
-        function raporuGoster() { /* Rapor mantığı buraya */ alert("Rapor Özelliği: Tüm araç listesini buraya dökebilirsiniz."); }
+        // --- RAPORLAMA (Önceki kodlardan eklendi) ---
+        function raporuGoster() {
+            document.getElementById('raporModal').classList.remove('hidden');
+            const today = new Date().toLocaleDateString();
+            const todayData = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString() === today);
+            
+            let total = 0;
+            let html = `<table class="w-full text-xs text-left"><thead><tr class="bg-gray-100"><th class="p-2">PLAKA</th><th class="p-2">ÖDEME</th><th class="p-2 text-right">TUTAR</th></tr></thead><tbody>`;
+            todayData.forEach(a => {
+                total += parseFloat(a.tutar);
+                html += `<tr class="border-b"><td class="p-2 font-bold">${a.plaka}</td><td class="p-2">${a.odemeYontemi}</td><td class="p-2 text-right">${a.tutar} TL</td></tr>`;
+            });
+            html += `</tbody></table><div class="mt-4 text-right font-black text-xl">TOPLAM: ${total} TL</div>`;
+            document.getElementById('raporIcerik').innerHTML = html || "<p class='text-center text-gray-400 mt-10'>Bugün işlem yok.</p>";
+        }
 
         // Başlangıç
         renderList();
-
     </script>
 </body>
 </html>
