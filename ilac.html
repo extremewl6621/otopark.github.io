@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>İlaç Rehberim Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --success: #2e7d32;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #212529;
+            --border: #dee2e6;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e9ecef;
+            --border: #333333;
+            --shadow: rgba(0, 0, 0, 0.4);
+        }
+
+        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body { 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container { width: 100%; max-width: 480px; }
+
+        .data-panel {
+            display: flex;
+            justify-content: space-between;
+            background: var(--card);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px var(--shadow);
+            margin-bottom: 15px;
+            gap: 8px;
+        }
+
+        .panel-btn {
+            flex: 1;
+            padding: 8px 5px;
+            border: none;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: white;
+        }
+
+        .export-btn { background-color: #0288d1; }
+        .import-btn { background-color: #7b1fa2; }
+        .reset-btn { background-color: #c62828; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .setup-card { 
+            background: var(--card); 
+            padding: 20px; 
+            border-radius: 15px; 
+            margin-bottom: 25px;
+            box-shadow: 0 8px 16px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .input-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .input-group { flex: 1; min-width: 120px; }
+        
+        label { font-size: 11px; font-weight: 800; color: var(--primary); display: block; margin-bottom: 5px; text-transform: uppercase; }
+
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid var(--border); 
+            border-radius: 10px; 
+            font-size: 14px;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+        }
+
+        input:focus { border-color: var(--primary); background: var(--card); }
+
+        .btn-update { 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 10px; 
+            width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);
+        }
+
+        .med-card {
+            background: var(--card);
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid var(--primary);
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        .med-card.completed {
+            border-left-color: var(--success);
+            opacity: 0.5;
+            background-color: #f1f1f1;
+        }
+        [data-theme="dark"] .med-card.completed { background-color: #252525; }
+
+        .med-info b { display: block; font-size: 17px; margin-bottom: 4px; }
+        .med-info span { font-size: 13px; color: #888; }
+        .med-time { color: var(--primary); font-weight: bold; font-size: 14px; margin-top: 3px; display: block; }
+
+        .check-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .completed .check-btn {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        #fileInput { display: none; }
+    </style>
+</head>
+<body data-theme="light">
+
+<div class="container">
+    <div class="data-panel">
+        <button class="panel-btn export-btn" onclick="exportData()">
+            <i class="fas fa-file-export"></i> DIŞA AKTAR
+        </button>
+        <button class="panel-btn import-btn" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-file-import"></i> İÇE AKTAR
+        </button>
+        <button class="panel-btn reset-btn" onclick="clearAll()">
+            <i class="fas fa-trash-alt"></i> SIFIRLA
+        </button>
+        <input type="file" id="fileInput" onchange="importData(event)" accept=".json">
+    </div>
+
+    <div class="header">
+        <h2 style="margin:0; color: var(--primary);"><i class="fas fa-heartbeat"></i> İlaç Takibi</h2>
+        <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-adjust"></i></button>
+    </div>
+    
+    <div class="setup-card">
+        <div class="input-row">
+            <div class="input-group">
+                <label>7 GÜNLÜK İLAÇ ADI</label>
+                <input type="text" id="name7" value="7 Günlük Hap" 
+                       onfocus="if(this.value=='7 Günlük Hap') this.value='';" 
+                       onblur="if(this.value=='') this.value='7 Günlük Hap';">
+            </div>
+            <div class="input-group">
+                <label>SON TARİH</label>
+                <input type="date" id="date7">
+            </div>
+            <div class="input-group" style="min-width: 80px;">
+                <label>SAAT</label>
+                <input type="time" id="time7" value="09:00">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label>10 GÜNLÜK İLAÇ ADI</label>
+                <input type="text" id="name10" value="10 Günlük Sürme" 
+                       onfocus="if(this.value=='10 Günlük Sürme') this.value='';" 
+                       onblur="if(this.value=='') this.value='10 Günlük Sürme';">
+            </div>
+            <div class="input-group">
+                <label>SON TARİH</label>
+                <input type="date" id="date10">
+            </div>
+            <div class="input-group" style="min-width: 80px;">
+                <label>SAAT</label>
+                <input type="time" id="time10" value="21:00">
+            </div>
+        </div>
+
+        <label>TAKİP SÜRESİ (AY)</label>
+        <select id="months">
+            <option value="3">3 Aylık Liste</option>
+            <option value="6">6 Aylık Liste</option>
+            <option value="9">9 Aylık Liste</option>
+        </select>
+        
+        <button class="btn-update" onclick="generateSchedule()"><i class="fas fa-calendar-plus"></i> TAKVİMİ OLUŞTUR</button>
+    </div>
+
+    <div id="listContainer"></div>
+</div>
+
+<script>
+    window.onload = function() {
+        if(localStorage.getItem('theme') === 'dark') toggleTheme();
+        loadSettings();
+        if(localStorage.getItem('medList')) renderList();
+    };
+
+    function toggleTheme() {
+        const body = document.body;
+        const current = body.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    }
+
+    function generateSchedule() {
+        const settings = {
+            n7: document.getElementById('name7').value,
+            d7: document.getElementById('date7').value,
+            t7: document.getElementById('time7').value,
+            n10: document.getElementById('name10').value,
+            d10: document.getElementById('date10').value,
+            t10: document.getElementById('time10').value,
+            m: document.getElementById('months').value
+        };
+        
+        if (!settings.d7 || !settings.d10) { alert("Lütfen başlangıç tarihlerini seçin!"); return; }
+        
+        localStorage.setItem('medSettings', JSON.stringify(settings));
+
+        let schedule = [];
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + parseInt(settings.m));
+
+        let c7 = new Date(settings.d7);
+        c7.setDate(c7.getDate() + 7);
+        while(c7 <= endDate) {
+            schedule.push({ id: '7_'+c7.getTime(), name: settings.n7, date: new Date(c7).toISOString(), time: settings.t7, done: false });
+            c7.setDate(c7.getDate() + 7);
+        }
+
+        let c10 = new Date(settings.d10);
+        c10.setDate(c10.getDate() + 10);
+        while(c10 <= endDate) {
+            schedule.push({ id: '10_'+c10.getTime(), name: settings.n10, date: new Date(c10).toISOString(), time: settings.t10, done: false });
+            c10.setDate(c10.getDate() + 10);
+        }
+
+        schedule.sort((a,b) => new Date(a.date) - new Date(b.date));
+        localStorage.setItem('medList', JSON.stringify(schedule));
+        renderList();
+    }
+
+    function renderList() {
+        const list = JSON.parse(localStorage.getItem('medList'));
+        const container = document.getElementById('listContainer');
+        container.innerHTML = `<h3 style="margin-left:10px;"><i class="fas fa-list-ul"></i> Kullanım Takvimi</h3>`;
+
+        list.forEach((item, index) => {
+            const dt = new Date(item.date);
+            const dateStr = dt.toLocaleDateString('tr-TR', { day:'numeric', month:'long', weekday:'long' });
+            
+            const card = document.createElement('div');
+            card.className = `med-card ${item.done ? 'completed' : ''}`;
+            card.innerHTML = `
+                <div class="med-info">
+                    <b>${item.name}</b>
+                    <span>${dateStr}</span>
+                    <span class="med-time"><i class="far fa-clock"></i> ${item.time}</span>
+                </div>
+                <div class="check-btn" onclick="toggleItem(${index})">
+                    ${item.done ? '<i class="fas fa-check"></i>' : ''}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function toggleItem(index) {
+        let list = JSON.parse(localStorage.getItem('medList'));
+        list[index].done = !list[index].done;
+        localStorage.setItem('medList', JSON.stringify(list));
+        renderList();
+    }
+
+    function loadSettings() {
+        const s = JSON.parse(localStorage.getItem('medSettings'));
+        if(s) {
+            document.getElementById('name7').value = s.n7;
+            document.getElementById('date7').value = s.d7;
+            document.getElementById('time7').value = s.t7;
+            document.getElementById('name10').value = s.n10;
+            document.getElementById('date10').value = s.d10;
+            document.getElementById('time10').value = s.t10;
+            document.getElementById('months').value = s.m;
+        }
+    }
+
+    function exportData() {
+        const data = {
+            medList: localStorage.getItem('medList'),
+            medSettings: localStorage.getItem('medSettings')
+        };
+        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ilac_takibi_yedek.json';
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = JSON.parse(e.target.result);
+            localStorage.setItem('medList', data.medList);
+            localStorage.setItem('medSettings', data.medSettings);
+            location.reload();
+        };
+        reader.readAsText(file);
+    }
+
+    function clearAll() {
+        if(confirm("Tüm döküm ve ayarlar sıfırlanacak. Emin misiniz?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
