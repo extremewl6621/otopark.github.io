@@ -2,462 +2,252 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iSTAY PARK PRO - AI Plaka Tanıma</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iSTAY PARK PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()" type="text/javascript"></script>
-
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .park-card { border-left: 6px solid #e11d48; border-radius: 16px; background: white; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .completed-card { border-left: 6px solid #94a3b8; opacity: 0.8; background: #f8fafc; }
+        body { background-color: #f4f4f4; font-family: sans-serif; }
+        .park-card { border-left: 6px solid #e11d48; border-radius: 12px; transition: all 0.3s; position: relative; background: white; }
+        .completed-card { border-left: 6px solid #9ca3af; opacity: 0.8; }
+        .header-banner { background-color: #1a1a1a; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .logo-wrapper { display: flex; align-items: center; gap: 2px; color: white; font-weight: 800; font-size: 20px; }
+        .logo-p-badge { background-color: #e11d48; color: white; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin: 0 2px; font-style: italic; }
         
-        /* Kamera ve Canvas Stilleri */
-        #cameraContainer { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; }
-        #canvasOutput { width: 100%; height: 100%; object-fit: contain; }
-        /* İşlemler ağır olduğu için video elementini gizliyoruz, sonucu canvas'a çiziyoruz */
-        #videoInput { display: none; }
-
-        /* Yükleme Ekranı */
-        #loadingScreen { position: fixed; inset: 0; background: white; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        
-        /* Debug Pencereleri (Sağ Alt) */
-        .debug-box { position: absolute; bottom: 20px; right: 20px; width: 140px; height: 100px; background: #222; border: 2px solid #fff; border-radius: 8px; overflow: hidden; z-index: 10001; }
-        .debug-box canvas { width: 100%; height: 100%; object-fit: contain; }
-        .debug-label { position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.7); color: #0f0; font-size: 10px; padding: 2px 4px; }
+        /* PDF Gelişmiş Tasarım */
+        #pdfTemplate { width: 100%; background: white; padding: 20px; color: black; display: none; } /* Normalde gizli */
+        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .pdf-table th { background: #1a1a1a; color: white; border: 1px solid #333; padding: 10px; text-align: left; font-size: 12px; }
+        .pdf-table td { border: 1px solid #ddd; padding: 8px; font-size: 11px; }
     </style>
 </head>
 <body class="pb-20">
 
-    <div id="loadingScreen">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-rose-600 mb-4"></div>
-        <h2 class="text-2xl font-bold text-gray-800">Sistem Başlatılıyor...</h2>
-        <p class="text-gray-500 mt-2">Yapay zeka modelleri ve OpenCV kütüphanesi yükleniyor.</p>
-        <p class="text-xs text-gray-400 mt-4">Bu işlem internet hızınıza göre 5-10 saniye sürebilir.</p>
+    <div class="header-banner no-print">
+        <div class="logo-wrapper">
+            <span class="italic">iSTAY</span>
+            <div class="logo-p-badge">P</div>
+            <span class="italic">ARK</span>
+        </div>
+        <button onclick="raporuGoster()" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg active:scale-95"><i class="fas fa-chart-pie mr-1"></i> RAPORLAR</button>
     </div>
 
-    <div id="cameraContainer">
-        <video id="videoInput" playsinline muted></video>
-        <canvas id="canvasOutput"></canvas>
-
-        <div class="debug-box" style="bottom: 130px;">
-            <canvas id="plateCanvas"></canvas>
-            <span class="debug-label">OCR GİRİŞİ (Binarize)</span>
-        </div>
-        <div class="debug-box">
-            <canvas id="edgeCanvas"></canvas>
-            <span class="debug-label">KENAR TESPİTİ (Canny)</span>
-        </div>
-
-        <div class="absolute top-10 left-0 right-0 flex justify-center">
-            <div id="scanStatus" class="bg-black/70 text-white px-6 py-2 rounded-full font-bold text-sm backdrop-blur-md border border-white/20">
-                Kamera Bekleniyor...
+    <div id="pdfContainer">
+        <div id="pdfTemplate">
+            <div style="border-bottom: 5px solid #e11d48; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="font-size: 28px; font-weight: 900; margin: 0;">iSTAY PARK ÖZETİ</h1>
+                <p id="pdfDate" style="margin: 5px 0; color: #444; font-weight: bold;"></p>
             </div>
+            <table class="pdf-table">
+                <thead>
+                    <tr>
+                        <th>PLAKA</th><th>ARAÇ TİPİ</th><th>GİRİŞ SAATİ</th><th>ÇIKIŞ SAATİ</th><th>ÖDEME</th><th>TUTAR</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfBody"></tbody>
+            </table>
+            <div id="pdfSummaryArea" style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px;"></div>
         </div>
-
-        <button onclick="stopCamera()" class="absolute bottom-10 left-10 w-14 h-14 bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/30">
-            <i class="fas fa-times text-xl"></i>
-        </button>
-    </div>
-
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black/80 z-[500] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
-            <h3 class="text-center text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Plaka Tespit Edildi</h3>
-            <input type="text" id="detectedPlateInput" class="w-full text-4xl font-black text-center border-b-2 border-rose-600 outline-none mb-6 uppercase text-gray-800" value="">
-            <div class="flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold">İPTAL</button>
-                <button onclick="acceptPlate()" class="flex-1 bg-rose-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-rose-200">ONAYLA</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-slate-900 text-white p-4 sticky top-0 z-40 flex justify-between items-center shadow-md">
-        <div class="flex items-center gap-1 text-xl font-black italic">
-            <span>iSTAY</span><span class="bg-rose-600 px-2 rounded ml-1">PARK</span>
-        </div>
-        <button onclick="raporuGoster()" class="text-xs bg-white/10 px-3 py-2 rounded-lg font-bold hover:bg-white/20 transition">
-            <i class="fas fa-file-alt mr-1"></i> RAPOR
-        </button>
     </div>
 
     <div class="max-w-md mx-auto p-4">
-        <div class="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 mb-6 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-500 to-orange-500"></div>
-            
-            <div class="relative mb-4">
-                <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA GİRİNİZ" class="w-full h-16 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-rose-500 text-center text-2xl font-black uppercase outline-none transition-all placeholder:text-gray-300">
-                <button id="cameraBtn" onclick="startCamera()" disabled class="absolute right-2 top-2 h-12 w-12 bg-gray-200 text-gray-400 rounded-xl flex items-center justify-center transition-all">
-                    <i class="fas fa-video-slash"></i>
-                </button>
-            </div>
-
+        <div class="bg-white rounded-2xl p-5 shadow-sm mb-6 no-print">
+            <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA GİRİN VEYA ARA" class="w-full px-4 py-4 border-2 border-gray-100 rounded-2xl font-black uppercase text-2xl mb-4 text-center focus:border-rose-500 outline-none transition-all">
             <div class="flex gap-3 mb-4">
-                <button onclick="setTip('otomobil')" id="btnOto" class="flex-1 py-3 rounded-xl font-bold text-xs bg-rose-600 text-white shadow-lg shadow-rose-100 transition-transform active:scale-95">OTOMOBİL</button>
-                <button onclick="setTip('minibus')" id="btnMini" class="flex-1 py-3 rounded-xl font-bold text-xs bg-white border border-gray-200 text-gray-400 transition-transform active:scale-95">MİNİBÜS</button>
+                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white transition">OTOMOBİL</button>
+                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500 transition">MİNİBÜS</button>
             </div>
-
-            <button onclick="aracGiris()" class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-xl active:scale-[0.98] transition-all">
-                GİRİŞ YAP
-            </button>
+            <button onclick="aracGiris()" class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition">GİRİŞİ KAYDET</button>
         </div>
-
-        <div id="aracListesi" class="space-y-3 pb-10"></div>
+        <div id="aracListesi" class="space-y-4"></div>
     </div>
 
-    <div id="raporModal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl h-[80vh] flex flex-col overflow-hidden">
-            <div class="bg-slate-900 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold">Özet Rapor</h3>
-                <button onclick="document.getElementById('raporModal').classList.add('hidden')"><i class="fas fa-times"></i></button>
+    <div id="raporModal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-end sm:items-center justify-center no-print">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[95vh] flex flex-col">
+            <div class="bg-zinc-900 p-6 text-white flex justify-between items-center">
+                <h2 id="modalTitle" class="font-black text-xl">Finansal Özet</h2>
+                <div class="flex gap-2">
+                    <button onclick="generatePDF()" class="bg-green-600 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg active:scale-90"><i class="fas fa-file-pdf text-xl"></i></button>
+                    <button onclick="raporuKapat()" class="bg-zinc-800 w-12 h-12 rounded-2xl flex items-center justify-center active:scale-90"><i class="fas fa-times"></i></button>
+                </div>
             </div>
-            <div class="p-4 overflow-y-auto" id="raporIcerik"></div>
-            <div class="p-4 border-t bg-gray-50">
-                <button onclick="generatePDF()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">PDF İNDİR</button>
+            
+            <div class="overflow-y-auto flex-1 p-4 bg-gray-50">
+                <div id="raporGorunumu">
+                    <div id="ozetKartlari" class="grid grid-cols-3 gap-2 mb-6"></div>
+                    <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+                        <h3 class="text-[10px] font-black text-gray-400 mb-3 uppercase tracking-wider">İşlem Geçmişi</h3>
+                        <div id="raporTablo" class="space-y-2 max-h-60 overflow-auto"></div>
+                    </div>
+                    <div id="netCiroBox" class="bg-zinc-900 rounded-2xl p-5 text-white flex justify-between items-center shadow-2xl"></div>
+                </div>
+
+                <div id="tarifeGorunumu" class="hidden">
+                    <div id="oto_fiyat_list" class="grid grid-cols-2 gap-2 mb-6"></div>
+                    <div id="mini_fiyat_list" class="grid grid-cols-2 gap-2 mb-6"></div>
+                    <button onclick="tarifeleriKaydet()" class="w-full bg-zinc-900 text-white py-4 rounded-xl font-black uppercase mb-4">Fiyatları Uygula</button>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-2">
+                    <button id="btnTarife" onclick="toggleView('tarife')" class="bg-white border py-3 rounded-xl font-bold text-[10px] uppercase">Fiyat Düzenle</button>
+                    <button onclick="raporuSifirla()" class="bg-rose-50 text-rose-600 border border-rose-100 py-3 rounded-xl font-bold text-[10px] uppercase">Sistemi Sıfırla</button>
+                    <button onclick="veriyiDisaAktar()" class="bg-zinc-800 text-white py-3 rounded-xl font-bold text-[10px] uppercase">Yedek Al</button>
+                    <label class="bg-zinc-100 text-zinc-600 py-3 rounded-xl font-bold text-[10px] uppercase text-center cursor-pointer border border-zinc-200">
+                        Yedek Yükle
+                        <input type="file" id="importFile" class="hidden" onchange="veriyiIceriAktar(event)">
+                    </label>
+                </div>
             </div>
         </div>
     </div>
-    
-    <div id="pdfTemplate" class="hidden bg-white p-5"></div>
 
-    <div id="exitModal" class="hidden fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
-            <div class="bg-rose-600 p-6 text-center text-white">
-                <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">ÇIKIŞ İŞLEMİ</p>
-                <h2 id="exitPlaka" class="text-4xl font-black mt-1">--</h2>
-            </div>
-            <div class="p-6">
-                <div class="flex justify-between border-b pb-3 mb-3">
-                    <span class="text-gray-400 text-xs font-bold">SÜRE</span>
-                    <span id="exitSure" class="font-black text-gray-800">--</span>
-                </div>
-                <div class="text-center mb-6">
-                    <p class="text-xs text-gray-400 font-bold">TOPLAM TUTAR</p>
-                    <p id="exitTutar" class="text-5xl font-black text-slate-900">0<span class="text-lg ml-1">TL</span></p>
-                </div>
-                <div class="grid gap-2">
-                    <button onclick="completeExit('HGS')" class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs">HGS</button>
-                    <button onclick="completeExit('KART')" class="bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs">KREDİ KARTI</button>
-                    <button onclick="completeExit('NAKİT')" class="bg-amber-500 text-white py-3 rounded-xl font-bold text-xs">NAKİT</button>
-                </div>
-                <button onclick="document.getElementById('exitModal').classList.add('hidden')" class="w-full mt-4 text-gray-400 text-xs font-bold">İPTAL</button>
+    <div id="editModal" class="hidden fixed inset-0 bg-black/80 z-[70] flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl">
+            <h3 class="font-black text-zinc-800 mb-4 text-center uppercase">Giriş Düzelt</h3>
+            <input type="datetime-local" id="editDateTime" class="w-full border-2 border-gray-100 rounded-2xl p-4 mb-4 font-bold outline-none focus:border-rose-500">
+            <div class="flex gap-2">
+                <button onclick="closeEditModal()" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold text-gray-400 uppercase text-xs">İptal</button>
+                <button id="saveEditBtn" class="flex-1 py-4 bg-zinc-900 rounded-2xl font-bold text-white uppercase text-xs shadow-lg">Güncelle</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- DEĞİŞKENLER ---
-        let opencvReady = false;
-        let video = document.getElementById('videoInput');
-        let stream = null;
-        let isStreaming = false;
-        let vehicleType = 'otomobil';
-        let araclar = JSON.parse(localStorage.getItem('istay_data_v2')) || [];
-        let exitTargetId = null;
-
-        // --- TARİFE ---
-        const TARIFE = {
-            otomobil: [{h:1, p:200}, {h:24, p:300}], // Örnek fiyatlar
-            minibus: [{h:1, p:300}, {h:24, p:400}]
+        let varsayilanTarife = {
+            otomobil: [ { min: 0, max: 1, ucret: 170 }, { min: 1, max: 2, ucret: 210 }, { min: 2, max: 4, ucret: 290 }, { min: 4, max: 6, ucret: 360 }, { min: 6, max: 8, ucret: 420 }, { min: 8, max: 12, ucret: 500 }, { min: 12, max: 24, ucret: 600 } ],
+            minibus: [ { min: 0, max: 1, ucret: 250 }, { min: 1, max: 2, ucret: 300 }, { min: 2, max: 4, ucret: 400 }, { min: 4, max: 6, ucret: 500 }, { min: 6, max: 8, ucret: 600 }, { min: 8, max: 12, ucret: 750 }, { min: 12, max: 24, ucret: 900 } ]
         };
+        let aktifTarife = JSON.parse(localStorage.getItem('istay_tarifeler')) || varsayilanTarife;
+        let araclar = JSON.parse(localStorage.getItem('istay_park_data')) || [];
+        let seciliAracTipi = 'otomobil';
 
-        // --- OPENCV YÜKLENİNCE ÇALIŞIR ---
-        function onOpenCvReady() {
-            opencvReady = true;
-            document.getElementById('loadingScreen').style.display = 'none';
-            const btn = document.getElementById('cameraBtn');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-camera"></i>';
-            btn.classList.replace('bg-gray-200', 'bg-rose-600');
-            btn.classList.replace('text-gray-400', 'text-white');
-            console.log("OpenCV Hazır.");
-        }
-
-        // --- KAMERA BAŞLATMA ---
-        async function startCamera() {
-            if (!opencvReady) return alert("Sistem henüz yüklenmedi, bekleyin.");
-            
-            try {
-                // Arka kamera öncelikli, 640p performans için ideal
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment', width: {ideal: 640}, height: {ideal: 480} } 
-                });
-                video.srcObject = stream;
-                video.play();
-                document.getElementById('cameraContainer').style.display = 'flex';
-                
-                // Video oynamaya başlayınca işleme başla
-                video.onloadedmetadata = () => {
-                    isStreaming = true;
-                    processVideo();
-                };
-            } catch (err) {
-                alert("Kamera hatası: " + err.message + "\nLütfen 'https' veya 'localhost' üzerinde çalıştırın.");
+        function ucretHesapla(girisTarihi, tip) {
+            const farkMs = new Date() - new Date(girisTarihi);
+            if (farkMs / 60000 <= 4) return 0;
+            const toplamSaat = farkMs / 3600000;
+            const tamGun = Math.floor(toplamSaat / 24);
+            const kalanSaat = toplamSaat % 24;
+            const t = aktifTarife[tip] || aktifTarife.otomobil;
+            let u = tamGun * t[t.length - 1].ucret;
+            if (kalanSaat > 0) {
+                let ek = t[0].ucret; 
+                for (let k of t) { if (kalanSaat > k.min && kalanSaat <= k.max) { ek = k.ucret; break; } }
+                u += ek;
             }
-        }
-
-        function stopCamera() {
-            isStreaming = false;
-            if (stream) stream.getTracks().forEach(t => t.stop());
-            document.getElementById('cameraContainer').style.display = 'none';
-        }
-
-        // --- GELİŞMİŞ GÖRÜNTÜ İŞLEME (Python Projesi Mantığı) ---
-        let src, dst, gray, edges, contours, hierarchy;
-        let lastScan = 0;
-
-        function processVideo() {
-            if (!isStreaming) return;
-
-            try {
-                // Bellek yönetimi: Matrisleri sadece bir kez veya boyut değişince oluştur
-                if (!src) src = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
-                if (!dst) dst = new cv.Mat(); // İşlenmiş sonuç için
-                if (!gray) gray = new cv.Mat();
-                if (!edges) edges = new cv.Mat();
-                if (!contours) contours = new cv.MatVector();
-                if (!hierarchy) hierarchy = new cv.Mat();
-
-                let cap = new cv.VideoCapture(video);
-                cap.read(src);
-
-                // 1. Gri Tonlama (COLOR_RGBA2GRAY)
-                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
-
-                // 2. Gürültü Azaltma & Bilateral Filter
-                // GitHub projesindeki parametreler: d=11, sigmaColor=90, sigmaSpace=90
-                // JS'de Bilateral çok yavaştır, bu yüzden önce resmi küçültüp uygulasak daha iyi olurdu ama
-                // burada "buna göre yap" dediğin için Gaussian + Histogram Eşitleme (Benzer etki, daha hızlı) kullanıyorum.
-                // Gerçek Bilateral tarayıcıyı dondurabilir.
-                let ksize = new cv.Size(5, 5);
-                cv.GaussianBlur(gray, gray, ksize, 0, 0, cv.BORDER_DEFAULT);
-                
-                // Histogram Eşitleme (Kontrast Artırır) - Plaka okumada çok önemli
-                cv.equalizeHist(gray, gray);
-
-                // 3. Kenar Tespiti (Canny) - Projedeki parametreler: 100, 200
-                cv.Canny(gray, edges, 100, 200);
-
-                // DEBUG: Kenarları göster
-                cv.imshow('edgeCanvas', edges);
-
-                // 4. Kontur Bulma
-                cv.findContours(edges, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
-
-                let statusDiv = document.getElementById('scanStatus');
-                statusDiv.innerText = "Taranıyor...";
-                statusDiv.classList.remove('bg-rose-600');
-
-                // En büyük konturları ara
-                for (let i = 0; i < contours.size(); ++i) {
-                    let cnt = contours.get(i);
-                    let area = cv.contourArea(cnt);
-
-                    // Alan filtresi (Çok küçük ve çok büyükleri ele)
-                    if (area > 2000 && area < 50000) {
-                        let peri = cv.arcLength(cnt, true);
-                        let approx = new cv.Mat();
-                        // Poligon yaklaşımı (Köşe sayısını bulmak için)
-                        cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
-
-                        // 4 Köşeli mi? (Plaka dikdörtgendir)
-                        if (approx.rows === 4) {
-                            let rect = cv.boundingRect(cnt);
-                            let aspect = rect.width / rect.height;
-
-                            // Plaka oranı kontrolü (Genelde 2.0 ile 5.0 arasıdır)
-                            if (aspect > 1.5 && aspect < 6.0) {
-                                // Ekrana çiz
-                                let pt1 = new cv.Point(rect.x, rect.y);
-                                let pt2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
-                                cv.rectangle(src, pt1, pt2, [0, 255, 0, 255], 3);
-
-                                // 5. OCR İşlemi (Saniyede 1 kez çalıştır ki donmasın)
-                                let now = Date.now();
-                                if (now - lastScan > 1000) {
-                                    lastScan = now;
-                                    statusDiv.innerText = "PLAKA BULUNDU - OKUNUYOR";
-                                    statusDiv.classList.add('bg-rose-600');
-                                    
-                                    // Plakayı kes (ROI)
-                                    let plateRoi = gray.roi(rect);
-                                    
-                                    // OCR Öncesi Temizlik (Thresholding - Siyah/Beyaz yapma)
-                                    cv.threshold(plateRoi, plateRoi, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-                                    
-                                    cv.imshow('plateCanvas', plateRoi);
-                                    runOCR();
-                                    plateRoi.delete();
-                                }
-                            }
-                        }
-                        approx.delete();
-                    }
-                }
-
-                cv.imshow('canvasOutput', src);
-
-                requestAnimationFrame(processVideo);
-
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        // --- TESSERACT OCR ---
-        async function runOCR() {
-            const canvas = document.getElementById('plateCanvas');
-            // Tesseract'a sadece Harf ve Sayı beklemesini söyle (Whitelist)
-            const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
-                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            });
-
-            const cleanText = text.replace(/[^A-Z0-9]/g, '').trim();
-            
-            // Geçerli bir plaka formatı mı? (En az 5 karakter)
-            if (cleanText.length >= 5 && cleanText.length <= 9) {
-                isStreaming = false; // Taramayı durdur
-                document.getElementById('detectedPlateInput').value = cleanText;
-                document.getElementById('confirmModal').classList.remove('hidden');
-            }
-        }
-
-        // --- ARAYÜZ İŞLEMLERİ ---
-        function closeConfirmModal() {
-            document.getElementById('confirmModal').classList.add('hidden');
-            isStreaming = true; // Kamerayı tekrar başlat
-            processVideo();
-        }
-
-        function acceptPlate() {
-            const plaka = document.getElementById('detectedPlateInput').value;
-            document.getElementById('confirmModal').classList.add('hidden');
-            stopCamera();
-            
-            // Otomatik İşlem (Giriş mi Çıkış mı?)
-            const existing = araclar.find(a => a.plaka === plaka && a.durum === 'aktif');
-            if (existing) {
-                openExitModal(existing);
-            } else {
-                document.getElementById('plakaInput').value = plaka;
-                aracGiris();
-            }
-        }
-
-        function setTip(t) {
-            vehicleType = t;
-            const btnOto = document.getElementById('btnOto');
-            const btnMini = document.getElementById('btnMini');
-            if (t === 'otomobil') {
-                btnOto.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-rose-600 text-white shadow-lg shadow-rose-100 transition-transform active:scale-95";
-                btnMini.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-white border border-gray-200 text-gray-400 transition-transform active:scale-95";
-            } else {
-                btnMini.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-blue-600 text-white shadow-lg shadow-blue-100 transition-transform active:scale-95";
-                btnOto.className = "flex-1 py-3 rounded-xl font-bold text-xs bg-white border border-gray-200 text-gray-400 transition-transform active:scale-95";
-            }
-        }
-
-        function aracGiris() {
-            const plaka = document.getElementById('plakaInput').value.toUpperCase();
-            if (!plaka) return alert("Plaka giriniz!");
-            
-            const existing = araclar.find(a => a.plaka === plaka && a.durum === 'aktif');
-            if (existing) return alert("Araç zaten içeride!");
-
-            araclar.push({
-                id: Date.now(),
-                plaka: plaka,
-                tip: vehicleType,
-                giris: new Date().toISOString(),
-                durum: 'aktif'
-            });
-            saveData();
-            document.getElementById('plakaInput').value = '';
-            renderList();
-        }
-
-        function openExitModal(arac) {
-            exitTargetId = arac.id;
-            const giris = new Date(arac.giris);
-            const now = new Date();
-            const diffMs = now - giris;
-            const hours = Math.ceil(diffMs / (1000 * 60 * 60)); // Yukarı yuvarla
-            
-            let fiyat = 0;
-            // Basit tarife mantığı
-            if (hours <= 1) fiyat = TARIFE[arac.tip][0].p;
-            else fiyat = TARIFE[arac.tip][0].p + ((hours-1) * 50);
-
-            document.getElementById('exitPlaka').innerText = arac.plaka;
-            document.getElementById('exitSure').innerText = Math.floor(diffMs/60000) + " Dk";
-            document.getElementById('exitTutar').innerHTML = fiyat + '<span class="text-lg ml-1">TL</span>';
-            document.getElementById('exitModal').classList.remove('hidden');
-        }
-
-        function completeExit(method) {
-            const idx = araclar.findIndex(a => a.id === exitTargetId);
-            if (idx > -1) {
-                araclar[idx].durum = 'tamamlandi';
-                araclar[idx].cikis = new Date().toISOString();
-                araclar[idx].odemeYontemi = method;
-                araclar[idx].tutar = document.getElementById('exitTutar').innerText.replace('TL','');
-                saveData();
-                renderList();
-            }
-            document.getElementById('exitModal').classList.add('hidden');
+            return u;
         }
 
         function renderList() {
-            const container = document.getElementById('aracListesi');
-            container.innerHTML = '';
-            const filter = document.getElementById('plakaInput').value.toUpperCase();
+            const filtre = document.getElementById('plakaInput').value.toUpperCase();
+            const liste = document.getElementById('aracListesi');
+            liste.innerHTML = '';
 
-            const list = araclar.filter(a => a.plaka.includes(filter)).sort((a,b) => b.id - a.id);
+            let aktifler = araclar.filter(a => a.durum === 'aktif' && a.plaka.includes(filtre)).sort((a, b) => a.plaka.localeCompare(b.plaka));
+            let tamamlananlar = araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.cikis) - new Date(a.cikis));
 
-            list.forEach(a => {
-                const isActive = a.durum === 'aktif';
-                const el = document.createElement('div');
-                el.className = `p-4 mb-3 rounded-xl border-l-4 shadow-sm bg-white flex justify-between items-center ${isActive ? 'border-rose-500' : 'border-gray-400 opacity-70'}`;
-                el.innerHTML = `
-                    <div>
-                        <div class="text-[10px] font-bold uppercase ${isActive ? 'text-rose-500' : 'text-gray-400'}">${a.tip}</div>
-                        <div class="text-xl font-black text-gray-800">${a.plaka}</div>
-                        <div class="text-xs text-gray-400">${new Date(a.giris).toLocaleTimeString()}</div>
+            [...aktifler, ...tamamlananlar].forEach(arac => {
+                const isComp = arac.durum === 'tamamlandi';
+                const ucret = isComp ? arac.tutar : ucretHesapla(arac.giris, arac.tip);
+                const isFree = ((isComp ? new Date(arac.cikis) : new Date()) - new Date(arac.giris)) / 60000 <= 4;
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-3xl shadow-sm relative ${isComp ? 'completed-card bg-white' : 'park-card bg-white'}`;
+                const silBtn = `<button onclick="sil(${arac.id})" class="absolute top-4 right-4 text-gray-300 hover:text-rose-500 p-2 z-10"><i class="fas fa-trash"></i></button>`;
+
+                card.innerHTML = `
+                    ${silBtn}
+                    <div class="flex justify-between items-start pr-10">
+                        <div>
+                            <span class="text-[8px] font-black px-2 py-1 rounded-lg uppercase ${arac.tip==='minibus'?'bg-blue-100 text-blue-600':'bg-rose-100 text-rose-600'}">${arac.tip}</span>
+                            <h3 class="text-2xl font-black text-zinc-800 mt-1">${arac.plaka}</h3>
+                            <div onclick="openEditModal(${arac.id})" class="text-[10px] font-bold text-gray-400 mt-1 cursor-pointer">
+                                <i class="fas fa-clock mr-1"></i> Giriş: ${new Date(arac.giris).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} <span class="underline">Düzelt</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-black ${isComp ? 'text-gray-400' : (ucret===0?'text-green-500':'text-rose-600')}">${ucret}<small class="text-xs ml-0.5">TL</small></div>
+                            <div class="text-[10px] font-bold ${isFree && !isComp ? 'text-green-500':'text-gray-400'} uppercase">
+                                ${isComp ? 'ÖDENDİ ('+arac.odemeYontemi+')' : (isFree ? 'ÜCRETSİZ' : sureHesapla(arac.giris))}
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        ${isActive 
-                            ? `<button onclick="openExitModal(${JSON.stringify(a).replace(/"/g, '&quot;')})" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold">ÇIKIŞ</button>` 
-                            : `<div class="font-black text-lg text-gray-600">${a.tutar} TL</div><div class="text-[9px] font-bold text-green-600">${a.odemeYontemi}</div>`
-                        }
-                    </div>
+                    ${!isComp ? `
+                    <div class="grid grid-cols-3 gap-2 mt-4">
+                        <button onclick="cikisYap(${arac.id}, 'HGS')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase">HGS</button>
+                        <button onclick="cikisYap(${arac.id}, 'KART')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[10px] uppercase">KART</button>
+                        <button onclick="cikisYap(${arac.id}, 'NAKİT')" class="bg-amber-500 text-white py-3 rounded-xl font-black text-[10px] uppercase">NAKİT</button>
+                    </div>` : ''}
                 `;
-                container.appendChild(el);
+                liste.appendChild(card);
             });
         }
 
-        function saveData() { localStorage.setItem('istay_data_v2', JSON.stringify(araclar)); }
-        
-        // --- RAPORLAMA (Önceki kodlardan eklendi) ---
-        function raporuGoster() {
-            document.getElementById('raporModal').classList.remove('hidden');
-            const today = new Date().toLocaleDateString();
-            const todayData = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString() === today);
+        function generatePDF() {
+            const bugun = new Date().toLocaleDateString('tr-TR');
+            const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun);
             
-            let total = 0;
-            let html = `<table class="w-full text-xs text-left"><thead><tr class="bg-gray-100"><th class="p-2">PLAKA</th><th class="p-2">ÖDEME</th><th class="p-2 text-right">TUTAR</th></tr></thead><tbody>`;
-            todayData.forEach(a => {
-                total += parseFloat(a.tutar);
-                html += `<tr class="border-b"><td class="p-2 font-bold">${a.plaka}</td><td class="p-2">${a.odemeYontemi}</td><td class="p-2 text-right">${a.tutar} TL</td></tr>`;
+            // Verileri şablona bas
+            document.getElementById('pdfDate').innerText = "Rapor Tarihi: " + bugun + " " + new Date().toLocaleTimeString();
+            let hgs = 0, kart = 0, nakit = 0, rows = "";
+            bugunCikislar.forEach(a => {
+                if(a.odemeYontemi==='HGS') hgs+=a.tutar; else if(a.odemeYontemi==='KART') kart+=a.tutar; else if(a.odemeYontemi==='NAKİT') nakit+=a.tutar;
+                rows += `<tr><td>${a.plaka}</td><td>${a.tip.toUpperCase()}</td><td>${new Date(a.giris).toLocaleTimeString()}</td><td>${new Date(a.cikis).toLocaleTimeString()}</td><td>${a.odemeYontemi}</td><td>${a.tutar} TL</td></tr>`;
             });
-            html += `</tbody></table><div class="mt-4 text-right font-black text-xl">TOPLAM: ${total} TL</div>`;
-            document.getElementById('raporIcerik').innerHTML = html || "<p class='text-center text-gray-400 mt-10'>Bugün işlem yok.</p>";
+            document.getElementById('pdfBody').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;">Bugün henüz işlem yapılmadı.</td></tr>';
+            
+            document.getElementById('pdfSummaryArea').innerHTML = `
+                <table style="width: 100%; border: 0;">
+                    <tr>
+                        <td style="width: 50%; font-size: 14px; line-height: 1.8;">
+                            <b>HGS TOPLAM:</b> ${hgs} TL<br>
+                            <b>KART TOPLAM:</b> ${kart} TL<br>
+                            <b>NAKİT TOPLAM:</b> ${nakit} TL
+                        </td>
+                        <td style="text-align: right; background: #f4f4f4; padding: 20px; border-radius: 10px;">
+                            <span style="font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase;">Toplam Tahsilat</span><br>
+                            <span style="font-size: 32px; font-weight: 900; color: #e11d48;">${hgs+kart+nakit} TL</span>
+                        </td>
+                    </tr>
+                </table>
+            `;
+
+            // PDF OLUŞTURMA ÖNCESİ GÖRÜNÜR YAP
+            const element = document.getElementById('pdfTemplate');
+            element.style.display = 'block';
+
+            const opt = {
+                margin: 0.3,
+                filename: `istay_park_rapor_${bugun}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: false, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = 'none'; // PDF oluştuktan sonra tekrar gizle
+            });
         }
 
-        // Başlangıç
+        // --- Diğer Sabit Fonksiyonlar ---
+        function toggleView(view) { const isTarife = view === 'tarife'; document.getElementById('raporGorunumu').style.display = isTarife ? 'none' : 'block'; document.getElementById('tarifeGorunumu').style.display = isTarife ? 'block' : 'none'; document.getElementById('modalTitle').innerText = isTarife ? 'Fiyat Tarifesi' : 'Finansal Özet'; document.getElementById('btnTarife').innerText = isTarife ? 'Rapora Dön' : 'Fiyat Düzenle'; document.getElementById('btnTarife').onclick = () => toggleView(isTarife ? 'rapor' : 'tarife'); if(isTarife) renderTarifeInputs(); }
+        function renderTarifeInputs() { const gen = (tip, target) => { let html = `<h4 class="col-span-2 font-black text-[10px] text-gray-400 uppercase mb-2">${tip} Fiyatlar</h4>`; aktifTarife[tip].forEach((k, i) => { html += `<div class="bg-white p-2 rounded-xl border flex items-center justify-between"><span class="text-[10px] font-bold">${k.min}-${k.max}S:</span><input type="number" step="10" value="${k.ucret}" class="fiyat-input w-16 text-right font-black text-rose-600 outline-none" data-tip="${tip}" data-idx="${i}"></div>`; }); document.getElementById(target).innerHTML = html; }; gen('otomobil', 'oto_fiyat_list'); gen('minibus', 'mini_fiyat_list'); }
+        function tarifeleriKaydet() { document.querySelectorAll('.fiyat-input').forEach(input => { aktifTarife[input.dataset.tip][input.dataset.idx].ucret = parseInt(input.value); }); localStorage.setItem('istay_tarifeler', JSON.stringify(aktifTarife)); alert("Fiyatlar güncellendi!"); toggleView('rapor'); renderList(); }
+        function veriyiIceriAktar(e) { const r = new FileReader(); r.onload = (v) => { try { const yeniVeri = JSON.parse(v.target.result); if(Array.isArray(yeniVeri)) { araclar = yeniVeri; localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); alert("Yedek yüklendi!"); raporuKapat(); } } catch(err) { alert("Dosya hatalı!"); } }; r.readAsText(e.target.files[0]); }
+        function raporuGoster() { const bugun = new Date().toLocaleDateString('tr-TR'); const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun); let hgs = 0, kart = 0, nakit = 0, tabloHtml = ""; bugunCikislar.forEach(a => { if(a.odemeYontemi === 'HGS') hgs += a.tutar; else if(a.odemeYontemi === 'KART') kart += a.tutar; else if(a.odemeYontemi === 'NAKİT') nakit += a.tutar; tabloHtml += `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100"><span class="font-bold text-xs">${a.plaka}</span><span class="text-[9px] font-bold text-gray-400">${a.odemeYontemi}</span><span class="font-black text-xs">${a.tutar} TL</span></div>`; }); document.getElementById('ozetKartlari').innerHTML = `<div class="bg-blue-600 p-4 rounded-2xl text-white"><div class="text-[8px] font-bold opacity-70">HGS</div><div class="text-lg font-black">${hgs}</div></div><div class="bg-emerald-600 p-4 rounded-2xl text-white"><div class="text-[8px] font-bold opacity-70">KART</div><div class="text-lg font-black">${kart}</div></div><div class="bg-amber-500 p-4 rounded-2xl text-white"><div class="text-[8px] font-bold opacity-70">NAKİT</div><div class="text-lg font-black">${nakit}</div></div>`; document.getElementById('raporTablo').innerHTML = tabloHtml || `<p class="text-center text-gray-400 py-4 text-xs font-bold">İŞLEM YOK</p>`; document.getElementById('netCiroBox').innerHTML = `<div><h4 class="text-[10px] font-bold text-gray-400 uppercase">Tahsilat</h4><p class="text-2xl font-black">${hgs+kart+nakit} TL</p></div><i class="fas fa-wallet text-3xl opacity-20"></i>`; document.getElementById('raporModal').classList.remove('hidden'); toggleView('rapor'); }
+        function aracGiris() { const inp = document.getElementById('plakaInput'); const plaka = inp.value.trim().toUpperCase(); if(!plaka) return; araclar.push({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' }); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); inp.value = ""; renderList(); }
+        function cikisYap(id, yontem) { const a = araclar.find(x => x.id === id); a.tutar = ucretHesapla(a.giris, a.tip); a.cikis = new Date().toISOString(); a.odemeYontemi = yontem; a.durum = 'tamamlandi'; localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); }
+        function sureHesapla(g) { const f = new Date() - new Date(g); return Math.floor(f/3600000) + "s " + Math.floor((f%3600000)/60000) + "dk"; }
+        function setAracTipi(t) { seciliAracTipi = t; document.getElementById('type_oto').className = t === 'otomobil' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-rose-600 bg-rose-600 text-white' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; document.getElementById('type_mini').className = t === 'minibus' ? 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-blue-600 bg-blue-600 text-white' : 'flex-1 py-4 rounded-xl font-bold text-xs border-2 border-gray-100 text-gray-500'; }
+        function openEditModal(id) { const a = araclar.find(a => a.id === id); if(a.durum === 'tamamlandi') return; const g = new Date(a.giris); document.getElementById('editDateTime').value = new Date(g.getTime() - g.getTimezoneOffset() * 60000).toISOString().slice(0, 16); document.getElementById('editModal').classList.remove('hidden'); document.getElementById('saveEditBtn').onclick = () => { a.giris = new Date(document.getElementById('editDateTime').value).toISOString(); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); closeEditModal(); }; }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+        function raporuKapat() { document.getElementById('raporModal').classList.add('hidden'); }
+        function sil(id) { if(confirm('Bu kaydı tamamen silmek istiyor musunuz?')) { araclar = araclar.filter(a => a.id !== id); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); } }
+        function raporuSifirla() { if(confirm("TÜM VERİLER SIFIRLANACAK!")) { araclar = []; localStorage.setItem('istay_park_data', "[]"); renderList(); raporuKapat(); } }
+        function veriyiDisaAktar() { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(araclar)])); a.download = `istay_yedek_${new Date().toLocaleDateString()}.txt`; a.click(); }
+
         renderList();
+        setInterval(renderList, 30000);
     </script>
 </body>
 </html>
