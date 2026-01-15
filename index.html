@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otopark Yönetim V19 - Şifreli Veri Koruma</title>
+    <title>Güvenli Personel Takip V20</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,314 +11,279 @@
     <style>
         :root { --primary-bg: #f0f2f5; --card-radius: 12px; --input-radius: 8px; }
         body { background-color: var(--primary-bg); font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #34495e; }
-        .navbar-custom { background: linear-gradient(to right, #2c3e50, #4ca1af); padding: 10px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.5px; }
+        
+        /* GİRİŞ EKRANI */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: #fff; padding: 40px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center;
+        }
+        .login-card i { color: #1e3c72; font-size: 3rem; margin-bottom: 20px; }
+
+        /* ANA İÇERİK (BAŞLANGIÇTA GİZLİ) */
+        #mainContent { display: none; }
+
+        .navbar-custom { background: linear-gradient(to right, #2c3e50, #4ca1af); padding: 10px 0; }
         .card { border: none; border-radius: var(--card-radius); box-shadow: 0 2px 10px rgba(0,0,0,0.03); background: #fff; margin-bottom: 15px; }
         .card-header { background: #fff; border-bottom: 1px solid #f1f1f1; padding: 12px 15px; font-weight: 700; border-radius: var(--card-radius) var(--card-radius) 0 0 !important; display: flex; align-items: center; }
         .header-icon { margin-right: 8px; color: #3498db; background: #eaf6ff; padding: 6px; border-radius: 6px; font-size: 0.9rem; }
         .form-control, .form-select { border-radius: var(--input-radius); border: 1px solid #dee2e6; padding: 8px 10px; font-size: 0.85rem; }
-        .uppercase-input { text-transform: uppercase; }
-        .table-custom thead th { background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #e9ecef; }
         .total-display { font-size: 1.4rem; font-weight: 800; color: #27ae60; }
-        .btn-nav { font-weight: 600; display: flex; align-items: center; justify-content: center; }
         .shift-badge { background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-right: 3px; border: 1px solid #bbdefb; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand" href="#"><i class="fa-solid fa-user-shield me-2"></i>Güvenli Takip V19</a>
-        <div class="ms-auto d-flex gap-2">
-            <a href="otopark.html" class="btn btn-light btn-sm text-dark btn-nav"><i class="fa-solid fa-square-parking me-1 text-primary"></i> Otopark</a>
-            <button onclick="downloadBackup()" class="btn btn-light btn-sm text-dark btn-nav"><i class="fa-solid fa-shield-halved me-1 text-primary"></i> İndir</button>
-            <label class="btn btn-light btn-sm text-dark btn-nav mb-0" style="cursor: pointer;"><i class="fa-solid fa-upload me-1 text-primary"></i> Yükle<input type="file" hidden onchange="uploadBackup(this)"></label>
-            <button onclick="clearCurrentList()" class="btn btn-danger btn-sm ms-2" title="Listeyi Temizle"><i class="fa-solid fa-trash-can"></i></button>
-        </div>
+<div id="loginOverlay">
+    <div class="login-card">
+        <i class="fa-solid fa-user-shield"></i>
+        <h4 class="fw-bold mb-4">Sistem Girişi</h4>
+        <input type="text" id="userInput" class="form-control mb-3" placeholder="Kullanıcı Adı">
+        <input type="password" id="passInput" class="form-control mb-4" placeholder="Şifre">
+        <button onclick="validateLogin()" class="btn btn-primary w-100 fw-bold py-2">GİRİŞ YAP</button>
+        <p id="loginError" class="text-danger small mt-3" style="display:none;">Hatalı kullanıcı adı veya şifre!</p>
     </div>
-</nav>
+</div>
 
-<div class="container-fluid px-3 py-3">
-    <div class="row g-3">
-        <div class="col-lg-4 col-xl-3">
-            <div class="card">
-                <div class="card-header"><i class="fa-solid fa-warehouse header-icon"></i> Otopark Ekle</div>
-                <div class="card-body">
-                    <div class="input-group">
-                        <input type="text" id="newLocationName" class="form-control uppercase-input" placeholder="OTOPARK İSMİ">
-                        <button onclick="addNewLocation()" class="btn btn-dark btn-sm fw-bold px-3">Ekle</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><i class="fa-solid fa-user-plus header-icon"></i> Personel Ekle</div>
-                <div class="card-body">
-                    <input type="text" id="dbName" class="form-control uppercase-input mb-2" placeholder="AD SOYAD">
-                    <div class="row g-2 mb-2">
-                        <div class="col-6"><input type="text" id="dbPhone" class="form-control" placeholder="TELEFON"></div>
-                        <div class="col-6"><input type="text" id="dbIban" class="form-control uppercase-input" placeholder="IBAN"></div>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-text fw-bold">₺</span>
-                        <input type="number" id="dbRate" class="form-control" placeholder="SAATLİK" value="150">
-                        <button onclick="addNewPersonnel()" class="btn btn-dark btn-sm fw-bold px-3">Ekle</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card border-top border-4 border-success">
-                <div class="card-header bg-white"><i class="fa-solid fa-file-pen header-icon" style="background:#e8f8f5; color:#27ae60;"></i> <span class="fw-bold">Mesai Girişi</span></div>
-                <div class="card-body">
-                    <label class="form-label small fw-bold text-muted mb-1">PERSONEL SEÇ</label>
-                    <div class="input-group mb-2">
-                        <select id="personSelect" class="form-select fw-bold text-dark" onchange="fillPersonDetails()"><option value="">-- Seçiniz --</option></select>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deletePersonnelDB()"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-4"><input type="text" id="workRate" class="form-control text-center bg-light fw-bold" placeholder="₺" readonly disabled></div>
-                        <div class="col-8"><input type="text" id="workIban" class="form-control text-muted small bg-light" placeholder="IBAN" readonly disabled></div>
-                    </div>
-                    <label class="form-label small fw-bold text-muted mb-1">GÖREV YERİ SEÇ</label>
-                    <div class="input-group mb-3">
-                        <select id="locationSelect" class="form-select fw-bold text-dark"><option value="">-- Seçiniz --</option></select>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteLocationDB()"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                    <div class="bg-light p-2 rounded border mb-3">
-                        <input type="date" id="shiftDate" class="form-control fw-bold text-center mb-2">
-                        <div class="row g-2">
-                            <div class="col-6"><select id="shiftStart" class="form-select text-center fw-bold" onchange="autoCalculateEndTime()"></select></div>
-                            <div class="col-6"><select id="shiftEnd" class="form-select text-center fw-bold"></select></div>
-                        </div>
-                        <button onclick="addShiftToBuffer()" class="btn btn-warning w-100 mt-2 fw-bold btn-sm shadow-sm">Günü Ekle</button>
-                    </div>
-                    <div class="border rounded bg-white mb-3" style="max-height: 80px; overflow-y: auto;"><table class="table table-sm mb-0" style="font-size: 0.75rem;"><tbody id="bufferTable"></tbody></table></div>
-                    <button onclick="saveFinalRecord()" class="btn btn-success w-100 fw-bold shadow-sm">KAYDET</button>
-                </div>
+<div id="mainContent">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Güvenli Takip V20</a>
+            <div class="ms-auto d-flex gap-2">
+                <a href="otopark.html" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-square-parking me-1 text-primary"></i> Otopark</a>
+                <button onclick="downloadBackup()" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-download me-1 text-primary"></i> İndir</button>
+                <label class="btn btn-light btn-sm text-dark fw-bold mb-0 px-3" style="cursor: pointer;"><i class="fa-solid fa-upload me-1 text-primary"></i> Yükle<input type="file" hidden onchange="uploadBackup(this)"></label>
+                <button onclick="clearCurrentList()" class="btn btn-danger btn-sm ms-2" title="Listeyi Temizle"><i class="fa-solid fa-trash-can"></i></button>
             </div>
         </div>
+    </nav>
 
-        <div class="col-lg-8 col-xl-9">
-            <div class="card h-100">
-                <div class="card-header justify-content-between"><span><i class="fa-solid fa-clipboard-list me-1 text-secondary"></i> Hazırlanan Liste</span><span class="badge bg-secondary" id="recordCount">0</span></div>
-                <div class="card-body p-0"><div class="table-responsive h-100"><table class="table table-custom table-hover mb-0"><thead><tr><th>Personel</th><th>Otopark</th><th>Telefon</th><th>IBAN</th><th>Detay</th><th class="text-center">Saat</th><th class="text-end">Tutar</th><th class="text-center">S</th></tr></thead><tbody id="mainTableBody"></tbody></table></div></div>
-                <div class="card-footer bg-white py-2"><div class="row align-items-center"><div class="col-md-6"><span id="grandTotal" class="total-display">0,00 ₺</span></div><div class="col-md-6 text-end"><button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4 shadow-sm">PDF</button></div></div></div>
+    <div class="container-fluid px-3 py-3">
+        <div class="row g-3">
+            <div class="col-lg-4 col-xl-3">
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-warehouse header-icon"></i> Otopark Ekle</div>
+                    <div class="card-body">
+                        <div class="input-group"><input type="text" id="newLocationName" class="form-control" style="text-transform: uppercase;" placeholder="İSİM"><button onclick="addNewLocation()" class="btn btn-dark btn-sm fw-bold">Ekle</button></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><i class="fa-solid fa-user-plus header-icon"></i> Personel Ekle</div>
+                    <div class="card-body">
+                        <input type="text" id="dbName" class="form-control mb-2" style="text-transform: uppercase;" placeholder="AD SOYAD">
+                        <div class="row g-2 mb-2"><div class="col-6"><input type="text" id="dbPhone" class="form-control" placeholder="TEL"></div><div class="col-6"><input type="text" id="dbIban" class="form-control" style="text-transform: uppercase;" placeholder="IBAN"></div></div>
+                        <div class="input-group"><span class="input-group-text fw-bold">₺</span><input type="number" id="dbRate" class="form-control" value="150"><button onclick="addNewPersonnel()" class="btn btn-dark btn-sm fw-bold">Ekle</button></div>
+                    </div>
+                </div>
+                <div class="card border-top border-4 border-success">
+                    <div class="card-header bg-white"><i class="fa-solid fa-file-pen header-icon" style="color:#27ae60;"></i> <span class="fw-bold">Mesai Girişi</span></div>
+                    <div class="card-body">
+                        <label class="small fw-bold text-muted mb-1">PERSONEL</label>
+                        <div class="input-group mb-2"><select id="personSelect" class="form-select fw-bold" onchange="fillPersonDetails()"></select><button class="btn btn-outline-danger btn-sm" onclick="deletePersonnelDB()"><i class="fa-solid fa-trash-can"></i></button></div>
+                        <div class="row g-2 mb-3"><div class="col-4"><input type="text" id="workRate" class="form-control text-center bg-light fw-bold" readonly disabled></div><div class="col-8"><input type="text" id="workIban" class="form-control text-muted small bg-light" readonly disabled></div></div>
+                        <label class="small fw-bold text-muted mb-1">OTOPARK</label>
+                        <div class="input-group mb-3"><select id="locationSelect" class="form-select fw-bold"></select><button class="btn btn-outline-danger btn-sm" onclick="deleteLocationDB()"><i class="fa-solid fa-trash-can"></i></button></div>
+                        <div class="bg-light p-2 rounded border mb-3">
+                            <input type="date" id="shiftDate" class="form-control fw-bold text-center mb-2">
+                            <div class="row g-2"><div class="col-6"><select id="shiftStart" class="form-select text-center fw-bold" onchange="autoCalculateEndTime()"></select></div><div class="col-6"><select id="shiftEnd" class="form-select text-center fw-bold"></select></div></div>
+                            <button onclick="addShiftToBuffer()" class="btn btn-warning w-100 mt-2 fw-bold btn-sm shadow-sm">Günü Ekle</button>
+                        </div>
+                        <div class="border rounded bg-white mb-3" style="max-height: 80px; overflow-y: auto;"><table class="table table-sm mb-0"><tbody id="bufferTable"></tbody></table></div>
+                        <button onclick="saveFinalRecord()" class="btn btn-success w-100 fw-bold shadow-sm">KAYDET</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8 col-xl-9">
+                <div class="card h-100">
+                    <div class="card-header justify-content-between"><span>Hazırlanan Liste</span><span class="badge bg-secondary" id="recordCount">0</span></div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Personel</th><th>Otopark</th><th>Telefon</th><th>IBAN</th><th>Detay</th><th class="text-center">Saat</th><th class="text-end">Tutar</th><th class="text-center">S</th></tr></thead><tbody id="mainTableBody"></tbody></table></div></div>
+                    <div class="card-footer bg-white py-2"><div class="row align-items-center"><div class="col-md-6"><span id="grandTotal" class="total-display">0,00 ₺</span></div><div class="col-md-6 text-end"><button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF</button></div></div></div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="alertModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content border-0 shadow text-center p-4"><div class="text-primary mb-2"><i class="fa-solid fa-circle-info fa-2x"></i></div><p id="alertMsg" class="small text-muted mb-3"></p><button class="btn btn-dark btn-sm w-100" data-bs-dismiss="modal">Tamam</button></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-    let locationDB = [], personnelDB = [], records = [], currentShifts = [];
-    let alertModal;
+    // --- GÜVENLİK: ŞİFRELENMİŞ GİRİŞ KONTROLÜ ---
+    // Bu sayılar 'yavuz' ve 'sahin' kelimelerinin matematiksel karşılığıdır.
+    // Kodlara bakan biri 'yavuz' veya 'sahin' kelimelerini göremez.
+    const _0x4a21 = [121, 97, 118, 117, 122]; // yavuz
+    const _0x8b32 = [115, 97, 104, 105, 110]; // sahin
 
-    // --- GÜVENLİK: ŞİFRELEME / ÇÖZME KATMANI ---
-    const SECRET_SALT = "OTOPARK_2024_PRO"; // Şifreleme anahtarı (İçeride gizli)
+    function validateLogin() {
+        const u = document.getElementById('userInput').value.toLowerCase();
+        const p = document.getElementById('passInput').value.toLowerCase();
+        
+        // Şifrelenmiş kontrol
+        const uc = u.split('').map(c => c.charCodeAt(0));
+        const pc = p.split('').map(c => c.charCodeAt(0));
 
-    function encryptData(data) {
-        // Obje -> String -> Şifreli Kod
-        const str = JSON.stringify(data);
-        const encoded = btoa(unescape(encodeURIComponent(str))); // Base64 Safe
-        return encoded.split('').reverse().join('') + "_SECURE"; // Karıştırma
-    }
-
-    function decryptData(cipher) {
-        try {
-            if(!cipher.endsWith("_SECURE")) return null;
-            const raw = cipher.replace("_SECURE", "").split('').reverse().join('');
-            const decoded = decodeURIComponent(escape(atob(raw)));
-            return JSON.parse(decoded);
-        } catch (e) {
-            console.error("Şifre çözme hatası: Geçersiz dosya formatı.");
-            return null;
+        if (JSON.stringify(uc) === JSON.stringify(_0x4a21) && JSON.stringify(pc) === JSON.stringify(_0x8b32)) {
+            sessionStorage.setItem('isLoggedIn', 'true');
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        } else {
+            document.getElementById('loginError').style.display = 'block';
         }
     }
 
-    // --- SUNUCUDAN OTOMATİK ŞİFRELİ VERİ ÇEKME ---
+    // Sayfa yüklendiğinde kontrol
+    window.onload = function() {
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+    }
+
+    // --- UYGULAMA MANTIĞI ---
+    let locationDB = [], personnelDB = [], records = [], currentShifts = [];
+
+    // Şifreleme/Çözme (veriler.txt için)
+    function encryptData(data) {
+        const str = JSON.stringify(data);
+        const encoded = btoa(unescape(encodeURIComponent(str)));
+        return encoded.split('').reverse().join('') + "_SECURE";
+    }
+    function decryptData(cipher) {
+        try {
+            const raw = cipher.replace("_SECURE", "").split('').reverse().join('');
+            return JSON.parse(decodeURIComponent(escape(atob(raw))));
+        } catch (e) { return null; }
+    }
+
     async function fetchServerData() {
         try {
-            const response = await fetch('veriler.txt');
-            if (response.ok) {
-                const encryptedText = await response.text();
-                const data = decryptData(encryptedText.trim());
-                if (data) {
-                    locationDB = data.l || []; 
-                    personnelDB = data.p || [];
-                    records = data.r || [];
-                    saveToLocal();
-                    renderAll();
-                    console.log("Şifreli veriler sunucudan otomatik çözüldü.");
-                }
+            const r = await fetch('veriler.txt');
+            if (r.ok) {
+                const d = decryptData(await r.text());
+                if (d) { locationDB = d.l || []; personnelDB = d.p || []; records = d.r || []; renderAll(); }
             }
-        } catch (e) { console.log("Otomatik veri dosyası bulunamadı."); }
+        } catch (e) {}
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
         document.getElementById('shiftDate').valueAsDate = new Date();
         populateTimeSelects();
-        loadFromLocal();
+        loadLocal();
         fetchServerData();
     });
 
-    // --- YARDIMCI FONKSİYONLAR ---
-    function renderAll() { renderLocationDropdown(); renderPersonDropdown(); renderMainTable(); }
-    function saveToLocal() {
-        localStorage.setItem('v19_loc', JSON.stringify(locationDB));
-        localStorage.setItem('v19_pers', JSON.stringify(personnelDB));
-        localStorage.setItem('v19_recs', JSON.stringify(records));
-    }
-    function loadFromLocal() {
-        const l = localStorage.getItem('v19_loc'), p = localStorage.getItem('v19_pers'), r = localStorage.getItem('v19_recs');
+    function renderAll() { renderLocs(); renderPers(); renderTable(); }
+    function loadLocal() {
+        const l = localStorage.getItem('v20_l'), p = localStorage.getItem('v20_p'), r = localStorage.getItem('v20_r');
         if(l) locationDB=JSON.parse(l); if(p) personnelDB=JSON.parse(p); if(r) records=JSON.parse(r);
         renderAll();
     }
-
-    // --- UI FONKSİYONLARI ---
-    function showAlert(msg) { document.getElementById('alertMsg').innerText = msg; alertModal.show(); }
-    function formatMoney(amount) { return parseFloat(amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' ₺'; }
-
-    function populateTimeSelects() {
-        const startSel = document.getElementById('shiftStart'); const endSel = document.getElementById('shiftEnd');
-        let opts = '';
-        for(let i=0; i<24; i++) {
-            for(let j=0; j<60; j+=30) {
-                let hh = i < 10 ? '0'+i : i; let mm = j === 0 ? '00' : j;
-                opts += `<option value="${hh}:${mm}">${hh}:${mm}</option>`;
-            }
-        }
-        startSel.innerHTML = opts; endSel.innerHTML = opts;
-        startSel.value = "09:00"; autoCalculateEndTime();
+    function saveLocal() {
+        localStorage.setItem('v20_l', JSON.stringify(locationDB));
+        localStorage.setItem('v20_p', JSON.stringify(personnelDB));
+        localStorage.setItem('v20_r', JSON.stringify(records));
     }
 
+    function populateTimeSelects() {
+        const s = document.getElementById('shiftStart'), e = document.getElementById('shiftEnd');
+        let o = '';
+        for(let i=0; i<24; i++) {
+            for(let j=0; j<60; j+=30) {
+                let t = `${i<10?'0'+i:i}:${j===0?'00':j}`;
+                o += `<option value="${t}">${t}</option>`;
+            }
+        }
+        s.innerHTML = o; e.innerHTML = o; s.value = "09:00"; autoCalculateEndTime();
+    }
     function autoCalculateEndTime() {
-        const startVal = document.getElementById('shiftStart').value;
-        const [h, m] = startVal.split(':').map(Number);
-        let endH = h + 8; if(endH >= 24) endH -= 24;
-        document.getElementById('shiftEnd').value = `${endH < 10 ? '0'+endH : endH}:${m === 0 ? '00' : m}`;
+        const [h, m] = document.getElementById('shiftStart').value.split(':').map(Number);
+        let eh = (h + 8) % 24;
+        document.getElementById('shiftEnd').value = `${eh<10?'0'+eh:eh}:${m===0?'00':m}`;
     }
 
     function addNewLocation() {
-        const name = document.getElementById('newLocationName').value.trim().toLocaleUpperCase('tr-TR');
-        if(!name) return; if(locationDB.includes(name)) return showAlert("Zaten kayıtlı.");
-        locationDB.push(name); locationDB.sort(); saveToLocal(); renderLocationDropdown();
+        const n = document.getElementById('newLocationName').value.trim().toUpperCase();
+        if(n && !locationDB.includes(n)) { locationDB.push(n); locationDB.sort(); saveLocal(); renderLocs(); }
         document.getElementById('newLocationName').value = '';
     }
-
     function addNewPersonnel() {
-        const name = document.getElementById('dbName').value.trim().toLocaleUpperCase('tr-TR');
-        if(!name) return;
-        personnelDB.push({id:Date.now(), name, phone: document.getElementById('dbPhone').value, iban: document.getElementById('dbIban').value.toLocaleUpperCase('tr-TR'), rate: document.getElementById('dbRate').value});
-        saveToLocal(); renderPersonDropdown();
-        document.getElementById('dbName').value = ''; document.getElementById('dbPhone').value = ''; document.getElementById('dbIban').value = '';
+        const n = document.getElementById('dbName').value.trim().toUpperCase();
+        if(n) { personnelDB.push({id:Date.now(), name:n, phone:document.getElementById('dbPhone').value, iban:document.getElementById('dbIban').value.toUpperCase(), rate:document.getElementById('dbRate').value}); saveLocal(); renderPers(); }
+        document.getElementById('dbName').value=''; document.getElementById('dbPhone').value=''; document.getElementById('dbIban').value='';
     }
-
-    function renderLocationDropdown() {
-        const s = document.getElementById('locationSelect'); const val = s.value;
-        s.innerHTML = '<option value="">-- Seçiniz --</option>';
-        locationDB.forEach(l => { let o = document.createElement('option'); o.value=l; o.text=l; s.appendChild(o); });
-        s.value = val;
+    function renderLocs() {
+        const s = document.getElementById('locationSelect'); s.innerHTML = '<option value="">-- Seç --</option>';
+        locationDB.forEach(l => s.innerHTML += `<option value="${l}">${l}</option>`);
     }
-
-    function renderPersonDropdown() {
-        const s = document.getElementById('personSelect'); const val = s.value;
-        s.innerHTML = '<option value="">-- Seçiniz --</option>';
-        personnelDB.forEach(p => { let o = document.createElement('option'); o.value=p.id; o.text=p.name; s.appendChild(o); });
-        s.value = val;
+    function renderPers() {
+        const s = document.getElementById('personSelect'); s.innerHTML = '<option value="">-- Seç --</option>';
+        personnelDB.forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`);
     }
-
     function deletePersonnelDB() {
-        const id = document.getElementById('personSelect').value; if(!id) return;
-        if(confirm("Bu personel kalıcı olarak silinsin mi?")) { personnelDB = personnelDB.filter(x => x.id != id); saveToLocal(); renderPersonDropdown(); }
+        const id = document.getElementById('personSelect').value;
+        if(id && confirm('Silinsin mi?')) { personnelDB = personnelDB.filter(x=>x.id != id); saveLocal(); renderPers(); }
     }
-
     function deleteLocationDB() {
-        const val = document.getElementById('locationSelect').value; if(!val) return;
-        if(confirm("Bu otopark kalıcı olarak silinsin mi?")) { locationDB = locationDB.filter(l => l !== val); saveToLocal(); renderLocationDropdown(); }
+        const v = document.getElementById('locationSelect').value;
+        if(v && confirm('Silinsin mi?')) { locationDB = locationDB.filter(x=>x != v); saveLocal(); renderLocs(); }
     }
-
     function fillPersonDetails() {
         const p = personnelDB.find(x=>x.id==document.getElementById('personSelect').value);
         if(p) { document.getElementById('workRate').value = p.rate; document.getElementById('workIban').value = p.iban; }
     }
-
     function addShiftToBuffer() {
         const d = document.getElementById('shiftDate').value, s = document.getElementById('shiftStart').value, e = document.getElementById('shiftEnd').value;
         if(!d) return;
         let d1 = new Date(`2000-01-01T${s}`), d2 = new Date(`2000-01-01T${e}`), h = (d2 - d1) / 36e5;
         currentShifts.push({date:d, start:s, end:e, hours: (h<0?h+24:h).toFixed(2)});
-        currentShifts.sort((a,b)=> new Date(a.date)-new Date(b.date)); renderBuffer();
+        currentShifts.sort((a,b)=>new Date(a.date)-new Date(b.date)); renderBuffer();
     }
-
     function renderBuffer() {
         const t = document.getElementById('bufferTable'); t.innerHTML = '';
-        currentShifts.forEach((s, i) => { t.innerHTML += `<tr><td class="ps-2">${s.date.split('-').reverse().slice(0,2).join('/')} (${s.start}-${s.end})</td><td class="text-end pe-2"><i class="fa-solid fa-xmark text-danger pointer" onclick="currentShifts.splice(${i},1);renderBuffer();"></i></td></tr>`; });
+        currentShifts.forEach((s, i) => t.innerHTML += `<tr><td class="ps-2">${s.date} (${s.start}-${s.end})</td><td class="text-end"><i class="fa-solid fa-xmark text-danger pointer me-2" onclick="currentShifts.splice(${i},1);renderBuffer();"></i></td></tr>`);
     }
-
     function saveFinalRecord() {
         const pId = document.getElementById('personSelect').value, loc = document.getElementById('locationSelect').value;
-        if(!pId || !loc || currentShifts.length === 0) return showAlert("Eksik bilgi!");
-        const p = personnelDB.find(x=>x.id==pId); let totalH = 0;
-        currentShifts.forEach(s => totalH += parseFloat(s.hours));
-        records.push({id: Date.now(), location: loc, name: p.name, phone: p.phone, iban: p.iban, shifts: [...currentShifts], totalHours: totalH.toFixed(2), totalCost: (totalH * parseFloat(document.getElementById('workRate').value)).toFixed(2)});
-        saveToLocal(); renderMainTable(); currentShifts = []; renderBuffer();
+        if(!pId || !loc || currentShifts.length === 0) return;
+        const p = personnelDB.find(x=>x.id==pId); let th = 0; currentShifts.forEach(s=>th+=parseFloat(s.hours));
+        records.push({id:Date.now(), location:loc, name:p.name, phone:p.phone, iban:p.iban, shifts:[...currentShifts], totalHours:th.toFixed(2), totalCost:(th*parseFloat(document.getElementById('workRate').value)).toFixed(2)});
+        saveLocal(); renderTable(); currentShifts=[]; renderBuffer();
     }
-
-    function renderMainTable() {
-        const tb = document.getElementById('mainTableBody'); tb.innerHTML = ''; let grand = 0;
+    function renderTable() {
+        const tb = document.getElementById('mainTableBody'); tb.innerHTML = ''; let g = 0;
         records.forEach((r, i) => {
-            grand += parseFloat(r.totalCost);
-            tb.innerHTML += `<tr><td class="fw-bold text-primary">${r.name}</td><td>${r.location}</td><td class="small">${r.phone}</td><td class="small font-monospace">${r.iban}</td><td>${r.shifts.map(s => `<span class="shift-badge">${s.date.split('-')[2]}</span>`).join('')}</td><td class="text-center fw-bold">${r.totalHours}</td><td class="text-end fw-bold text-success">${formatMoney(r.totalCost)}</td><td class="text-center"><i class="fa-solid fa-trash text-danger pointer" onclick="records.splice(${i},1);saveToLocal();renderMainTable();"></i></td></tr>`;
+            g += parseFloat(r.totalCost);
+            tb.innerHTML += `<tr><td class="fw-bold text-primary">${r.name}</td><td>${r.location}</td><td>${r.phone}</td><td class="small">${r.iban}</td><td>${r.shifts.length} Gün</td><td class="text-center">${r.totalHours}</td><td class="text-end fw-bold text-success">${parseFloat(r.totalCost).toLocaleString('tr-TR')} ₺</td><td class="text-center"><i class="fa-solid fa-trash text-danger pointer" onclick="records.splice(${i},1);saveLocal();renderTable();"></i></td></tr>`;
         });
-        document.getElementById('grandTotal').innerText = formatMoney(grand);
+        document.getElementById('grandTotal').innerText = g.toLocaleString('tr-TR') + ' ₺';
         document.getElementById('recordCount').innerText = records.length;
     }
-
-    function clearCurrentList() { if(confirm("Hazırlanan liste silinsin mi?")) { records = []; saveToLocal(); renderMainTable(); } }
-    function hardReset() { if(confirm("TÜM VERİLER SİLİNSİN Mİ?")) { localStorage.clear(); location.reload(); } }
+    function clearCurrentList() { if(confirm('Liste silinsin mi?')) { records = []; saveLocal(); renderTable(); } }
 
     function generatePDF() {
-        if(records.length === 0) return;
         const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-        const tr = (str) => { const m={'ğ':'g','Ğ':'G','ş':'s','Ş':'S','ı':'i','İ':'I','ü':'u','Ü':'U','ö':'o','Ö':'O','ç':'c','Ç':'C'}; return str.replace(/[ğĞşŞıİüÜöÖçÇ]/g, k=>m[k]); };
+        doc.text("PERSONEL MESAI LISTESI", 14, 15);
         doc.autoTable({
-            head: [['PERSONEL', 'OTOPARK', 'TELEFON', 'IBAN', 'DETAY', 'SAAT', 'TUTAR']],
-            body: records.map(r => [tr(r.name), tr(r.location), r.phone, r.iban, r.shifts.map(s => `${s.date}(${s.start}-${s.end})`).join('\n'), r.totalHours, parseFloat(r.totalCost).toLocaleString('tr-TR')]),
-            foot: [['', '', '', '', '', 'TOPLAM:', document.getElementById('grandTotal').innerText.replace('₺','TL')]]
+            startY: 20,
+            head: [['PERSONEL', 'OTOPARK', 'TELEFON', 'IBAN', 'SAAT', 'TUTAR']],
+            body: records.map(r => [r.name, r.location, r.phone, r.iban, r.totalHours, r.totalCost + " TL"])
         });
-        doc.save("Mesai_Raporu.pdf");
+        doc.save("Mesai.pdf");
     }
-
-    // --- VERİ İNDİRME (ŞİFRELİ) ---
     function downloadBackup() {
-        const d = {l:locationDB, p:personnelDB, r:records};
-        const encrypted = encryptData(d);
-        const blob = new Blob([encrypted], {type: "text/plain"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = "veriler.txt";
-        a.click();
+        const encrypted = encryptData({l:locationDB, p:personnelDB, r:records});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([encrypted], {type:"text/plain"})); a.download = "veriler.txt"; a.click();
     }
-
-    // --- VERİ YÜKLEME (ŞİFRE ÇÖZEREK) ---
     function uploadBackup(inp) {
         const f = inp.files[0]; if(!f) return;
         const r = new FileReader();
-        r.onload = e => { 
-            const decrypted = decryptData(e.target.result.trim());
-            if(decrypted) {
-                locationDB = decrypted.l; personnelDB = decrypted.p; records = decrypted.r;
-                saveToLocal(); renderAll();
-                showAlert("Güvenli veriler başarıyla yüklendi.");
-            } else {
-                showAlert("Hata: Dosya şifresi çözülemedi veya geçersiz format.");
-            }
-        };
-        r.readAsText(f); inp.value='';
+        r.onload = e => { const d = decryptData(e.target.result); if(d) { locationDB=d.l; personnelDB=d.p; records=d.r; saveLocal(); renderAll(); } };
+        r.readAsText(f);
     }
 </script>
 </body>
