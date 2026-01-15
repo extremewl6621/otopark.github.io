@@ -1,33 +1,15 @@
-<?php
-// park.txt dosyasını veritabanı olarak kullanıyoruz
-$dosya = 'park.txt';
-
-// Dosya yoksa boş bir JSON dizisiyle oluştur
-if (!file_exists($dosya)) {
-    file_put_contents($dosya, json_encode([]));
-}
-
-// Veri Kaydetme İşlemi (JavaScript'ten gelen isteği karşılar)
-if (isset($_POST['action']) && $_POST['action'] == 'save') {
-    file_put_contents($dosya, $_POST['data']);
-    echo "kaydedildi";
-    exit;
-}
-
-// Mevcut veriyi PHP ile oku
-$mevcut_veri = file_get_contents($dosya);
-?>
-
 <!DOCTYPE html>
 <html lang="tr" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY PARK PRO - CLOUD TXT</title>
+    <title>iSTAY PARK PRO - GITHUB READY</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
@@ -36,7 +18,11 @@ $mevcut_veri = file_get_contents($dosya);
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { brand: { 500: '#e11d48', 600: '#be123c' }, darkbg: '#0f172a', darkcard: '#1e293b' }
+                    colors: {
+                        brand: { 500: '#e11d48', 600: '#be123c' },
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b'
+                    }
                 }
             }
         }
@@ -44,67 +30,83 @@ $mevcut_veri = file_get_contents($dosya);
 
     <style>
         body { -webkit-tap-highlight-color: transparent; transition: background-color 0.3s, color 0.3s; }
-        ::-webkit-scrollbar { width: 0px; }
-        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); }
         .dark .glass { background: rgba(15, 23, 42, 0.85); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .park-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .progress-bar { transition: width 0.8s ease-in-out; }
+        .progress-bar { transition: width 1s ease-in-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-slide-in { animation: slideIn 0.4s ease forwards; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 dark:bg-darkbg dark:text-slate-100 pb-24">
+<body class="bg-slate-100 text-slate-800 dark:bg-darkbg dark:text-slate-100 pb-24 transition-colors duration-300">
 
     <header class="glass fixed top-0 w-full z-40 px-4 h-16 flex items-center justify-between no-print">
-        <a href="index.php" class="active:scale-95 transition-transform">
-            <img src="1000067482.webp" alt="Logo" class="h-10 w-auto object-contain">
-        </a>
         <div class="flex items-center gap-3">
-            <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 flex items-center justify-center">
+            <a href="index.html" class="active:scale-95 transition-transform cursor-pointer">
+                <img src="1000067482.webp" alt="Logo" class="h-10 w-auto object-contain drop-shadow-sm">
+            </a>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 flex items-center justify-center transition hover:scale-110">
                 <i id="themeIcon" class="fas fa-moon"></i>
             </button>
-            <button onclick="raporuGoster()" class="bg-gradient-to-r from-brand-500 to-rose-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg shadow-rose-500/30 active:scale-95">
-                <i class="fas fa-chart-pie mr-1"></i> YÖNETİM
+            <button onclick="raporuGoster()" class="bg-gradient-to-r from-brand-500 to-rose-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg shadow-rose-500/30 active:scale-95 flex items-center gap-2">
+                <i class="fas fa-chart-pie"></i> <span>YÖNETİM</span>
             </button>
         </div>
     </header>
 
+    <div id="pdfContainer">
+        <div id="pdfTemplate" style="display:none; padding:30px; background:white; color:black;">
+            <div style="border-bottom: 4px solid #e11d48; padding-bottom: 15px; margin-bottom: 25px;">
+                <h1 style="font-size: 26px; font-weight: 900; margin: 0;">GÜNLÜK HASILAT RAPORU</h1>
+                <p id="pdfDate" style="margin: 5px 0; color: #555; font-size: 12px;"></p>
+            </div>
+            <table style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background:#111; color:white; text-align:left; font-size:12px;">
+                        <th style="padding:10px;">PLAKA</th><th style="padding:10px;">TİP</th><th style="padding:10px;">GİRİŞ</th><th style="padding:10px;">ÇIKIŞ</th><th style="padding:10px;">TUTAR</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfBody"></tbody>
+            </table>
+        </div>
+    </div>
+
     <main class="max-w-lg mx-auto pt-20 px-4">
         
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 shadow-xl mb-6 border border-white/50 dark:border-slate-700">
+        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 shadow-lg mb-6 border border-white/50 dark:border-slate-700 no-print backdrop-blur-sm transition-colors duration-300">
             <div class="relative mb-5">
                 <input type="text" id="plakaInput" oninput="renderList()" placeholder="34 AB 123" 
                     class="w-full h-16 bg-slate-100 dark:bg-slate-900/50 border-2 border-transparent focus:border-brand-500 rounded-2xl text-center text-3xl font-black uppercase outline-none dark:text-white transition-all">
-                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <i class="fas fa-car-side"></i>
-                </div>
             </div>
             
             <div class="flex gap-2 mb-5">
-                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-brand-500 bg-brand-500 text-white shadow-lg shadow-rose-500/20 transition">OTO</button>
-                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 transition">MİNİ</button>
-                <button id="type_abone" onclick="setAracTipi('abone')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-purple-500 text-purple-500 transition">ABONE</button>
+                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-brand-500 bg-brand-500 text-white shadow-lg transition">OTO</button>
+                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-transparent transition">MİNİ</button>
+                <button id="type_abone" onclick="setAracTipi('abone')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-purple-500 text-purple-500 bg-transparent transition">ABONE</button>
             </div>
             
-            <button onclick="aracGiris()" class="w-full bg-slate-900 dark:bg-white dark:text-black text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition">Girişi Kaydet</button>
+            <button onclick="aracGiris()" class="w-full bg-slate-900 dark:bg-white dark:text-black text-white py-4 rounded-2xl font-black text-sm uppercase shadow-xl active:scale-95 transition">Girişi Kaydet</button>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-xl mb-8 border border-white/50 dark:border-slate-700 transition-all">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-xl mb-8 border border-white/50 dark:border-slate-700 relative overflow-hidden transition-colors duration-300">
             <div class="flex justify-between items-end mb-4">
                 <div>
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Doluluk</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Doluluk</p>
                     <h2 class="text-3xl font-black text-slate-800 dark:text-white" id="dolulukOrani">%0</h2>
                 </div>
                 <div class="text-right">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Boş Yer</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Boş Yer</p>
                     <h2 class="text-3xl font-black text-brand-500" id="bosYerSayisi">--</h2>
                 </div>
             </div>
-            <div class="w-full bg-slate-100 dark:bg-slate-900 h-3 rounded-full overflow-hidden mb-4">
+            <div class="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full overflow-hidden mb-4">
                 <div id="dolulukBar" class="h-full bg-brand-500 progress-bar rounded-full" style="width: 0%"></div>
             </div>
-            <div class="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                <span class="text-xs font-bold text-slate-400"><i class="fas fa-circle text-green-500 animate-pulse mr-1"></i> SİSTEM BULUTTA</span>
+            <div class="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700/50">
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-green-500 animate-pulse mr-1"></i> GITHUB AKTİF</span>
                 <span class="text-sm font-black text-slate-800 dark:text-white" id="tahminiCiro">0 TL</span>
             </div>
         </div>
@@ -117,10 +119,10 @@ $mevcut_veri = file_get_contents($dosya);
         <div id="aracListesi" class="space-y-4 pb-10"></div>
     </main>
 
-    <div id="raporModal" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center no-print p-4">
+    <div id="raporModal" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="raporuKapat()"></div>
         <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl overflow-hidden max-h-[90vh] flex flex-col relative z-10 shadow-2xl animate-slide-in">
-            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                 <h2 id="modalTitle" class="font-black text-2xl dark:text-white">Yönetim</h2>
                 <button onclick="raporuKapat()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500"><i class="fas fa-times"></i></button>
             </div>
@@ -130,21 +132,23 @@ $mevcut_veri = file_get_contents($dosya);
                     <div id="raporTablo" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
                     <div id="netCiroBox" class="bg-slate-900 dark:bg-black rounded-2xl p-6 text-white flex justify-between items-center mt-4"></div>
                 </div>
+                
                 <div id="tarifeGorunumu" class="hidden">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl mb-6 shadow-sm border dark:border-slate-700">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-3">Otopark Kapasitesi</label>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border mb-6">
+                        <label class="block text-[10px] font-black uppercase mb-2">Kapasite</label>
                         <div class="flex gap-2">
-                            <input type="number" id="kapasiteInput" class="flex-1 min-w-0 bg-slate-50 dark:bg-slate-900 border-2 rounded-xl p-3 font-black text-xl text-center dark:text-white">
-                            <button onclick="kapasiteKaydet()" class="bg-slate-900 dark:bg-white dark:text-black px-6 py-3 rounded-xl font-bold text-xs">KAYDET</button>
+                            <input type="number" id="kapasiteInput" class="flex-1 bg-slate-100 dark:bg-slate-900 border-none rounded-xl p-3 font-black text-center dark:text-white">
+                            <button onclick="kapasiteKaydet()" class="bg-slate-900 dark:bg-white dark:text-black px-6 rounded-xl font-bold text-xs">KAYDET</button>
                         </div>
                     </div>
                     <div id="oto_fiyat_list" class="grid grid-cols-2 gap-3 mb-6"></div>
                     <div id="mini_fiyat_list" class="grid grid-cols-2 gap-3 mb-6"></div>
                     <button onclick="tarifeleriKaydet()" class="w-full bg-brand-600 text-white py-4 rounded-xl font-bold uppercase shadow-lg">Fiyatları Güncelle</button>
                 </div>
-                <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <button id="btnTarife" onclick="toggleView('tarife')" class="bg-white dark:bg-slate-800 border py-3 rounded-xl font-bold text-[10px] uppercase dark:text-white"><i class="fas fa-cog mr-1"></i> Ayarlar</button>
-                    <button onclick="raporuSifirla()" class="bg-rose-50 dark:bg-rose-900/20 text-rose-600 py-3 rounded-xl font-bold text-[10px] uppercase border border-rose-100 dark:border-rose-900">Sıfırla</button>
+                
+                <div class="grid grid-cols-2 gap-3 pt-4 border-t">
+                    <button id="btnTarife" onclick="toggleView('tarife')" class="bg-white dark:bg-slate-800 border py-3 rounded-xl font-bold text-[10px] uppercase dark:text-white">Ayarlar</button>
+                    <button onclick="raporuSifirla()" class="bg-rose-50 dark:bg-rose-900/20 text-rose-600 py-3 rounded-xl font-bold text-[10px] uppercase border border-rose-100">Sıfırla</button>
                 </div>
             </div>
         </div>
@@ -163,27 +167,43 @@ $mevcut_veri = file_get_contents($dosya);
     </div>
 
     <script>
-        // PHP'DEN GELEN VERİLER
-        let araclar = <?php echo $mevcut_veri ?: '[]'; ?>;
-        
-        let aktifTarife = JSON.parse(localStorage.getItem('istay_tarifeler')) || { otomobil: [ { min: 0, max: 1, ucret: 170 }, { min: 1, max: 2, ucret: 210 }, { min: 2, max: 4, ucret: 290 }, { min: 4, max: 6, ucret: 360 }, { min: 6, max: 8, ucret: 420 }, { min: 8, max: 12, ucret: 500 }, { min: 12, max: 24, ucret: 600 } ], minibus: [ { min: 0, max: 1, ucret: 250 }, { min: 1, max: 2, ucret: 300 }, { min: 2, max: 4, ucret: 400 }, { min: 4, max: 6, ucret: 500 }, { min: 6, max: 8, ucret: 600 }, { min: 8, max: 12, ucret: 750 }, { min: 12, max: 24, ucret: 900 } ] };
+        // VERİLER (GitHub'da PHP çalışmaz, LocalStorage kullanılır)
+        let araclar = JSON.parse(localStorage.getItem('istay_park_data')) || [];
+        let aktifTarife = JSON.parse(localStorage.getItem('istay_tarifeler')) || { 
+            otomobil: [ { min: 0, max: 1, ucret: 170 }, { min: 1, max: 2, ucret: 210 }, { min: 2, max: 4, ucret: 290 }, { min: 4, max: 6, ucret: 360 }, { min: 6, max: 8, ucret: 420 }, { min: 8, max: 12, ucret: 500 }, { min: 12, max: 24, ucret: 600 } ], 
+            minibus: [ { min: 0, max: 1, ucret: 250 }, { min: 1, max: 2, ucret: 300 }, { min: 2, max: 4, ucret: 400 }, { min: 4, max: 6, ucret: 500 }, { min: 6, max: 8, ucret: 600 }, { min: 8, max: 12, ucret: 750 }, { min: 12, max: 24, ucret: 900 } ] 
+        };
         let toplamKapasite = parseInt(localStorage.getItem('istay_kapasite')) || 50;
         let seciliAracTipi = 'otomobil';
 
-        // TEMA AYARI
-        function initTheme() { if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun'); } }
-        function toggleTheme() { if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; document.getElementById('themeIcon').classList.replace('fa-sun', 'fa-moon'); } else { document.documentElement.classList.add('dark'); localStorage.theme = 'dark'; document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun'); } }
+        // TEMA YÖNETİMİ
+        function initTheme() { 
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) { 
+                document.documentElement.classList.add('dark'); 
+                document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun'); 
+            } 
+        }
+        function toggleTheme() { 
+            if (document.documentElement.classList.contains('dark')) { 
+                document.documentElement.classList.remove('dark'); 
+                localStorage.theme = 'light'; 
+                document.getElementById('themeIcon').classList.replace('fa-sun', 'fa-moon'); 
+            } else { 
+                document.documentElement.classList.add('dark'); 
+                localStorage.theme = 'dark'; 
+                document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun'); 
+            } 
+        }
         initTheme();
 
-        // VERİ SENKRONİZASYONU (TXT KAYIT)
-        function txtKaydet() {
-            const formData = new FormData();
-            formData.append('action', 'save');
-            formData.append('data', JSON.stringify(araclar));
-            fetch('index.php', { method: 'POST', body: formData });
+        // KAYDETME FONKSİYONU
+        function veriyiKaydet() {
+            localStorage.setItem('istay_park_data', JSON.stringify(araclar));
+            localStorage.setItem('istay_tarifeler', JSON.stringify(aktifTarife));
+            localStorage.setItem('istay_kapasite', toplamKapasite);
         }
 
-        // LİSTELEME VE DASHBOARD
+        // LİSTELEME
         function renderList() {
             const filtre = document.getElementById('plakaInput').value.toUpperCase();
             const liste = document.getElementById('aracListesi');
@@ -192,23 +212,20 @@ $mevcut_veri = file_get_contents($dosya);
             let aktifler = araclar.filter(a => a.durum === 'aktif' && a.plaka.includes(filtre)).sort((a,b)=> new Date(b.giris)-new Date(a.giris));
             let tamamlananlar = filtre ? araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(filtre)).sort((a,b)=> new Date(b.cikis)-new Date(a.cikis)) : [];
 
-            const totalAktif = araclar.filter(a => a.durum === 'aktif').length;
-            dashboardGuncelle(totalAktif);
-
-            document.getElementById('aracSayisi').innerText = (filtre ? (aktifler.length + tamamlananlar.length) + " Sonuç" : totalAktif + " Aktif");
+            dashboardGuncelle(araclar.filter(a => a.durum === 'aktif').length);
+            document.getElementById('aracSayisi').innerText = (filtre ? (aktifler.length + tamamlananlar.length) + " Sonuç" : aktifler.length + " Aktif");
 
             [...aktifler, ...tamamlananlar].forEach(arac => {
                 const isComp = arac.durum === 'tamamlandi';
                 const ucret = isComp ? arac.tutar : ucretHesapla(arac.giris, arac.tip);
+                const icon = arac.tip === 'abone' ? 'fa-star text-purple-500' : (arac.tip === 'minibus' ? 'fa-shuttle-van text-blue-500' : 'fa-car text-brand-500');
+
                 const card = document.createElement('div');
                 card.className = `park-card animate-slide-in p-5 rounded-3xl relative border shadow-sm ${isComp ? 'bg-slate-100 dark:bg-slate-800/50 opacity-70' : 'bg-white dark:bg-darkcard border-l-[6px] border-l-brand-500'}`;
-                
-                let iconClass = arac.tip === 'abone' ? 'fa-star text-purple-500' : (arac.tip === 'minibus' ? 'fa-shuttle-van text-blue-500' : 'fa-car text-brand-500');
-
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="flex gap-4 items-center">
-                            <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-xl"><i class="fas ${iconClass}"></i></div>
+                            <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-xl"><i class="fas ${icon}"></i></div>
                             <div>
                                 <h3 class="text-xl font-black text-slate-800 dark:text-white leading-none">${arac.plaka}</h3>
                                 <div class="text-[11px] font-bold text-slate-400 mt-1">${new Date(arac.giris).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
@@ -218,19 +235,30 @@ $mevcut_veri = file_get_contents($dosya);
                             <div class="text-2xl font-black ${isComp ? 'text-slate-400' : 'text-brand-600'}">${ucret} TL</div>
                         </div>
                     </div>
-                    ${!isComp ? `
-                    <div class="grid grid-cols-3 gap-2 mt-5">
+                    ${!isComp ? `<div class="grid grid-cols-3 gap-2 mt-5">
                         <button onclick="cikisYap(${arac.id}, 'HGS')" class="py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-bold">HGS</button>
                         <button onclick="cikisYap(${arac.id}, 'KART')" class="py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-bold">KART</button>
                         <button onclick="cikisYap(${arac.id}, 'NAKİT')" class="py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-bold">NAKİT</button>
                     </div>` : `<div class="mt-3 text-[10px] font-bold text-slate-400">ÖDEME: ${arac.odemeYontemi}</div>`}
-                    <button onclick="sil(${arac.id})" class="absolute top-2 right-2 text-slate-300 hover:text-rose-500"><i class="fas fa-trash-alt text-xs"></i></button>
-                `;
+                    <button onclick="sil(${arac.id})" class="absolute top-2 right-2 text-slate-300 hover:text-rose-500"><i class="fas fa-trash-alt text-xs"></i></button>`;
                 liste.appendChild(card);
             });
         }
 
-        // DASHBOARD GÜNCELLEME
+        // ÜCRET HESAPLAMA
+        function ucretHesapla(g, tip) {
+            if(tip === 'abone') return 0;
+            const farkSaat = (new Date() - new Date(g)) / 3600000;
+            if(farkSaat < 0.08) return 0; 
+            const t = aktifTarife[tip] || aktifTarife.otomobil;
+            let u = 0;
+            if(farkSaat > 24) u = Math.floor(farkSaat/24) * t[t.length-1].ucret;
+            const kalan = farkSaat % 24;
+            for(let k of t) { if(kalan > k.min && kalan <= k.max) { u += k.ucret; break; } }
+            return u || t[0].ucret;
+        }
+
+        // DASHBOARD
         function dashboardGuncelle(n) {
             let doluluk = Math.round((n / toplamKapasite) * 100);
             if(doluluk > 100) doluluk = 100;
@@ -247,11 +275,11 @@ $mevcut_veri = file_get_contents($dosya);
             const inp = document.getElementById('plakaInput');
             const plaka = inp.value.trim().toUpperCase();
             if(!plaka) { showModal('Uyarı', 'Plaka giriniz!', 'error'); return; }
-            if(araclar.some(a => a.plaka === plaka && a.durum === 'aktif')) { showModal('Zaten İçerde', plaka + ' zaten otoparkta.', 'error'); return; }
-            if(araclar.filter(a=>a.durum==='aktif').length >= toplamKapasite) { showModal('Kapasite Dolu', 'Yeni araç için yer yok.', 'error'); return; }
+            if(araclar.some(a => a.plaka === plaka && a.durum === 'aktif')) { showModal('Hata', plaka + ' zaten içerde.', 'error'); return; }
+            if(araclar.filter(a=>a.durum==='aktif').length >= toplamKapasite) { showModal('Dolu', 'Kapasite doldu!', 'error'); return; }
 
             araclar.push({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), durum: 'aktif' });
-            txtKaydet(); inp.value = ""; renderList();
+            veriyiKaydet(); inp.value = ""; renderList();
         }
 
         function cikisYap(id, yontem) {
@@ -260,22 +288,73 @@ $mevcut_veri = file_get_contents($dosya);
             a.cikis = new Date().toISOString();
             a.odemeYontemi = yontem;
             a.durum = 'tamamlandi';
-            txtKaydet(); renderList();
+            veriyiKaydet(); renderList();
         }
 
-        function ucretHesapla(g, tip) {
-            if(tip === 'abone') return 0;
-            const farkSaat = (new Date() - new Date(g)) / 3600000;
-            if(farkSaat < 0.08) return 0; // 5 dk ücretsiz
-            const t = aktifTarife[tip] || aktifTarife.otomobil;
-            let u = 0;
-            if(farkSaat > 24) u = Math.floor(farkSaat/24) * t[t.length-1].ucret;
-            const kalan = farkSaat % 24;
-            for(let k of t) { if(kalan > k.min && kalan <= k.max) { u += k.ucret; break; } }
-            return u || t[0].ucret;
+        // MODAL KONTROLLERİ
+        function raporuGoster() {
+            const bugun = new Date().toLocaleDateString('tr-TR');
+            const cikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun);
+            let hgs=0, kart=0, nakit=0, html="";
+            cikislar.forEach(a => {
+                if(a.odemeYontemi==='HGS') hgs+=a.tutar; else if(a.odemeYontemi==='KART') kart+=a.tutar; else nakit+=a.tutar;
+                html += `<div class="p-3 bg-white dark:bg-slate-800 rounded-xl flex justify-between items-center text-xs"><b>${a.plaka}</b><span>${a.tutar} TL (${a.odemeYontemi})</span></div>`;
+            });
+            document.getElementById('ozetKartlari').innerHTML = `<div class="bg-blue-600 p-3 rounded-xl text-white">HGS<br>${hgs}</div><div class="bg-emerald-600 p-3 rounded-xl text-white">KART<br>${kart}</div><div class="bg-amber-500 p-3 rounded-xl text-white">NAKİT<br>${nakit}</div>`;
+            document.getElementById('raporTablo').innerHTML = html || "Bugün işlem yok.";
+            document.getElementById('netCiroBox').innerHTML = `<b>TOPLAM</b> <span>${hgs+kart+nakit} TL</span>`;
+            document.getElementById('raporModal').classList.remove('hidden');
+            toggleView('rapor');
         }
 
-        // MODAL VE POPUP YARDIMCILARI
+        function toggleView(v) {
+            const isT = v === 'tarife';
+            document.getElementById('raporGorunumu').style.display = isT ? 'none' : 'block';
+            document.getElementById('tarifeGorunumu').style.display = isT ? 'block' : 'none';
+            document.getElementById('btnTarife').innerHTML = isT ? 'Panele Dön' : 'Ayarlar';
+            if(isT) renderTarifeInputs();
+        }
+
+        function renderTarifeInputs() {
+            const gen = (tip, target) => {
+                let h = `<h4 class="col-span-2 text-[10px] font-bold text-slate-400 uppercase">${tip} Tarifesi</h4>`;
+                aktifTarife[tip].forEach((k, i) => {
+                    h += `<div class="bg-white dark:bg-slate-800 p-2 rounded-xl flex justify-between items-center border"><span class="text-[10px]">${k.min}-${k.max}s:</span><input type="number" value="${k.ucret}" class="tarife-inp w-12 text-right bg-transparent font-bold text-rose-600 outline-none" data-tip="${tip}" data-idx="${i}"></div>`;
+                });
+                document.getElementById(target).innerHTML = h;
+            };
+            gen('otomobil', 'oto_fiyat_list'); gen('minibus', 'mini_fiyat_list');
+        }
+
+        function tarifeleriKaydet() {
+            document.querySelectorAll('.tarife-inp').forEach(inp => {
+                aktifTarife[inp.dataset.tip][inp.dataset.idx].ucret = parseInt(inp.value);
+            });
+            veriyiKaydet();
+            showModal('Başarılı', 'Fiyatlar güncellendi.', 'success');
+            toggleView('rapor');
+        }
+
+        function kapasiteKaydet() {
+            toplamKapasite = parseInt(document.getElementById('kapasiteInput').value) || 50;
+            veriyiKaydet();
+            showModal('Başarılı', 'Kapasite güncellendi.', 'success');
+            renderList();
+        }
+
+        function sil(id) { 
+            showModal('Sil', 'Bu kaydı silmek istiyor musunuz?', 'confirm', () => { 
+                araclar = araclar.filter(a=>a.id!==id); veriyiKaydet(); renderList(); 
+            }); 
+        }
+
+        function raporuSifirla() { 
+            showModal('Sıfırla', 'TÜM VERİLER SİLİNECEK!', 'confirm', () => { 
+                araclar = []; veriyiKaydet(); renderList(); raporuKapat(); 
+            }); 
+        }
+
+        // POPUP YARDIMCILARI
         function showModal(title, msg, type = 'error', callback = null) {
             document.getElementById('infoTitle').innerText = title;
             document.getElementById('infoMessage').innerText = msg;
@@ -284,8 +363,8 @@ $mevcut_veri = file_get_contents($dosya);
             if(type === 'confirm') {
                 icon.className = "w-16 h-16 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center mx-auto mb-4";
                 icon.innerHTML = '<i class="fas fa-question"></i>';
-                btns.innerHTML = `<button onclick="closeInfoModal()" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold">Vazgeç</button><button id="confirmBtn" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold">Onayla</button>`;
-                document.getElementById('confirmBtn').onclick = () => { callback(); closeInfoModal(); };
+                btns.innerHTML = `<button onclick="closeInfoModal()" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold">Vazgeç</button><button id="confBtn" class="flex-1 py-3 bg-rose-600 text-white rounded-xl font-bold">Onayla</button>`;
+                document.getElementById('confBtn').onclick = () => { callback(); closeInfoModal(); };
             } else {
                 icon.className = type === 'success' ? "w-16 h-16 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mx-auto mb-4" : "w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center mx-auto mb-4";
                 icon.innerHTML = type === 'success' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-exclamation"></i>';
@@ -295,42 +374,13 @@ $mevcut_veri = file_get_contents($dosya);
         }
         function closeInfoModal() { document.getElementById('infoModal').classList.add('hidden'); }
         function raporuKapat() { document.getElementById('raporModal').classList.add('hidden'); }
-        function openEditModal(id) { /* Saat düzenleme buraya... */ }
         function setAracTipi(t) { 
             seciliAracTipi = t;
             ['oto','mini','abone'].forEach(x => {
                 const b = document.getElementById('type_'+x);
-                if(x===t) { b.className = (x==='abone'?'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-purple-500 bg-purple-500 text-white transition shadow-lg':'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-brand-500 bg-brand-500 text-white transition shadow-lg shadow-rose-500/20'); }
-                else { b.className = 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 transition'; }
+                b.className = (x===t) ? 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-brand-500 bg-brand-500 text-white shadow-lg transition' : 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 transition';
+                if(t==='abone' && x==='abone') b.className = 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-purple-500 bg-purple-500 text-white shadow-lg transition';
             });
-        }
-        function toggleView(v) { 
-            const isT = v==='tarife'; 
-            document.getElementById('raporGorunumu').style.display = isT ? 'none' : 'block';
-            document.getElementById('tarifeGorunumu').style.display = isT ? 'block' : 'none';
-            document.getElementById('btnTarife').innerHTML = isT ? 'Panele Dön' : 'Ayarlar';
-            if(isT) renderTarifeInputs();
-        }
-        function renderTarifeInputs() { /* Önceki kodundaki tarife render buraya... */ }
-        function kapasiteKaydet() { toplamKapasite = parseInt(document.getElementById('kapasiteInput').value); localStorage.setItem('istay_kapasite', toplamKapasite); renderList(); showModal('Başarılı','Kapasite güncellendi','success'); }
-        function sil(id) { showModal('Sil', 'Bu kaydı silmek istiyor musunuz?', 'confirm', () => { araclar = araclar.filter(a=>a.id!==id); txtKaydet(); renderList(); }); }
-        function raporuSifirla() { showModal('Sıfırla', 'TÜM VERİLER SİLİNECEK!', 'confirm', () => { araclar = []; txtKaydet(); renderList(); raporuKapat(); }); }
-
-        function raporuGoster() {
-            const bugun = new Date().toLocaleDateString('tr-TR');
-            const cikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun);
-            let hgs=0, kart=0, nakit=0, html="";
-            cikislar.forEach(a => {
-                if(a.odemeYontemi==='HGS') hgs+=a.tutar; else if(a.odemeYontemi==='KART') kart+=a.tutar; else nakit+=a.tutar;
-                html += `<div class="p-3 bg-white dark:bg-slate-800 rounded-xl mb-2 flex justify-between items-center text-xs">
-                            <span class="font-bold">${a.plaka}</span><span>${a.tutar} TL (${a.odemeYontemi})</span>
-                         </div>`;
-            });
-            document.getElementById('ozetKartlari').innerHTML = `<div class="bg-blue-600 p-3 rounded-xl text-white">HGS<br>${hgs}</div><div class="bg-emerald-600 p-3 rounded-xl text-white">KART<br>${kart}</div><div class="bg-amber-500 p-3 rounded-xl text-white">NAKİT<br>${nakit}</div>`;
-            document.getElementById('raporTablo').innerHTML = html || "Bugün henüz çıkış yok.";
-            document.getElementById('netCiroBox').innerHTML = `<b>TOPLAM HASILAT</b> <span>${hgs+kart+nakit} TL</span>`;
-            document.getElementById('raporModal').classList.remove('hidden');
-            toggleView('rapor');
         }
 
         renderList();
