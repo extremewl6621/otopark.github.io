@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>İlaç Takip Pro v7</title>
+    <title>İlaç Takip Pro v11</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #d32f2f;
             --success: #2e7d32;
-            --warning: #f57c00;
             --bg: #f2f2f7;
             --card: #ffffff;
             --text: #1c1c1e;
@@ -28,46 +27,32 @@
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         
         body { 
-            background-color: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            padding: 10px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh; 
-            font-family: -apple-system, system-ui, sans-serif;
-            transition: background 0.3s ease;
+            background-color: var(--bg); color: var(--text); margin: 0; padding: 10px; 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; 
+            font-family: -apple-system, system-ui, sans-serif; transition: background 0.3s ease;
         }
 
         .container { width: 100%; max-width: 420px; }
 
-        .header-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 15px;
-            padding: 5px;
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary), #b71c1c);
+            color: white; padding: 15px; border-radius: 16px; margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4); text-align: center;
         }
 
-        .theme-btn {
-            background: var(--card); border: 1px solid var(--border); color: var(--text);
-            width: 44px; height: 44px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; font-size: 18px;
-            cursor: pointer; box-shadow: 0 2px 5px var(--shadow);
-        }
+        .countdown { font-size: 20px; font-weight: 800; margin-top: 5px; }
+        .stats-info { font-size: 11px; opacity: 0.8; margin-top: 8px; text-transform: uppercase; }
+
+        .header-area { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
+        .theme-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
 
         input, select, button {
-            -webkit-appearance: none; appearance: none; outline: none;
-            border: 1px solid var(--border); border-radius: 12px;
-            background-color: var(--card); color: var(--text);
-            font-size: 16px !important; height: 50px; padding: 0 12px;
-            width: 100%; display: block;
+            -webkit-appearance: none; outline: none; border: 1px solid var(--border); border-radius: 12px;
+            background-color: var(--card); color: var(--text); font-size: 16px !important; height: 50px; padding: 0 12px; width: 100%;
         }
 
         .data-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .panel-btn { height: 44px; font-size: 10px !important; font-weight: 700; color: white; border: none; display: flex; align-items: center; justify-content: center; border-radius: 12px;}
+        .panel-btn { height: 44px; font-size: 10px !important; font-weight: 700; color: white; border: none; border-radius: 12px; }
         .export-btn { background-color: #007aff; }
         .import-btn { background-color: #5856d6; }
         .reset-btn { background-color: #ff3b30; }
@@ -75,59 +60,69 @@
         .setup-card { background: var(--card); padding: 18px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 12px var(--shadow); }
         .row-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px; margin-top: 8px; }
         label { font-size: 11px; font-weight: 700; color: #8e8e93; margin-bottom: 4px; display: block; text-transform: uppercase; }
-        
-        .btn-update { background-color: var(--primary); color: white; border: none; height: 56px; font-weight: 800; font-size: 18px !important; margin-top: 15px; border-radius: 12px;}
 
-        /* Modern Modal */
+        .btn-update { background-color: var(--primary); color: white; border: none; height: 56px; font-weight: 800; font-size: 18px !important; margin-top: 15px; }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
         }
         .modal-content {
             background: var(--card); padding: 25px; border-radius: 24px; width: 100%; max-width: 380px;
-            text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-        @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-icon { font-size: 45px; color: var(--primary); margin-bottom: 15px; }
-        .modal-title { font-size: 20px; font-weight: 800; margin-bottom: 15px; color: var(--text); }
-        .modal-body { font-size: 15px; line-height: 1.6; color: var(--text); margin-bottom: 25px; text-align: left; }
-        .modal-close { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 14px; font-weight: 700; font-size: 16px;}
+        .modal-buttons { display: flex; gap: 10px; }
+        .btn-yes { background: var(--success); color: white; border: none; padding: 14px; flex: 1; border-radius: 12px; font-weight: 700; }
+        .btn-no { background: #8e8e93; color: white; border: none; padding: 14px; flex: 1; border-radius: 12px; font-weight: 700; }
 
-        .alert-section { margin-bottom: 15px; padding: 10px; border-radius: 10px; }
-        .alert-past { border: 1px solid var(--primary); background: rgba(211, 47, 47, 0.1); }
-        .alert-today { border: 1px solid var(--success); background: rgba(46, 125, 50, 0.1); }
-
-        /* Takvim Kartları */
         .med-card {
             background: var(--card); margin-bottom: 10px; padding: 15px; border-radius: 14px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 2px 6px var(--shadow); border-left: 5px solid var(--primary);
+            transition: 0.3s;
         }
-        .med-card.completed { opacity: 0.4; filter: grayscale(1); border-left-color: var(--success); }
+        .future-card { opacity: 0.6; border-left-color: #d1d1d6; }
         .pulse-card { border: 2px solid var(--primary) !important; animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); } }
 
-        .check-btn { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; }
-        .completed .check-btn { background: var(--success); border-color: var(--success); color: white; }
+        .check-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .locked-btn { background: #f2f2f7; color: #d1d1d6; cursor: not-allowed; border-color: #e5e5ea; }
+        .active-btn { color: var(--success); border-color: var(--success); }
+
+        .undo-toast {
+            position: fixed; bottom: 30px; background: #323232; color: white;
+            padding: 12px 20px; border-radius: 30px; display: none;
+            justify-content: space-between; align-items: center; width: 90%; max-width: 380px;
+            z-index: 2000;
+        }
     </style>
 </head>
 <body data-theme="light">
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
-        <div class="modal-icon"><i class="fas fa-exclamation-circle"></i></div>
-        <div class="modal-title">İlaç Hatırlatıcı</div>
-        <div class="modal-body" id="modalBody"></div>
-        <button class="modal-close" onclick="closeModal()">Anladım, Kapat</button>
+        <div id="modalIcon" style="font-size:40px; margin-bottom:15px"></div>
+        <div id="modalTitle" style="font-size:19px; font-weight:800; margin-bottom:10px"></div>
+        <div id="modalBody" style="font-size:15px; margin-bottom:20px;"></div>
+        <div id="modalFooter"></div>
     </div>
 </div>
 
+<div class="undo-toast" id="undoToast">
+    <span>Kayıt silindi.</span>
+    <button style="color:#4dabf7; background:none; border:none; font-weight:800;" onclick="undoDelete()">GERİ AL</button>
+</div>
+
 <div class="container">
+    <div class="stats-card">
+        <div id="timerLabel" style="font-size: 11px; font-weight: 600;">SIRADAKİ İLAÇ VAKTİ</div>
+        <div class="countdown" id="countdownTimer">--:--:--</div>
+        <div class="stats-info" id="statsProgress">BAŞARI: 0 KULLANIM</div>
+    </div>
+
     <div class="header-area">
-        <h2 style="margin:0; font-size: 20px;"><i class="fas fa-calendar-check" style="color:var(--primary)"></i> Takip Paneli</h2>
-        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
-            <i class="fas fa-moon"></i>
-        </button>
+        <h2 style="margin:0; font-size: 20px;"><i class="fas fa-history" style="color:var(--primary)"></i> İlaç Takvimim</h2>
+        <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-adjust"></i></button>
     </div>
 
     <div class="data-panel">
@@ -139,7 +134,7 @@
 
     <div class="setup-card">
         <div style="margin-bottom:15px">
-            <label>7 GÜNLÜK İLAÇ ADI</label>
+            <label>7 GÜNLÜK: AVODARTS</label>
             <input type="text" id="name7" value="avodarts">
             <div class="row-grid">
                 <input type="date" id="date7">
@@ -147,7 +142,7 @@
             </div>
         </div>
         <div style="margin-bottom:15px">
-            <label>10 GÜNLÜK İLAÇ ADI</label>
+            <label>10 GÜNLÜK: LOSYON KARISIM</label>
             <input type="text" id="name10" value="losyon karisim">
             <div class="row-grid">
                 <input type="date" id="date10">
@@ -155,211 +150,190 @@
             </div>
         </div>
         <div>
-            <label>TAKİVİM SÜRESİ</label>
+            <label>TAKİVİM DÖKÜM SÜRESİ</label>
             <select id="months">
                 <option value="3">3 Aylık</option>
                 <option value="6" selected>6 Aylık</option>
                 <option value="9">9 Aylık</option>
             </select>
         </div>
-        <button class="btn-update" onclick="generateSchedule()">HESAPLA VE LİSTELE</button>
+        <button class="btn-update" onclick="generateSchedule()">YENİ TAKVİM OLUŞTUR</button>
     </div>
 
     <div id="listContainer"></div>
 </div>
 
 <script>
+    let lastDeletedItem = null, lastDeletedIndex = null, toastTimeout;
+
     window.onload = function() {
-        if(localStorage.getItem('theme') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
-        }
+        if(localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
         loadSettings();
-        if(localStorage.getItem('medList')) {
-            renderList();
-            checkMedsAlerts(); 
-        }
+        renderList();
+        checkMedsAlerts();
+        setInterval(updateCountdown, 1000);
     };
 
     function toggleTheme() {
-        const body = document.body;
-        const btn = document.getElementById('themeBtn');
-        if(body.getAttribute('data-theme') === 'dark') {
-            body.setAttribute('data-theme', 'light');
-            localStorage.setItem('theme', 'light');
-            btn.innerHTML = '<i class="fas fa-moon"></i>';
-        } else {
-            body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            btn.innerHTML = '<i class="fas fa-sun"></i>';
-        }
+        const next = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
     }
 
-    // GECİKMİŞ VE BUGÜNKÜ İLAÇLARI KONTROL EDER
-    function checkMedsAlerts() {
-        const list = JSON.parse(localStorage.getItem('medList'));
-        const now = new Date();
-        now.setHours(0,0,0,0);
+    function updateCountdown() {
+        const list = JSON.parse(localStorage.getItem('medList')) || [];
+        if (list.length === 0) { document.getElementById('countdownTimer').innerText = "Takvim Boş"; return; }
         
-        const todayStr = now.toLocaleDateString('tr-TR');
-        const longDateToday = new Date().toLocaleDateString('tr-TR', { day:'numeric', month:'long', weekday:'long' });
+        const now = new Date().getTime();
+        const nextDate = new Date(list[0].date);
+        const [h, m] = list[0].time.split(':');
+        nextDate.setHours(h, m, 0);
 
-        let pastMeds = [];
-        let todayMeds = [];
+        const diff = nextDate.getTime() - now;
+        if (diff < 0) { document.getElementById('countdownTimer').innerText = "VAKTİ GELDİ!"; return; }
 
-        list.forEach(item => {
-            const itemDate = new Date(item.date);
-            itemDate.setHours(0,0,0,0);
-            const itemDateStr = itemDate.toLocaleDateString('tr-TR');
-
-            if (!item.done) {
-                if (itemDate < now) {
-                    pastMeds.push(item);
-                } else if (itemDateStr === todayStr) {
-                    todayMeds.push(item);
-                }
-            }
-        });
-
-        if (pastMeds.length > 0 || todayMeds.length > 0) {
-            const overlay = document.getElementById('modalOverlay');
-            const body = document.getElementById('modalBody');
-            let content = "";
-
-            if (pastMeds.length > 0) {
-                let pastList = pastMeds.map(m => {
-                    const d = new Date(m.date).toLocaleDateString('tr-TR', {day:'numeric', month:'short'});
-                    return `• <b>${m.name}</b> (${d})`;
-                }).join("<br>");
-                content += `<div class="alert-section alert-past" style="color:var(--primary)">
-                                <b>⚠️ GECİKMİŞ İLAÇLAR:</b><br>${pastList}
-                            </div>`;
-            }
-
-            if (todayMeds.length > 0) {
-                let todayList = todayMeds.map(m => `• <b>${m.name}</b>`).join("<br>");
-                content += `<div class="alert-section alert-today" style="color:var(--success)">
-                                <b>✅ BUGÜNÜN İLACI (${longDateToday}):</b><br>${todayList}
-                            </div>`;
-            }
-
-            body.innerHTML = content + "<p style='text-align:center; margin-top:10px;'>Lütfen kullanım sonrası işaretlemeyi unutmayın.</p>";
-            overlay.style.display = 'flex';
-        }
-    }
-
-    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
-    function generateSchedule() {
-        const settings = {
-            n7: document.getElementById('name7').value || "avodarts",
-            d7: document.getElementById('date7').value,
-            t7: document.getElementById('time7').value,
-            n10: document.getElementById('name10').value || "losyon karisim",
-            d10: document.getElementById('date10').value,
-            t10: document.getElementById('time10').value,
-            m: document.getElementById('months').value
-        };
-        if (!settings.d7 || !settings.d10) { alert("Başlangıç tarihlerini girin!"); return; }
-        localStorage.setItem('medSettings', JSON.stringify(settings));
-
-        let schedule = [];
-        const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + parseInt(settings.m));
-
-        let c7 = new Date(settings.d7);
-        c7.setDate(c7.getDate() + 7);
-        while(c7 <= endDate) {
-            schedule.push({ id: '7_'+c7.getTime(), name: settings.n7, date: new Date(c7).toISOString(), time: settings.t7, done: false });
-            c7.setDate(c7.getDate() + 7);
-        }
-
-        let c10 = new Date(settings.d10);
-        c10.setDate(c10.getDate() + 10);
-        while(c10 <= endDate) {
-            schedule.push({ id: '10_'+c10.getTime(), name: settings.n10, date: new Date(c10).toISOString(), time: settings.t10, done: false });
-            c10.setDate(c10.getDate() + 10);
-        }
-
-        schedule.sort((a,b) => new Date(a.date) - new Date(b.date));
-        localStorage.setItem('medList', JSON.stringify(schedule));
-        renderList();
-        checkMedsAlerts();
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById('countdownTimer').innerText = `${d > 0 ? d + "g " : ""}${hours}s ${mins}d ${secs}sn`;
     }
 
     function renderList() {
-        const list = JSON.parse(localStorage.getItem('medList'));
+        const list = JSON.parse(localStorage.getItem('medList')) || [];
         const container = document.getElementById('listContainer');
-        const today = new Date().toLocaleDateString('tr-TR');
-        container.innerHTML = `<h3 style="margin-left:5px;">İlaç Listesi</h3>`;
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        
+        container.innerHTML = `<h3 style="margin: 0 0 15px 5px;">Kalan Kullanımlar</h3>`;
+        document.getElementById('statsProgress').innerText = `BAŞARI: ${localStorage.getItem('successCount') || 0} KULLANIM`;
 
         list.forEach((item, index) => {
-            const dt = new Date(item.date);
-            const itemDateStr = dt.toLocaleDateString('tr-TR');
-            const displayDate = dt.toLocaleDateString('tr-TR', { day:'numeric', month:'long', weekday:'short' });
-            const isToday = (itemDateStr === today && !item.done);
+            const itemDate = new Date(item.date);
+            itemDate.setHours(0,0,0,0);
+            const isFuture = itemDate > now;
+            const isToday = itemDate.getTime() === now.getTime();
             
             const card = document.createElement('div');
-            card.className = `med-card ${item.done ? 'completed' : ''} ${isToday ? 'pulse-card' : ''}`;
+            card.className = `med-card ${isFuture ? 'future-card' : ''} ${isToday ? 'pulse-card' : ''}`;
             card.innerHTML = `
                 <div class="med-info">
                     <b>${item.name}</b>
-                    <span>${displayDate}</span>
-                    <span style="color:var(--primary); font-weight:700; font-size:14px; display:block; margin-top:4px;"><i class="far fa-clock"></i> ${item.time}</span>
+                    <span>${new Date(item.date).toLocaleDateString('tr-TR', { day:'numeric', month:'long', weekday:'short' })}</span>
+                    <span style="color:var(--primary); font-size:13px; font-weight:700;"><i class="far fa-clock"></i> ${item.time}</span>
                 </div>
-                <div class="check-btn" onclick="toggleItem(${index})">
-                    ${item.done ? '<i class="fas fa-check"></i>' : ''}
+                <div class="check-btn ${isFuture ? 'locked-btn' : 'active-btn'}" onclick="${isFuture ? '' : `requestDelete(${index})`}">
+                    <i class="fas ${isFuture ? 'fa-lock' : 'fa-check'}"></i>
                 </div>
             `;
             container.appendChild(card);
         });
     }
 
-    function toggleItem(index) {
+    function requestDelete(index) {
+        const list = JSON.parse(localStorage.getItem('medList'));
+        showModal('<i class="fas fa-question-circle" style="color:var(--success)"></i>', "Onay", 
+                  `<b>${list[index].name}</b> ilacını kullandınız mı? Kayıt silinecektir.`, true, index);
+    }
+
+    function confirmDelete(index) {
         let list = JSON.parse(localStorage.getItem('medList'));
-        list[index].done = !list[index].done;
+        lastDeletedItem = list[index]; lastDeletedIndex = index;
+        list.splice(index, 1);
         localStorage.setItem('medList', JSON.stringify(list));
+        
+        localStorage.setItem('successCount', parseInt(localStorage.getItem('successCount') || 0) + 1);
+        closeModal(); renderList();
+        
+        document.getElementById('undoToast').style.display = 'flex';
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => { document.getElementById('undoToast').style.display = 'none'; }, 5000);
+    }
+
+    function undoDelete() {
+        let list = JSON.parse(localStorage.getItem('medList'));
+        list.splice(lastDeletedIndex, 0, lastDeletedItem);
+        localStorage.setItem('medList', JSON.stringify(list));
+        localStorage.setItem('successCount', Math.max(0, parseInt(localStorage.getItem('successCount')) - 1));
+        document.getElementById('undoToast').style.display = 'none';
         renderList();
     }
+
+    function generateSchedule() {
+        const settings = {
+            n7: document.getElementById('name7').value, d7: document.getElementById('date7').value, t7: document.getElementById('time7').value,
+            n10: document.getElementById('name10').value, d10: document.getElementById('date10').value, t10: document.getElementById('time10').value,
+            m: document.getElementById('months').value
+        };
+        if(!settings.d7 || !settings.d10) { alert("Başlangıç tarihlerini seçin!"); return; }
+        
+        let schedule = [];
+        const end = new Date(); end.setMonth(end.getMonth() + parseInt(settings.m));
+
+        let c7 = new Date(settings.d7); c7.setDate(c7.getDate() + 7);
+        while(c7 <= end) { schedule.push({ name: settings.n7, date: new Date(c7).toISOString(), time: settings.t7 }); c7.setDate(c7.getDate() + 7); }
+
+        let c10 = new Date(settings.d10); c10.setDate(c10.getDate() + 10);
+        while(c10 <= end) { schedule.push({ name: settings.n10, date: new Date(c10).toISOString(), time: settings.t10 }); c10.setDate(c10.getDate() + 10); }
+
+        schedule.sort((a,b) => new Date(a.date) - new Date(b.date));
+        localStorage.setItem('medList', JSON.stringify(schedule));
+        localStorage.setItem('medSettings', JSON.stringify(settings));
+        renderList();
+    }
+
+    function checkMedsAlerts() {
+        const list = JSON.parse(localStorage.getItem('medList')) || [];
+        const now = new Date(); now.setHours(0,0,0,0);
+        let past = list.filter(m => new Date(m.date) < now);
+        let today = list.filter(m => new Date(m.date).toLocaleDateString() === new Date().toLocaleDateString());
+
+        if(past.length > 0 || today.length > 0) {
+            let msg = past.length > 0 ? `<div style="color:var(--primary); margin-bottom:10px">⚠️ <b>Gecikmiş:</b> ${past.length} kayıt var.</div>` : "";
+            msg += today.length > 0 ? `<div style="color:var(--success)">✅ <b>Bugün:</b> ${today.map(m=>m.name).join(", ")} günü.</div>` : "";
+            showModal('<i class="fas fa-bell"></i>', "Hatırlatıcı", msg, false);
+        }
+    }
+
+    function showModal(icon, title, body, isConfirm, index = null) {
+        document.getElementById('modalIcon').innerHTML = icon;
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalBody').innerHTML = body;
+        const footer = document.getElementById('modalFooter');
+        footer.innerHTML = isConfirm ? 
+            `<div class="modal-buttons"><button class="btn-yes" onclick="confirmDelete(${index})">EVET</button><button class="btn-no" onclick="closeModal()">HAYIR</button></div>` :
+            `<button class="btn-yes" style="width:100%" onclick="closeModal()">TAMAM</button>`;
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
 
     function loadSettings() {
         const s = JSON.parse(localStorage.getItem('medSettings'));
         if(s) {
-            document.getElementById('name7').value = s.n7;
-            document.getElementById('date7').value = s.d7;
-            document.getElementById('time7').value = s.t7;
-            document.getElementById('name10').value = s.n10;
-            document.getElementById('date10').value = s.d10;
-            document.getElementById('time10').value = s.t10;
-            document.getElementById('months').value = s.m;
+            document.getElementById('name7').value = s.n7; document.getElementById('date7').value = s.d7; document.getElementById('time7').value = s.t7;
+            document.getElementById('name10').value = s.n10; document.getElementById('date10').value = s.d10; document.getElementById('time10').value = s.t10;
+            document.getElementById('months').value = s.m || "6";
         }
     }
 
     function exportData() {
-        const data = { medList: localStorage.getItem('medList'), medSettings: localStorage.getItem('medSettings') };
+        const data = { medList: localStorage.getItem('medList'), medSettings: localStorage.getItem('medSettings'), successCount: localStorage.getItem('successCount') };
         const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'ilac_yedek.json';
-        a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ilac_yedek.json'; a.click();
     }
 
     function importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = JSON.parse(e.target.result);
-            localStorage.setItem('medList', data.medList);
-            localStorage.setItem('medSettings', data.medSettings);
+        reader.onload = (e) => {
+            const d = JSON.parse(e.target.result);
+            localStorage.setItem('medList', d.medList); localStorage.setItem('medSettings', d.medSettings); localStorage.setItem('successCount', d.successCount || 0);
             location.reload();
         };
-        reader.readAsText(file);
+        reader.readAsText(event.target.files[0]);
     }
 
-    function clearAll() {
-        if(confirm("Tüm döküm silinsin mi?")) { localStorage.clear(); location.reload(); }
-    }
+    function clearAll() { if(confirm("Tüm döküm temizlensin mi?")) { localStorage.clear(); location.reload(); } }
 </script>
 
 </body>
