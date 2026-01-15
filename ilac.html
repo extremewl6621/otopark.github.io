@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>İlaç Takip Pro v3</title>
+    <title>İlaç Takip Pro (Kararlı Sürüm)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -11,9 +11,10 @@
             --success: #2e7d32;
             --bg: #f2f2f7;
             --card: #ffffff;
-            --text: #000000;
-            --border: #c6c6c8;
-            --shadow: rgba(0, 0, 0, 0.05);
+            --text: #1c1c1e;
+            --border: #d1d1d6;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --input-bg: #ffffff;
         }
 
         [data-theme="dark"] {
@@ -21,107 +22,111 @@
             --card: #1c1c1e;
             --text: #ffffff;
             --border: #38383a;
-            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow: rgba(0, 0, 0, 0.4);
+            --input-bg: #2c2c2e;
         }
 
-        /* iOS Form Elemanları Düzeltmesi */
+        /* iOS & Android Evrensel Form Reset */
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        
         input, select, button {
             -webkit-appearance: none;
             appearance: none;
-            font-size: 16px !important;
-            border-radius: 12px;
-            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            outline: none;
             border: 1px solid var(--border);
-            background: var(--card);
+            border-radius: 12px;
+            background-color: var(--input-bg);
             color: var(--text);
-            box-sizing: border-box;
-            /* Basık görünümü engellemek için sabit yükseklik */
-            height: 48px; 
-            line-height: 1.2;
+            font-family: -apple-system, system-ui, sans-serif;
+            font-size: 16px !important;
+            height: 50px; /* Sabit yükseklik basıklığı önler */
             padding: 0 12px;
-            margin: 0;
+            width: 100%;
             display: block;
         }
 
-        /* Tarih ve Saat inputları için iOS'ta içerik yokken oluşan basıklığı önler */
-        input[type="date"], input[type="time"] {
-            min-height: 48px;
-            display: flex;
-            align-items: center;
+        /* iOS Safari'nin date/time kutularındaki garip boşlukları temizler */
+        input::-webkit-date-and-time-value {
+            min-height: 20px;
+            text-align: left;
         }
 
         body { 
             background-color: var(--bg); 
             color: var(--text); 
             margin: 0; 
-            padding: 15px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
         }
 
-        .container { width: 100%; max-width: 450px; }
+        .container { width: 100%; max-width: 420px; }
 
+        /* Üst Panel */
         .data-panel {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
         }
 
         .panel-btn {
-            height: auto;
-            padding: 10px 5px;
-            font-size: 10px;
+            height: 44px;
+            font-size: 11px !important;
             font-weight: 700;
             color: white;
-            text-align: center;
             border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
         }
 
         .export-btn { background-color: #007aff; }
         .import-btn { background-color: #5856d6; }
         .reset-btn { background-color: #ff3b30; }
 
+        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            padding: 0 5px;
         }
 
         .theme-toggle {
+            width: 40px;
             height: 40px;
-            padding: 0 15px;
-            background: var(--card);
-            color: var(--primary);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
+        /* Form Kartı */
         .setup-card { 
             background: var(--card); 
-            padding: 20px; 
+            padding: 16px; 
             border-radius: 16px; 
             margin-bottom: 20px;
-            box-shadow: 0 4px 15px var(--shadow);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
-        .input-row {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .inner-grid {
+        .input-block { margin-bottom: 20px; }
+        
+        .row-grid {
             display: grid;
             grid-template-columns: 1.5fr 1fr;
             gap: 10px;
+            margin-top: 8px;
         }
 
         label { 
             font-size: 11px; 
-            font-weight: 700; 
+            font-weight: 600; 
             color: #8e8e93; 
             margin-bottom: 4px; 
             display: block; 
@@ -132,21 +137,22 @@
             background-color: var(--primary); 
             color: white; 
             border: none; 
-            width: 100%;
-            height: 55px;
+            height: 56px;
             font-weight: 800;
             font-size: 18px !important;
+            margin-top: 10px;
         }
 
+        /* Liste Kartları */
         .med-card {
             background: var(--card);
             margin-bottom: 10px;
-            padding: 18px;
+            padding: 15px;
             border-radius: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px var(--shadow);
+            box-shadow: 0 2px 6px var(--shadow);
             border-left: 5px solid var(--primary);
         }
 
@@ -156,20 +162,19 @@
             border-left-color: var(--success);
         }
 
-        .med-info b { display: block; font-size: 17px; margin-bottom: 3px; }
+        .med-info b { display: block; font-size: 16px; margin-bottom: 2px; }
         .med-info span { font-size: 13px; color: #8e8e93; }
-        .med-time { color: var(--primary); font-weight: 700; margin-top: 5px; display: block; }
+        .med-time { color: var(--primary); font-weight: 700; font-size: 14px; margin-top: 4px; display: block; }
 
         .check-btn {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            border: 2.5px solid var(--border);
+            border: 2px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            background: transparent;
         }
 
         .completed .check-btn {
@@ -178,7 +183,6 @@
             color: white;
         }
 
-        select { padding-right: 30px; } /* iOS arrow fix */
         #fileInput { display: none; }
     </style>
 </head>
@@ -186,26 +190,24 @@
 
 <div class="container">
     <div class="data-panel">
-        <button class="panel-btn export-btn" onclick="exportData()"><i class="fas fa-download"></i> YEDEKLE</button>
+        <button class="panel-btn export-btn" onclick="exportData()"><i class="fas fa-download"></i> YEDEK</button>
         <button class="panel-btn import-btn" onclick="document.getElementById('fileInput').click()"><i class="fas fa-upload"></i> YÜKLE</button>
         <button class="panel-btn reset-btn" onclick="clearAll()"><i class="fas fa-trash"></i> SIFIRLA</button>
         <input type="file" id="fileInput" onchange="importData(event)" accept=".json">
     </div>
 
     <div class="header">
-        <h2 style="margin:0; font-size: 24px;"><i class="fas fa-pills" style="color:var(--primary)"></i> Takip</h2>
+        <h2 style="margin:0;"><i class="fas fa-heartbeat" style="color:var(--primary)"></i> İlaç Takip</h2>
         <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </div>
     
     <div class="setup-card">
-        <div class="input-row">
-            <div>
-                <label>7 GÜNLÜK İLAÇ ADI</label>
-                <input type="text" id="name7" value="7 Günlük Hap" 
-                       onfocus="if(this.value=='7 Günlük Hap') this.value='';" 
-                       onblur="if(this.value=='') this.value='7 Günlük Hap';">
-            </div>
-            <div class="inner-grid">
+        <div class="input-block">
+            <label>7 GÜNLÜK İLAÇ ADI</label>
+            <input type="text" id="name7" value="7 Günlük Hap" 
+                   onfocus="if(this.value=='7 Günlük Hap') this.value='';" 
+                   onblur="if(this.value=='') this.value='7 Günlük Hap';">
+            <div class="row-grid">
                 <div>
                     <label>SON TARİH</label>
                     <input type="date" id="date7">
@@ -217,16 +219,12 @@
             </div>
         </div>
 
-        <hr style="border:0; border-top:1px solid var(--border); margin: 20px 0;">
-
-        <div class="input-row">
-            <div>
-                <label>10 GÜNLÜK İLAÇ ADI</label>
-                <input type="text" id="name10" value="10 Günlük Sürme" 
-                       onfocus="if(this.value=='10 Günlük Sürme') this.value='';" 
-                       onblur="if(this.value=='') this.value='10 Günlük Sürme';">
-            </div>
-            <div class="inner-grid">
+        <div class="input-block">
+            <label>10 GÜNLÜK İLAÇ ADI</label>
+            <input type="text" id="name10" value="10 Günlük Sürme" 
+                   onfocus="if(this.value=='10 Günlük Sürme') this.value='';" 
+                   onblur="if(this.value=='') this.value='10 Günlük Sürme';">
+            <div class="row-grid">
                 <div>
                     <label>SON TARİH</label>
                     <input type="date" id="date10">
@@ -238,14 +236,12 @@
             </div>
         </div>
 
-        <div style="margin-top: 20px;">
-            <label>DÖKÜM SÜRESİ</label>
-            <select id="months" style="width: 100%;">
-                <option value="3">3 Aylık Takvim</option>
-                <option value="6">6 Aylık Takvim</option>
-                <option value="9">9 Aylık Takvim</option>
-            </select>
-        </div>
+        <label>TAKİVİM SÜRESİ</label>
+        <select id="months">
+            <option value="3">3 Aylık Döküm</option>
+            <option value="6">6 Aylık Döküm</option>
+            <option value="9">9 Aylık Döküm</option>
+        </select>
         
         <button class="btn-update" onclick="generateSchedule()">HESAPLA VE LİSTELE</button>
     </div>
@@ -254,6 +250,7 @@
 </div>
 
 <script>
+    // Önceki tüm fonksiyonel kodlar (generate, export, import) aynen korunmuştur.
     window.onload = function() {
         if(localStorage.getItem('theme') === 'dark') toggleTheme();
         loadSettings();
@@ -308,7 +305,7 @@
     function renderList() {
         const list = JSON.parse(localStorage.getItem('medList'));
         const container = document.getElementById('listContainer');
-        container.innerHTML = `<h3 style="margin: 0 0 15px 5px;"><i class="fas fa-calendar-alt"></i> Planlanan Günler</h3>`;
+        container.innerHTML = `<h3 style="margin-left:5px;"><i class="fas fa-calendar-alt"></i> Planlanan Günler</h3>`;
 
         list.forEach((item, index) => {
             const dt = new Date(item.date);
@@ -355,7 +352,7 @@
         const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'ilac_takip_yedek.json';
+        a.download = 'ilac_yedek.json';
         a.click();
     }
 
@@ -373,7 +370,7 @@
     }
 
     function clearAll() {
-        if(confirm("Tüm döküm ve ayarlar silinsin mi?")) {
+        if(confirm("Tüm döküm silinsin mi?")) {
             localStorage.clear();
             location.reload();
         }
