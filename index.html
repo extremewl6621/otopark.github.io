@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personel Takip V24 - Net Raporlama</title>
+    <title>Personel Takip V25 - Tam Detaylı PDF</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@
 <div id="mainContent">
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Personel Takip V24</a>
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Personel Takip V25</a>
             <div class="ms-auto d-flex gap-2">
                 <a href="otopark.html" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-square-parking me-1 text-primary"></i> Otopark</a>
                 <button onclick="downloadBackup()" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-download me-1 text-primary"></i> İndir</button>
@@ -70,10 +70,7 @@
                 <div class="card shadow-sm">
                     <div class="card-header"><i class="fa-solid fa-warehouse header-icon"></i> Otopark Ekle</div>
                     <div class="card-body">
-                        <div class="input-group">
-                            <input type="text" id="newLocationName" class="form-control" style="text-transform: uppercase;" placeholder="İSİM">
-                            <button onclick="addNewLocation()" class="btn btn-dark btn-sm fw-bold">Ekle</button>
-                        </div>
+                        <div class="input-group"><input type="text" id="newLocationName" class="form-control" style="text-transform: uppercase;" placeholder="İSİM"><button onclick="addNewLocation()" class="btn btn-dark btn-sm fw-bold">Ekle</button></div>
                     </div>
                 </div>
 
@@ -81,15 +78,8 @@
                     <div class="card-header"><i class="fa-solid fa-user-plus header-icon"></i> Personel Ekle</div>
                     <div class="card-body">
                         <input type="text" id="dbName" class="form-control mb-2" style="text-transform: uppercase;" placeholder="AD SOYAD">
-                        <div class="row g-2 mb-2">
-                            <div class="col-6"><input type="text" id="dbPhone" class="form-control" placeholder="TEL"></div>
-                            <div class="col-6"><input type="text" id="dbIban" class="form-control" style="text-transform: uppercase;" placeholder="IBAN"></div>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-text fw-bold">₺</span>
-                            <input type="number" id="dbRate" class="form-control" value="150">
-                            <button onclick="addNewPersonnel()" class="btn btn-dark btn-sm fw-bold">Ekle</button>
-                        </div>
+                        <div class="row g-2 mb-2"><div class="col-6"><input type="text" id="dbPhone" class="form-control" placeholder="TEL"></div><div class="col-6"><input type="text" id="dbIban" class="form-control" style="text-transform: uppercase;" placeholder="IBAN"></div></div>
+                        <div class="input-group"><span class="input-group-text fw-bold">₺</span><input type="number" id="dbRate" class="form-control" value="150"><button onclick="addNewPersonnel()" class="btn btn-dark btn-sm fw-bold">Ekle</button></div>
                     </div>
                 </div>
 
@@ -97,44 +87,24 @@
                     <div class="card-header bg-white"><i class="fa-solid fa-file-pen header-icon" style="color:#27ae60;"></i> <span class="fw-bold">Mesai Girişi</span></div>
                     <div class="card-body">
                         <label class="small fw-bold text-muted mb-1">PERSONEL SEÇ</label>
-                        <div class="input-group mb-2">
-                            <select id="personSelect" class="form-select fw-bold" onchange="fillPersonDetails()"></select>
-                            <button class="btn btn-outline-danger btn-sm" onclick="deletePersonnelDB()"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                        
-                        <div class="row g-2 mb-3">
-                            <div class="col-4"><input type="text" id="workRate" class="form-control text-center bg-light fw-bold" readonly disabled></div>
-                            <div class="col-8"><input type="text" id="workIban" class="form-control text-muted small bg-light" readonly disabled></div>
-                        </div>
-
+                        <div class="input-group mb-2"><select id="personSelect" class="form-select fw-bold" onchange="fillPersonDetails()"></select><button class="btn btn-outline-danger btn-sm" onclick="deletePersonnelDB()"><i class="fa-solid fa-trash-can"></i></button></div>
+                        <div class="row g-2 mb-3"><div class="col-4"><input type="text" id="workRate" class="form-control text-center bg-light fw-bold" readonly disabled></div><div class="col-8"><input type="text" id="workIban" class="form-control text-muted small bg-light" readonly disabled></div></div>
                         <label class="small fw-bold text-muted mb-1">OTOPARK SEÇ</label>
-                        <div class="input-group mb-3">
-                            <select id="locationSelect" class="form-select fw-bold"></select>
-                            <button class="btn btn-outline-danger btn-sm" onclick="deleteLocationDB()"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-
+                        <div class="input-group mb-3"><select id="locationSelect" class="form-select fw-bold"></select><button class="btn btn-outline-danger btn-sm" onclick="deleteLocationDB()"><i class="fa-solid fa-trash-can"></i></button></div>
                         <div class="bg-light p-2 rounded border mb-3">
                             <input type="date" id="shiftDate" class="form-control fw-bold text-center mb-2">
-                            <div class="row g-2">
-                                <div class="col-6"><select id="shiftStart" class="form-select text-center fw-bold" onchange="autoCalculateEndTime()"></select></div>
-                                <div class="col-6"><select id="shiftEnd" class="form-select text-center fw-bold"></select></div>
-                            </div>
+                            <div class="row g-2"><div class="col-6"><select id="shiftStart" class="form-select text-center fw-bold" onchange="autoCalculateEndTime()"></select></div><div class="col-6"><select id="shiftEnd" class="form-select text-center fw-bold"></select></div></div>
                             <button onclick="addShiftToBuffer()" class="btn btn-warning w-100 mt-2 fw-bold btn-sm shadow-sm">Günü Ekle</button>
                         </div>
-                        <div class="border rounded bg-white mb-3" style="max-height: 100px; overflow-y: auto;">
-                            <table class="table table-sm mb-0"><tbody id="bufferTable"></tbody></table>
-                        </div>
-                        <button onclick="saveFinalRecord()" class="btn btn-success w-100 fw-bold shadow-sm">LİSTEYE KAYDET</button>
+                        <div class="border rounded bg-white mb-3" style="max-height: 100px; overflow-y: auto;"><table class="table table-sm mb-0"><tbody id="bufferTable"></tbody></table></div>
+                        <button onclick="saveFinalRecord()" class="btn btn-success w-100 fw-bold shadow-sm">KAYDET</button>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-8 col-xl-9">
                 <div class="card h-100 shadow-sm">
-                    <div class="card-header justify-content-between">
-                        <span>Hazırlanan Liste</span>
-                        <span class="badge bg-secondary" id="recordCount">0</span>
-                    </div>
+                    <div class="card-header justify-content-between"><span>Hazırlanan Liste</span><span class="badge bg-secondary" id="recordCount">0</span></div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-custom table-hover mb-0">
@@ -144,7 +114,7 @@
                                         <th>Otopark</th>
                                         <th>İletişim/IBAN</th>
                                         <th width="35%">Mesai Detayları</th>
-                                        <th class="text-center">Saat</th>
+                                        <th class="text-center">Top. Saat</th>
                                         <th class="text-end">Tutar</th>
                                         <th class="text-center">S</th>
                                     </tr>
@@ -154,14 +124,7 @@
                         </div>
                     </div>
                     <div class="card-footer bg-white py-2">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <span id="grandTotal" class="total-display">0,00 ₺</span>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF RAPORU AL</button>
-                            </div>
-                        </div>
+                        <div class="row align-items-center"><div class="col-md-6"><span id="grandTotal" class="total-display">0,00 ₺</span></div><div class="col-md-6 text-end"><button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF RAPORU AL</button></div></div>
                     </div>
                 </div>
             </div>
@@ -175,21 +138,17 @@
 
 <script>
     // --- GİRİŞ KONTROLÜ ---
-    const _u = [121, 97, 118, 117, 122]; 
-    const _p = [115, 97, 104, 105, 110];
+    const _u = [121, 97, 118, 117, 122]; const _p = [115, 97, 104, 105, 110];
     function validateLogin() {
         const u = document.getElementById('userInput').value.toLowerCase();
         const p = document.getElementById('passInput').value.toLowerCase();
         if (JSON.stringify(u.split('').map(c=>c.charCodeAt(0))) === JSON.stringify(_u) && JSON.stringify(p.split('').map(c=>c.charCodeAt(0))) === JSON.stringify(_p)) {
-            sessionStorage.setItem('isLoggedIn', 'true');
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
+            sessionStorage.setItem('isLoggedIn', 'true'); document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainContent').style.display = 'block';
         } else { document.getElementById('loginError').style.display = 'block'; }
     }
     window.onload = function() { if (sessionStorage.getItem('isLoggedIn') === 'true') { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainContent').style.display = 'block'; } }
 
     let locationDB = [], personnelDB = [], records = [], currentShifts = [];
-
     function encryptData(data) { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).split('').reverse().join('') + "_SECURE"; }
     function decryptData(cipher) { try { return JSON.parse(decodeURIComponent(escape(atob(cipher.replace("_SECURE", "").split('').reverse().join(''))))); } catch (e) { return null; } }
 
@@ -210,11 +169,11 @@
 
     function renderAll() { renderLocs(); renderPers(); renderTable(); }
     function loadLocal() {
-        const l = localStorage.getItem('v24_l'), p = localStorage.getItem('v24_p'), r = localStorage.getItem('v24_r');
+        const l = localStorage.getItem('v25_l'), p = localStorage.getItem('v25_p'), r = localStorage.getItem('v25_r');
         if(l) locationDB=JSON.parse(l); if(p) personnelDB=JSON.parse(p); if(r) records=JSON.parse(r);
         renderAll();
     }
-    function saveLocal() { localStorage.setItem('v24_l', JSON.stringify(locationDB)); localStorage.setItem('v24_p', JSON.stringify(personnelDB)); localStorage.setItem('v24_r', JSON.stringify(records)); }
+    function saveLocal() { localStorage.setItem('v25_l', JSON.stringify(locationDB)); localStorage.setItem('v25_p', JSON.stringify(personnelDB)); localStorage.setItem('v25_r', JSON.stringify(records)); }
 
     function populateTimeSelects() {
         const s = document.getElementById('shiftStart'), e = document.getElementById('shiftEnd');
@@ -276,7 +235,7 @@
 
     function clearCurrentList() { if(confirm('Liste silinsin mi?')) { records = []; saveLocal(); renderTable(); } }
 
-    // --- PDF RAPORU GÜNCELLEMESİ (V24) ---
+    // --- PDF RAPORU GÜNCELLEMESİ (V25) ---
     function generatePDF() {
         if(records.length === 0) return;
         const { jsPDF } = window.jspdf;
@@ -287,7 +246,7 @@
             return str ? str.replace(/[ğĞşŞıİüÜöÖçÇ]/g, k=>m[k]) : ""; 
         };
 
-        const head = [['PERSONEL', 'OTOPARK', 'ILETISIM / IBAN', 'MESAI DETAYLARI (Tarih ve Saat)', 'SAAT', 'TUTAR']];
+        const head = [['PERSONEL', 'OTOPARK', 'ILETISIM / IBAN', 'MESAI DETAYLARI (Tarih ve Saat)', 'TOP. SAAT', 'TUTAR']];
         
         const body = records.map(r => {
             const shiftDetails = r.shifts.map(s => {
@@ -300,7 +259,7 @@
                 tr(r.location),
                 `${r.phone}\n${r.iban}`,
                 shiftDetails,
-                r.totalHours + " Sa",
+                r.totalHours + " Saat", // "Sa" -> "Saat" yapıldı
                 parseFloat(r.totalCost).toLocaleString('tr-TR') + " TL"
             ];
         });
@@ -312,34 +271,20 @@
             startY: 20,
             head: head,
             body: body,
-            theme: 'grid', // Çizgili tema
-            styles: { 
-                fontSize: 8, 
-                cellPadding: 3, 
-                overflow: 'linebreak', 
-                valign: 'middle', // Dikey ortalama
-                lineColor: [0, 0, 0], // Çizgi rengi: Siyah
-                lineWidth: 0.1 // Çizgi kalınlığı
-            },
-            headStyles: { 
-                fillColor: [44, 62, 80], 
-                textColor: [255, 255, 255], 
-                fontStyle: 'bold',
-                lineWidth: 0.1,
-                lineColor: [0, 0, 0]
-            },
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', valign: 'middle', lineColor: [0, 0, 0], lineWidth: 0.1 },
+            headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255], fontStyle: 'bold', lineWidth: 0.1, lineColor: [0, 0, 0] },
             columnStyles: {
                 0: { cellWidth: 35 },
                 1: { cellWidth: 30 },
                 2: { cellWidth: 45 },
-                3: { cellWidth: 80 }, // Detay sütunu geniş
-                4: { halign: 'center', cellWidth: 20 },
+                3: { cellWidth: 80 },
+                4: { halign: 'center', cellWidth: 25 }, // Genişlik artırıldı
                 5: { halign: 'right', fontStyle: 'bold', cellWidth: 35 }
             },
-            foot: [['', '', '', '', 'TOPLAM:', document.getElementById('grandTotal').innerText.replace('₺','TL')]],
+            foot: [['', '', '', '', 'GENEL TOPLAM:', document.getElementById('grandTotal').innerText.replace('₺','TL')]],
             footStyles: { fillColor: [39, 174, 96], textColor: [255,255,255], fontStyle: 'bold', halign: 'right', lineWidth: 0.1, lineColor: [0, 0, 0] }
         });
-
         doc.save("Mesai_Raporu.pdf");
     }
 
