@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Güvenli Personel Takip V20</title>
+    <title>Güvenli Personel Takip V21</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,6 @@
         :root { --primary-bg: #f0f2f5; --card-radius: 12px; --input-radius: 8px; }
         body { background-color: var(--primary-bg); font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #34495e; }
         
-        /* GİRİŞ EKRANI */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -22,11 +21,7 @@
             background: #fff; padding: 40px; border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center;
         }
-        .login-card i { color: #1e3c72; font-size: 3rem; margin-bottom: 20px; }
-
-        /* ANA İÇERİK (BAŞLANGIÇTA GİZLİ) */
         #mainContent { display: none; }
-
         .navbar-custom { background: linear-gradient(to right, #2c3e50, #4ca1af); padding: 10px 0; }
         .card { border: none; border-radius: var(--card-radius); box-shadow: 0 2px 10px rgba(0,0,0,0.03); background: #fff; margin-bottom: 15px; }
         .card-header { background: #fff; border-bottom: 1px solid #f1f1f1; padding: 12px 15px; font-weight: 700; border-radius: var(--card-radius) var(--card-radius) 0 0 !important; display: flex; align-items: center; }
@@ -34,13 +29,14 @@
         .form-control, .form-select { border-radius: var(--input-radius); border: 1px solid #dee2e6; padding: 8px 10px; font-size: 0.85rem; }
         .total-display { font-size: 1.4rem; font-weight: 800; color: #27ae60; }
         .shift-badge { background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-right: 3px; border: 1px solid #bbdefb; }
+        .pointer { cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-card">
-        <i class="fa-solid fa-user-shield"></i>
+        <i class="fa-solid fa-user-shield fa-3x mb-3 text-primary"></i>
         <h4 class="fw-bold mb-4">Sistem Girişi</h4>
         <input type="text" id="userInput" class="form-control mb-3" placeholder="Kullanıcı Adı">
         <input type="password" id="passInput" class="form-control mb-4" placeholder="Şifre">
@@ -52,11 +48,11 @@
 <div id="mainContent">
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Güvenli Takip V20</a>
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Personel Takip V21</a>
             <div class="ms-auto d-flex gap-2">
                 <a href="otopark.html" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-square-parking me-1 text-primary"></i> Otopark</a>
                 <button onclick="downloadBackup()" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-download me-1 text-primary"></i> İndir</button>
-                <label class="btn btn-light btn-sm text-dark fw-bold mb-0 px-3" style="cursor: pointer;"><i class="fa-solid fa-upload me-1 text-primary"></i> Yükle<input type="file" hidden onchange="uploadBackup(this)"></label>
+                <label class="btn btn-light btn-sm text-dark fw-bold mb-0 px-3 pointer"><i class="fa-solid fa-upload me-1 text-primary"></i> Yükle<input type="file" hidden onchange="uploadBackup(this)"></label>
                 <button onclick="clearCurrentList()" class="btn btn-danger btn-sm ms-2" title="Listeyi Temizle"><i class="fa-solid fa-trash-can"></i></button>
             </div>
         </div>
@@ -82,10 +78,10 @@
                 <div class="card border-top border-4 border-success">
                     <div class="card-header bg-white"><i class="fa-solid fa-file-pen header-icon" style="color:#27ae60;"></i> <span class="fw-bold">Mesai Girişi</span></div>
                     <div class="card-body">
-                        <label class="small fw-bold text-muted mb-1">PERSONEL</label>
+                        <label class="small fw-bold text-muted mb-1">PERSONEL SEÇ</label>
                         <div class="input-group mb-2"><select id="personSelect" class="form-select fw-bold" onchange="fillPersonDetails()"></select><button class="btn btn-outline-danger btn-sm" onclick="deletePersonnelDB()"><i class="fa-solid fa-trash-can"></i></button></div>
                         <div class="row g-2 mb-3"><div class="col-4"><input type="text" id="workRate" class="form-control text-center bg-light fw-bold" readonly disabled></div><div class="col-8"><input type="text" id="workIban" class="form-control text-muted small bg-light" readonly disabled></div></div>
-                        <label class="small fw-bold text-muted mb-1">OTOPARK</label>
+                        <label class="small fw-bold text-muted mb-1">OTOPARK SEÇ</label>
                         <div class="input-group mb-3"><select id="locationSelect" class="form-select fw-bold"></select><button class="btn btn-outline-danger btn-sm" onclick="deleteLocationDB()"><i class="fa-solid fa-trash-can"></i></button></div>
                         <div class="bg-light p-2 rounded border mb-3">
                             <input type="date" id="shiftDate" class="form-control fw-bold text-center mb-2">
@@ -101,7 +97,7 @@
                 <div class="card h-100">
                     <div class="card-header justify-content-between"><span>Hazırlanan Liste</span><span class="badge bg-secondary" id="recordCount">0</span></div>
                     <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Personel</th><th>Otopark</th><th>Telefon</th><th>IBAN</th><th>Detay</th><th class="text-center">Saat</th><th class="text-end">Tutar</th><th class="text-center">S</th></tr></thead><tbody id="mainTableBody"></tbody></table></div></div>
-                    <div class="card-footer bg-white py-2"><div class="row align-items-center"><div class="col-md-6"><span id="grandTotal" class="total-display">0,00 ₺</span></div><div class="col-md-6 text-end"><button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF</button></div></div></div>
+                    <div class="card-footer bg-white py-2"><div class="row align-items-center"><div class="col-md-6"><span id="grandTotal" class="total-display">0,00 ₺</span></div><div class="col-md-6 text-end"><button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF RAPOR AL</button></div></div></div>
                 </div>
             </div>
         </div>
@@ -113,52 +109,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-    // --- GÜVENLİK: ŞİFRELENMİŞ GİRİŞ KONTROLÜ ---
-    // Bu sayılar 'yavuz' ve 'sahin' kelimelerinin matematiksel karşılığıdır.
-    // Kodlara bakan biri 'yavuz' veya 'sahin' kelimelerini göremez.
-    const _0x4a21 = [121, 97, 118, 117, 122]; // yavuz
-    const _0x8b32 = [115, 97, 104, 105, 110]; // sahin
-
+    // --- GİRİŞ KONTROLÜ ---
+    const _u = [121, 97, 118, 117, 122]; // yavuz
+    const _p = [115, 97, 104, 105, 110]; // sahin
     function validateLogin() {
         const u = document.getElementById('userInput').value.toLowerCase();
         const p = document.getElementById('passInput').value.toLowerCase();
-        
-        // Şifrelenmiş kontrol
-        const uc = u.split('').map(c => c.charCodeAt(0));
-        const pc = p.split('').map(c => c.charCodeAt(0));
-
-        if (JSON.stringify(uc) === JSON.stringify(_0x4a21) && JSON.stringify(pc) === JSON.stringify(_0x8b32)) {
+        if (JSON.stringify(u.split('').map(c=>c.charCodeAt(0))) === JSON.stringify(_u) && JSON.stringify(p.split('').map(c=>c.charCodeAt(0))) === JSON.stringify(_p)) {
             sessionStorage.setItem('isLoggedIn', 'true');
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
-        } else {
-            document.getElementById('loginError').style.display = 'block';
-        }
+        } else { document.getElementById('loginError').style.display = 'block'; }
     }
+    window.onload = function() { if (sessionStorage.getItem('isLoggedIn') === 'true') { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainContent').style.display = 'block'; } }
 
-    // Sayfa yüklendiğinde kontrol
-    window.onload = function() {
-        if (sessionStorage.getItem('isLoggedIn') === 'true') {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        }
-    }
-
-    // --- UYGULAMA MANTIĞI ---
+    // --- UYGULAMA ---
     let locationDB = [], personnelDB = [], records = [], currentShifts = [];
 
-    // Şifreleme/Çözme (veriler.txt için)
-    function encryptData(data) {
-        const str = JSON.stringify(data);
-        const encoded = btoa(unescape(encodeURIComponent(str)));
-        return encoded.split('').reverse().join('') + "_SECURE";
-    }
-    function decryptData(cipher) {
-        try {
-            const raw = cipher.replace("_SECURE", "").split('').reverse().join('');
-            return JSON.parse(decodeURIComponent(escape(atob(raw))));
-        } catch (e) { return null; }
-    }
+    function encryptData(data) { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).split('').reverse().join('') + "_SECURE"; }
+    function decryptData(cipher) { try { return JSON.parse(decodeURIComponent(escape(atob(cipher.replace("_SECURE", "").split('').reverse().join(''))))); } catch (e) { return null; } }
 
     async function fetchServerData() {
         try {
@@ -172,38 +141,25 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('shiftDate').valueAsDate = new Date();
-        populateTimeSelects();
-        loadLocal();
-        fetchServerData();
+        populateTimeSelects(); loadLocal(); fetchServerData();
     });
 
     function renderAll() { renderLocs(); renderPers(); renderTable(); }
     function loadLocal() {
-        const l = localStorage.getItem('v20_l'), p = localStorage.getItem('v20_p'), r = localStorage.getItem('v20_r');
+        const l = localStorage.getItem('v21_l'), p = localStorage.getItem('v21_p'), r = localStorage.getItem('v21_r');
         if(l) locationDB=JSON.parse(l); if(p) personnelDB=JSON.parse(p); if(r) records=JSON.parse(r);
         renderAll();
     }
-    function saveLocal() {
-        localStorage.setItem('v20_l', JSON.stringify(locationDB));
-        localStorage.setItem('v20_p', JSON.stringify(personnelDB));
-        localStorage.setItem('v20_r', JSON.stringify(records));
-    }
+    function saveLocal() { localStorage.setItem('v21_l', JSON.stringify(locationDB)); localStorage.setItem('v21_p', JSON.stringify(personnelDB)); localStorage.setItem('v21_r', JSON.stringify(records)); }
 
     function populateTimeSelects() {
         const s = document.getElementById('shiftStart'), e = document.getElementById('shiftEnd');
-        let o = '';
-        for(let i=0; i<24; i++) {
-            for(let j=0; j<60; j+=30) {
-                let t = `${i<10?'0'+i:i}:${j===0?'00':j}`;
-                o += `<option value="${t}">${t}</option>`;
-            }
-        }
+        let o = ''; for(let i=0; i<24; i++) { for(let j=0; j<60; j+=30) { let t = `${i<10?'0'+i:i}:${j===0?'00':j}`; o += `<option value="${t}">${t}</option>`; } }
         s.innerHTML = o; e.innerHTML = o; s.value = "09:00"; autoCalculateEndTime();
     }
     function autoCalculateEndTime() {
         const [h, m] = document.getElementById('shiftStart').value.split(':').map(Number);
-        let eh = (h + 8) % 24;
-        document.getElementById('shiftEnd').value = `${eh<10?'0'+eh:eh}:${m===0?'00':m}`;
+        let eh = (h + 8) % 24; document.getElementById('shiftEnd').value = `${eh<10?'0'+eh:eh}:${m===0?'00':m}`;
     }
 
     function addNewLocation() {
@@ -216,30 +172,15 @@
         if(n) { personnelDB.push({id:Date.now(), name:n, phone:document.getElementById('dbPhone').value, iban:document.getElementById('dbIban').value.toUpperCase(), rate:document.getElementById('dbRate').value}); saveLocal(); renderPers(); }
         document.getElementById('dbName').value=''; document.getElementById('dbPhone').value=''; document.getElementById('dbIban').value='';
     }
-    function renderLocs() {
-        const s = document.getElementById('locationSelect'); s.innerHTML = '<option value="">-- Seç --</option>';
-        locationDB.forEach(l => s.innerHTML += `<option value="${l}">${l}</option>`);
-    }
-    function renderPers() {
-        const s = document.getElementById('personSelect'); s.innerHTML = '<option value="">-- Seç --</option>';
-        personnelDB.forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-    }
-    function deletePersonnelDB() {
-        const id = document.getElementById('personSelect').value;
-        if(id && confirm('Silinsin mi?')) { personnelDB = personnelDB.filter(x=>x.id != id); saveLocal(); renderPers(); }
-    }
-    function deleteLocationDB() {
-        const v = document.getElementById('locationSelect').value;
-        if(v && confirm('Silinsin mi?')) { locationDB = locationDB.filter(x=>x != v); saveLocal(); renderLocs(); }
-    }
-    function fillPersonDetails() {
-        const p = personnelDB.find(x=>x.id==document.getElementById('personSelect').value);
-        if(p) { document.getElementById('workRate').value = p.rate; document.getElementById('workIban').value = p.iban; }
-    }
+    function renderLocs() { const s = document.getElementById('locationSelect'); s.innerHTML = '<option value="">-- Seç --</option>'; locationDB.forEach(l => s.innerHTML += `<option value="${l}">${l}</option>`); }
+    function renderPers() { const s = document.getElementById('personSelect'); s.innerHTML = '<option value="">-- Seç --</option>'; personnelDB.forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`); }
+    function deletePersonnelDB() { const id = document.getElementById('personSelect').value; if(id && confirm('Silinsin mi?')) { personnelDB = personnelDB.filter(x=>x.id != id); saveLocal(); renderPers(); } }
+    function deleteLocationDB() { const v = document.getElementById('locationSelect').value; if(v && confirm('Silinsin mi?')) { locationDB = locationDB.filter(x=>x != v); saveLocal(); renderLocs(); } }
+    function fillPersonDetails() { const p = personnelDB.find(x=>x.id==document.getElementById('personSelect').value); if(p) { document.getElementById('workRate').value = p.rate; document.getElementById('workIban').value = p.iban; } }
+
     function addShiftToBuffer() {
         const d = document.getElementById('shiftDate').value, s = document.getElementById('shiftStart').value, e = document.getElementById('shiftEnd').value;
-        if(!d) return;
-        let d1 = new Date(`2000-01-01T${s}`), d2 = new Date(`2000-01-01T${e}`), h = (d2 - d1) / 36e5;
+        if(!d) return; let d1 = new Date(`2000-01-01T${s}`), d2 = new Date(`2000-01-01T${e}`), h = (d2 - d1) / 36e5;
         currentShifts.push({date:d, start:s, end:e, hours: (h<0?h+24:h).toFixed(2)});
         currentShifts.sort((a,b)=>new Date(a.date)-new Date(b.date)); renderBuffer();
     }
@@ -247,6 +188,7 @@
         const t = document.getElementById('bufferTable'); t.innerHTML = '';
         currentShifts.forEach((s, i) => t.innerHTML += `<tr><td class="ps-2">${s.date} (${s.start}-${s.end})</td><td class="text-end"><i class="fa-solid fa-xmark text-danger pointer me-2" onclick="currentShifts.splice(${i},1);renderBuffer();"></i></td></tr>`);
     }
+
     function saveFinalRecord() {
         const pId = document.getElementById('personSelect').value, loc = document.getElementById('locationSelect').value;
         if(!pId || !loc || currentShifts.length === 0) return;
@@ -254,6 +196,7 @@
         records.push({id:Date.now(), location:loc, name:p.name, phone:p.phone, iban:p.iban, shifts:[...currentShifts], totalHours:th.toFixed(2), totalCost:(th*parseFloat(document.getElementById('workRate').value)).toFixed(2)});
         saveLocal(); renderTable(); currentShifts=[]; renderBuffer();
     }
+
     function renderTable() {
         const tb = document.getElementById('mainTableBody'); tb.innerHTML = ''; let g = 0;
         records.forEach((r, i) => {
@@ -263,18 +206,63 @@
         document.getElementById('grandTotal').innerText = g.toLocaleString('tr-TR') + ' ₺';
         document.getElementById('recordCount').innerText = records.length;
     }
+
     function clearCurrentList() { if(confirm('Liste silinsin mi?')) { records = []; saveLocal(); renderTable(); } }
 
+    // --- PDF FONKSİYONU (DÜZELTİLDİ) ---
     function generatePDF() {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-        doc.text("PERSONEL MESAI LISTESI", 14, 15);
+        if(records.length === 0) return;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4'); // Yatay A4
+
+        const tr = (str) => { 
+            const m={'ğ':'g','Ğ':'G','ş':'s','Ş':'S','ı':'i','İ':'I','ü':'u','Ü':'U','ö':'o','Ö':'O','ç':'c','Ç':'C'}; 
+            return str ? str.replace(/[ğĞşŞıİüÜöÖçÇ]/g, k=>m[k]) : ""; 
+        };
+
+        const head = [['PERSONEL', 'OTOPARK', 'TELEFON', 'IBAN', 'DETAYLI MESAI GÜNLERI', 'SAAT', 'TUTAR']];
+        
+        const body = records.map(r => {
+            // Tarihleri ve saatleri tam formatta yazdır
+            const details = r.shifts.map(s => {
+                const parts = s.date.split('-');
+                const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                return `${formattedDate} (${s.start}-${s.end})`;
+            }).join(', ');
+
+            return [
+                tr(r.name),
+                tr(r.location),
+                r.phone,
+                r.iban,
+                details, // Tam detaylar buraya
+                r.totalHours + " Saat",
+                parseFloat(r.totalCost).toLocaleString('tr-TR') + " TL"
+            ];
+        });
+
+        doc.setFontSize(14);
+        doc.text("PERSONEL MESAI VE HAKEDIS RAPORU", 14, 15);
+        
         doc.autoTable({
             startY: 20,
-            head: [['PERSONEL', 'OTOPARK', 'TELEFON', 'IBAN', 'SAAT', 'TUTAR']],
-            body: records.map(r => [r.name, r.location, r.phone, r.iban, r.totalHours, r.totalCost + " TL"])
+            head: head,
+            body: body,
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' }, // Otomatik alt satıra geçme açık
+            columnStyles: {
+                4: { cellWidth: 80 }, // Detay sütununu geniş tut
+                5: { halign: 'center' },
+                6: { halign: 'right', fontStyle: 'bold' }
+            },
+            headStyles: { fillColor: [44, 62, 80] },
+            foot: [['', '', '', '', '', 'GENEL TOPLAM:', document.getElementById('grandTotal').innerText.replace('₺','TL')]],
+            footStyles: { fillColor: [39, 174, 96], fontStyle: 'bold', halign: 'right' }
         });
-        doc.save("Mesai.pdf");
+
+        doc.save("Personel_Mesai_Raporu.pdf");
     }
+
     function downloadBackup() {
         const encrypted = encryptData({l:locationDB, p:personnelDB, r:records});
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([encrypted], {type:"text/plain"})); a.download = "veriler.txt"; a.click();
