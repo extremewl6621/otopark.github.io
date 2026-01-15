@@ -240,10 +240,25 @@
             const filtre = document.getElementById('plakaInput').value.toUpperCase();
             const liste = document.getElementById('aracListesi');
             liste.innerHTML = '';
+            
+            // 1. HER ZAMAN GÖSTERİLECEK OLAN AKTİF ARAÇLAR (Arama varsa filtrelenir)
             let aktifler = araclar.filter(a => a.durum === 'aktif' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.giris) - new Date(a.giris));
-            let tamamlananlar = araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.cikis) - new Date(a.cikis));
-            document.getElementById('aracSayisi').innerText = (aktifler.length + tamamlananlar.length) + " Araç";
+            
+            // 2. SADECE ARAMA YAPILINCA GÖSTERİLECEK OLAN ESKİ KAYITLAR
+            let tamamlananlar = [];
+            if(filtre.length > 0) {
+                tamamlananlar = araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.cikis) - new Date(a.cikis));
+            }
 
+            // Başlık Güncellemesi
+            if(filtre.length > 0) {
+                 document.getElementById('aracSayisi').innerText = (aktifler.length + tamamlananlar.length) + " Sonuç";
+            } else {
+                 // Sadece içerideki araç sayısını göster
+                 document.getElementById('aracSayisi').innerText = aktifler.length + " Aktif";
+            }
+
+            // Listeleri birleştir ve ekrana bas
             [...aktifler, ...tamamlananlar].forEach(arac => {
                 const isComp = arac.durum === 'tamamlandi';
                 const ucret = isComp ? arac.tutar : ucretHesapla(arac.giris, arac.tip);
