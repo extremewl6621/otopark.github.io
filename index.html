@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personel Takip V22 - Detaylı Görünüm</title>
+    <title>Personel Takip V23 - Akıllı Hafıza</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,6 @@
         :root { --primary-bg: #f0f2f5; --card-radius: 12px; --input-radius: 8px; }
         body { background-color: var(--primary-bg); font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #34495e; }
         
-        /* GİRİŞ EKRANI */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -30,7 +29,6 @@
         .header-icon { margin-right: 8px; color: #3498db; background: #eaf6ff; padding: 6px; border-radius: 6px; }
         .form-control, .form-select { border-radius: var(--input-radius); border: 1px solid #dee2e6; padding: 8px 10px; font-size: 0.85rem; }
         
-        /* Tablo Detay Stili */
         .table-custom thead th { background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #e9ecef; }
         .table-custom td { vertical-align: top; padding: 12px 8px; }
         .shift-info-row { display: block; border-bottom: 1px dashed #eee; padding: 2px 0; font-size: 0.8rem; }
@@ -56,7 +54,7 @@
 <div id="mainContent">
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Personel Takip V22</a>
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Personel Takip V23</a>
             <div class="ms-auto d-flex gap-2">
                 <a href="otopark.html" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-square-parking me-1 text-primary"></i> Otopark</a>
                 <button onclick="downloadBackup()" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-download me-1 text-primary"></i> İndir</button>
@@ -145,8 +143,8 @@
                                         <th>Personel</th>
                                         <th>Otopark</th>
                                         <th>Telefon / IBAN</th>
-                                        <th width="35%">Mesai Detayları (Tarih - Saat)</th>
-                                        <th class="text-center">Top. Saat</th>
+                                        <th width="35%">Mesai Detayları</th>
+                                        <th class="text-center">Saat</th>
                                         <th class="text-end">Tutar</th>
                                         <th class="text-center">S</th>
                                     </tr>
@@ -161,7 +159,7 @@
                                 <span id="grandTotal" class="total-display">0,00 ₺</span>
                             </div>
                             <div class="col-md-6 text-end">
-                                <button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF RAPORU İNDİR</button>
+                                <button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF RAPORU</button>
                             </div>
                         </div>
                     </div>
@@ -196,28 +194,45 @@
     function encryptData(data) { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).split('').reverse().join('') + "_SECURE"; }
     function decryptData(cipher) { try { return JSON.parse(decodeURIComponent(escape(atob(cipher.replace("_SECURE", "").split('').reverse().join(''))))); } catch (e) { return null; } }
 
+    // --- AKILLI SENKRONİZASYON ---
     async function fetchServerData() {
         try {
             const r = await fetch('veriler.txt');
             if (r.ok) {
                 const d = decryptData(await r.text());
-                if (d) { locationDB = d.l || []; personnelDB = d.p || []; records = d.r || []; renderAll(); }
+                if (d) { 
+                    // Sadece havuz verilerini (Personel ve Otopark) güncelle
+                    locationDB = d.l || []; 
+                    personnelDB = d.p || [];
+                    // NOT: 'records' (Hazırlanan Liste) sunucudan DEĞİL, tarayıcı hafızasından okunur.
+                    // Böylece sayfa yenilense de hazırladığınız liste silinmez.
+                    saveLocal();
+                    renderLocs();
+                    renderPers();
+                    console.log("Sunucu havuzu güncellendi.");
+                }
             }
         } catch (e) {}
     }
 
     document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('shiftDate').valueAsDate = new Date();
-        populateTimeSelects(); loadLocal(); fetchServerData();
+        populateTimeSelects(); 
+        loadLocal(); // Önce tarayıcıdaki listeyi yükle
+        fetchServerData(); // Sonra sunucudan isimleri çek
     });
 
     function renderAll() { renderLocs(); renderPers(); renderTable(); }
     function loadLocal() {
-        const l = localStorage.getItem('v22_l'), p = localStorage.getItem('v22_p'), r = localStorage.getItem('v22_r');
+        const l = localStorage.getItem('v23_l'), p = localStorage.getItem('v23_p'), r = localStorage.getItem('v23_r');
         if(l) locationDB=JSON.parse(l); if(p) personnelDB=JSON.parse(p); if(r) records=JSON.parse(r);
         renderAll();
     }
-    function saveLocal() { localStorage.setItem('v22_l', JSON.stringify(locationDB)); localStorage.setItem('v22_p', JSON.stringify(personnelDB)); localStorage.setItem('v22_r', JSON.stringify(records)); }
+    function saveLocal() { 
+        localStorage.setItem('v23_l', JSON.stringify(locationDB)); 
+        localStorage.setItem('v23_p', JSON.stringify(personnelDB)); 
+        localStorage.setItem('v23_r', JSON.stringify(records)); 
+    }
 
     function populateTimeSelects() {
         const s = document.getElementById('shiftStart'), e = document.getElementById('shiftEnd');
@@ -239,31 +254,23 @@
         if(n) { personnelDB.push({id:Date.now(), name:n, phone:document.getElementById('dbPhone').value, iban:document.getElementById('dbIban').value.toUpperCase(), rate:document.getElementById('dbRate').value}); saveLocal(); renderPers(); }
         document.getElementById('dbName').value=''; document.getElementById('dbPhone').value=''; document.getElementById('dbIban').value='';
     }
-    function renderLocs() { const s = document.getElementById('locationSelect'); s.innerHTML = '<option value="">-- Seç --</option>'; locationDB.forEach(l => s.innerHTML += `<option value="${l}">${l}</option>`); }
-    function renderPers() { const s = document.getElementById('personSelect'); s.innerHTML = '<option value="">-- Seç --</option>'; personnelDB.forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`); }
+    function renderLocs() { const s = document.getElementById('locationSelect'); const val = s.value; s.innerHTML = '<option value="">-- Seç --</option>'; locationDB.forEach(l => s.innerHTML += `<option value="${l}">${l}</option>`); s.value = val; }
+    function renderPers() { const s = document.getElementById('personSelect'); const val = s.value; s.innerHTML = '<option value="">-- Seç --</option>'; personnelDB.forEach(p => s.innerHTML += `<option value="${p.id}">${p.name}</option>`); s.value = val; }
+    
     function deletePersonnelDB() { const id = document.getElementById('personSelect').value; if(id && confirm('Silinsin mi?')) { personnelDB = personnelDB.filter(x=>x.id != id); saveLocal(); renderPers(); } }
     function deleteLocationDB() { const v = document.getElementById('locationSelect').value; if(v && confirm('Silinsin mi?')) { locationDB = locationDB.filter(x=>x != v); saveLocal(); renderLocs(); } }
     function fillPersonDetails() { const p = personnelDB.find(x=>x.id==document.getElementById('personSelect').value); if(p) { document.getElementById('workRate').value = p.rate; document.getElementById('workIban').value = p.iban; } }
 
-    // --- GÜNÜ EKLE VE TEMİZLE ---
     function addShiftToBuffer() {
         const d = document.getElementById('shiftDate').value, s = document.getElementById('shiftStart').value, e = document.getElementById('shiftEnd').value;
-        if(!d) return; 
-        let d1 = new Date(`2000-01-01T${s}`), d2 = new Date(`2000-01-01T${e}`), h = (d2 - d1) / 36e5;
+        if(!d) return; let d1 = new Date(`2000-01-01T${s}`), d2 = new Date(`2000-01-01T${e}`), h = (d2 - d1) / 36e5;
         currentShifts.push({date:d, start:s, end:e, hours: (h<0?h+24:h).toFixed(2)});
-        currentShifts.sort((a,b)=>new Date(a.date)-new Date(b.date)); 
-        
-        renderBuffer();
-        
-        // TEMİZLİK: Günü ekledikten sonra kutuları sıfırla
+        currentShifts.sort((a,b)=>new Date(a.date)-new Date(b.date)); renderBuffer();
         document.getElementById('shiftDate').valueAsDate = new Date();
-        document.getElementById('shiftStart').value = "09:00";
-        autoCalculateEndTime();
     }
-
     function renderBuffer() {
         const t = document.getElementById('bufferTable'); t.innerHTML = '';
-        currentShifts.forEach((s, i) => t.innerHTML += `<tr><td class="ps-2 text-primary fw-bold">${s.date.split('-').reverse().join('/')} <span class="text-dark">(${s.start}-${s.end})</span></td><td class="text-end"><i class="fa-solid fa-xmark text-danger pointer me-2" onclick="currentShifts.splice(${i},1);renderBuffer();"></i></td></tr>`);
+        currentShifts.forEach((s, i) => t.innerHTML += `<tr><td class="ps-2 fw-bold text-primary">${s.date.split('-').reverse().join('/')} (${s.start}-${s.end})</td><td class="text-end pe-2"><i class="fa-solid fa-xmark text-danger pointer" onclick="currentShifts.splice(${i},1);renderBuffer();"></i></td></tr>`);
     }
 
     function saveFinalRecord() {
@@ -274,84 +281,31 @@
         saveLocal(); renderTable(); currentShifts=[]; renderBuffer();
     }
 
-    // --- TABLO DETAY GÖRÜNÜMÜ ---
     function renderTable() {
         const tb = document.getElementById('mainTableBody'); tb.innerHTML = ''; let g = 0;
         records.forEach((r, i) => {
             g += parseFloat(r.totalCost);
-            
-            // Mesai detaylarını alt alta satırlar halinde oluştur
-            let shiftHtml = r.shifts.map(s => `
-                <div class="shift-info-row">
-                    <span class="text-primary fw-bold">${s.date.split('-').reverse().join('/')}</span> 
-                    <span class="ms-2">(${s.start} - ${s.end})</span>
-                </div>
-            `).join('');
-
-            tb.innerHTML += `
-                <tr>
-                    <td class="fw-bold text-dark">${r.name}</td>
-                    <td class="text-secondary fw-bold">${r.location}</td>
-                    <td><div class="small fw-bold">${r.phone}</div><div class="small text-muted font-monospace">${r.iban}</div></td>
-                    <td>${shiftHtml}</td>
-                    <td class="text-center fw-bold">${r.totalHours}</td>
-                    <td class="text-end fw-bold text-success">${parseFloat(r.totalCost).toLocaleString('tr-TR')} ₺</td>
-                    <td class="text-center"><i class="fa-solid fa-trash text-danger pointer" onclick="records.splice(${i},1);saveLocal();renderTable();"></i></td>
-                </tr>`;
+            let shiftHtml = r.shifts.map(s => `<div class="shift-info-row"><span class="text-primary fw-bold">${s.date.split('-').reverse().join('/')}</span> <span class="ms-1">(${s.start}-${s.end})</span></div>`).join('');
+            tb.innerHTML += `<tr><td class="fw-bold">${r.name}</td><td class="text-secondary fw-bold">${r.location}</td><td><div class="small fw-bold">${r.phone}</div><div class="small text-muted font-monospace">${r.iban}</div></td><td>${shiftHtml}</td><td class="text-center fw-bold">${r.totalHours}</td><td class="text-end fw-bold text-success">${parseFloat(r.totalCost).toLocaleString('tr-TR')} ₺</td><td class="text-center"><i class="fa-solid fa-trash text-danger pointer" onclick="records.splice(${i},1);saveLocal();renderTable();"></i></td></tr>`;
         });
         document.getElementById('grandTotal').innerText = g.toLocaleString('tr-TR') + ' ₺';
         document.getElementById('recordCount').innerText = records.length;
     }
 
-    function clearCurrentList() { if(confirm('Liste silinsin mi?')) { records = []; saveLocal(); renderTable(); } }
+    function clearCurrentList() { if(confirm('Hazırlanan liste silinsin mi?')) { records = []; saveLocal(); renderTable(); } }
 
-    // --- PDF RAPORU ---
     function generatePDF() {
         if(records.length === 0) return;
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
-
-        const tr = (str) => { 
-            const m={'ğ':'g','Ğ':'G','ş':'s','Ş':'S','ı':'i','İ':'I','ü':'u','Ü':'U','ö':'o','Ö':'O','ç':'c','Ç':'C'}; 
-            return str ? str.replace(/[ğĞşŞıİüÜöÖçÇ]/g, k=>m[k]) : ""; 
-        };
-
-        const head = [['PERSONEL', 'OTOPARK', 'ILETISIM / IBAN', 'MESAI DETAYLARI (Tarih ve Saat)', 'SAAT', 'TUTAR']];
-        
-        const body = records.map(r => {
-            const shiftDetails = r.shifts.map(s => {
-                const p = s.date.split('-');
-                return `${p[2]}/${p[1]}/${p[0]} (${s.start}-${s.end})`;
-            }).join('\n'); // Her mesaiyi yeni satıra yaz
-
-            return [
-                tr(r.name),
-                tr(r.location),
-                `${r.phone}\n${r.iban}`,
-                shiftDetails,
-                r.totalHours,
-                parseFloat(r.totalCost).toLocaleString('tr-TR') + " TL"
-            ];
-        });
-
-        doc.setFontSize(14);
-        doc.text("MESAI VE HAKEDIS RAPORU", 14, 15);
-        
+        const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
+        const tr = (str) => { const m={'ğ':'g','Ğ':'G','ş':'s','Ş':'S','ı':'i','İ':'I','ü':'u','Ü':'U','ö':'o','Ö':'O','ç':'c','Ç':'C'}; return str ? str.replace(/[ğĞşŞıİüÜöÖçÇ]/g, k=>m[k]) : ""; };
         doc.autoTable({
-            startY: 20,
-            head: head,
-            body: body,
-            theme: 'grid',
-            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-            columnStyles: {
-                3: { cellWidth: 70 }, // Mesai Detay sütununu genişlet
-                5: { halign: 'right', fontStyle: 'bold' }
-            },
-            headStyles: { fillColor: [44, 62, 80] },
+            head: [['PERSONEL', 'OTOPARK', 'ILETISIM/IBAN', 'MESAI DETAYLARI', 'SAAT', 'TUTAR']],
+            body: records.map(r => [tr(r.name), tr(r.location), `${r.phone}\n${r.iban}`, r.shifts.map(s => `${s.date.split('-').reverse().join('/')} (${s.start}-${s.end})`).join('\n'), r.totalHours, parseFloat(r.totalCost).toLocaleString('tr-TR') + " TL"]),
+            styles: { fontSize: 8, overflow: 'linebreak' },
+            columnStyles: { 3: { cellWidth: 70 } },
             foot: [['', '', '', '', 'TOPLAM:', document.getElementById('grandTotal').innerText.replace('₺','TL')]],
-            footStyles: { fillColor: [39, 174, 96], fontStyle: 'bold', halign: 'right' }
+            footStyles: { fillColor: [39, 174, 96], halign: 'right' }
         });
-
         doc.save("Mesai_Raporu.pdf");
     }
 
