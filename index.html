@@ -11,10 +11,13 @@
         body { background-color: #f4f4f4; font-family: sans-serif; }
         .park-card { border-left: 6px solid #e11d48; border-radius: 12px; transition: all 0.3s; position: relative; background: white; }
         .completed-card { border-left: 6px solid #9ca3af; opacity: 0.8; }
-        .header-banner { background-color: #1a1a1a; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
-        .logo-wrapper { display: flex; align-items: center; gap: 2px; color: white; font-weight: 800; font-size: 20px; }
-        .logo-p-badge { background-color: #e11d48; color: white; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin: 0 2px; font-style: italic; }
         
+        /* HEADER GÜNCELLEMESİ */
+        .header-banner { background-color: #1a1a1a; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; height: 70px; }
+        .logo-wrapper { display: flex; align-items: center; height: 100%; }
+        /* Logo Görseli İçin Stil */
+        .logo-img { height: 50px; width: auto; object-fit: contain; }
+
         /* PDF Gelişmiş Tasarım */
         #pdfTemplate { width: 100%; background: white; padding: 20px; color: black; display: none; } /* Normalde gizli */
         .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -26,9 +29,7 @@
 
     <div class="header-banner no-print">
         <div class="logo-wrapper">
-            <span class="italic">iSTAY</span>
-            <div class="logo-p-badge">P</div>
-            <span class="italic">ARK</span>
+            <img src="1000067482.webp" alt="iSTAY PARK" class="logo-img">
         </div>
         <button onclick="raporuGoster()" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg active:scale-95"><i class="fas fa-chart-pie mr-1"></i> RAPORLAR</button>
     </div>
