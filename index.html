@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personel Takip V23 - Akıllı Hafıza</title>
+    <title>Personel Takip V24 - Net Raporlama</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
         .form-control, .form-select { border-radius: var(--input-radius); border: 1px solid #dee2e6; padding: 8px 10px; font-size: 0.85rem; }
         
         .table-custom thead th { background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #e9ecef; }
-        .table-custom td { vertical-align: top; padding: 12px 8px; }
+        .table-custom td { vertical-align: middle; padding: 12px 8px; }
         .shift-info-row { display: block; border-bottom: 1px dashed #eee; padding: 2px 0; font-size: 0.8rem; }
         .shift-info-row:last-child { border-bottom: none; }
         
@@ -54,7 +54,7 @@
 <div id="mainContent">
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Personel Takip V23</a>
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-lock me-2"></i>Personel Takip V24</a>
             <div class="ms-auto d-flex gap-2">
                 <a href="otopark.html" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-square-parking me-1 text-primary"></i> Otopark</a>
                 <button onclick="downloadBackup()" class="btn btn-light btn-sm text-dark fw-bold px-3"><i class="fa-solid fa-download me-1 text-primary"></i> İndir</button>
@@ -142,7 +142,7 @@
                                     <tr>
                                         <th>Personel</th>
                                         <th>Otopark</th>
-                                        <th>Telefon / IBAN</th>
+                                        <th>İletişim/IBAN</th>
                                         <th width="35%">Mesai Detayları</th>
                                         <th class="text-center">Saat</th>
                                         <th class="text-end">Tutar</th>
@@ -159,7 +159,7 @@
                                 <span id="grandTotal" class="total-display">0,00 ₺</span>
                             </div>
                             <div class="col-md-6 text-end">
-                                <button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF RAPORU</button>
+                                <button onclick="generatePDF()" class="btn btn-danger fw-bold btn-sm px-4">PDF RAPORU AL</button>
                             </div>
                         </div>
                     </div>
@@ -188,51 +188,33 @@
     }
     window.onload = function() { if (sessionStorage.getItem('isLoggedIn') === 'true') { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainContent').style.display = 'block'; } }
 
-    // --- UYGULAMA ---
     let locationDB = [], personnelDB = [], records = [], currentShifts = [];
 
     function encryptData(data) { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).split('').reverse().join('') + "_SECURE"; }
     function decryptData(cipher) { try { return JSON.parse(decodeURIComponent(escape(atob(cipher.replace("_SECURE", "").split('').reverse().join(''))))); } catch (e) { return null; } }
 
-    // --- AKILLI SENKRONİZASYON ---
     async function fetchServerData() {
         try {
             const r = await fetch('veriler.txt');
             if (r.ok) {
                 const d = decryptData(await r.text());
-                if (d) { 
-                    // Sadece havuz verilerini (Personel ve Otopark) güncelle
-                    locationDB = d.l || []; 
-                    personnelDB = d.p || [];
-                    // NOT: 'records' (Hazırlanan Liste) sunucudan DEĞİL, tarayıcı hafızasından okunur.
-                    // Böylece sayfa yenilense de hazırladığınız liste silinmez.
-                    saveLocal();
-                    renderLocs();
-                    renderPers();
-                    console.log("Sunucu havuzu güncellendi.");
-                }
+                if (d) { locationDB = d.l || []; personnelDB = d.p || []; saveLocal(); renderLocs(); renderPers(); }
             }
         } catch (e) {}
     }
 
     document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('shiftDate').valueAsDate = new Date();
-        populateTimeSelects(); 
-        loadLocal(); // Önce tarayıcıdaki listeyi yükle
-        fetchServerData(); // Sonra sunucudan isimleri çek
+        populateTimeSelects(); loadLocal(); fetchServerData();
     });
 
     function renderAll() { renderLocs(); renderPers(); renderTable(); }
     function loadLocal() {
-        const l = localStorage.getItem('v23_l'), p = localStorage.getItem('v23_p'), r = localStorage.getItem('v23_r');
+        const l = localStorage.getItem('v24_l'), p = localStorage.getItem('v24_p'), r = localStorage.getItem('v24_r');
         if(l) locationDB=JSON.parse(l); if(p) personnelDB=JSON.parse(p); if(r) records=JSON.parse(r);
         renderAll();
     }
-    function saveLocal() { 
-        localStorage.setItem('v23_l', JSON.stringify(locationDB)); 
-        localStorage.setItem('v23_p', JSON.stringify(personnelDB)); 
-        localStorage.setItem('v23_r', JSON.stringify(records)); 
-    }
+    function saveLocal() { localStorage.setItem('v24_l', JSON.stringify(locationDB)); localStorage.setItem('v24_p', JSON.stringify(personnelDB)); localStorage.setItem('v24_r', JSON.stringify(records)); }
 
     function populateTimeSelects() {
         const s = document.getElementById('shiftStart'), e = document.getElementById('shiftEnd');
@@ -285,27 +267,79 @@
         const tb = document.getElementById('mainTableBody'); tb.innerHTML = ''; let g = 0;
         records.forEach((r, i) => {
             g += parseFloat(r.totalCost);
-            let shiftHtml = r.shifts.map(s => `<div class="shift-info-row"><span class="text-primary fw-bold">${s.date.split('-').reverse().join('/')}</span> <span class="ms-1">(${s.start}-${s.end})</span></div>`).join('');
+            let shiftHtml = r.shifts.map(s => `<div class="shift-info-row"><span class="text-primary fw-bold">${s.date.split('-').reverse().join('/')}</span> <span>(${s.start}-${s.end})</span></div>`).join('');
             tb.innerHTML += `<tr><td class="fw-bold">${r.name}</td><td class="text-secondary fw-bold">${r.location}</td><td><div class="small fw-bold">${r.phone}</div><div class="small text-muted font-monospace">${r.iban}</div></td><td>${shiftHtml}</td><td class="text-center fw-bold">${r.totalHours}</td><td class="text-end fw-bold text-success">${parseFloat(r.totalCost).toLocaleString('tr-TR')} ₺</td><td class="text-center"><i class="fa-solid fa-trash text-danger pointer" onclick="records.splice(${i},1);saveLocal();renderTable();"></i></td></tr>`;
         });
         document.getElementById('grandTotal').innerText = g.toLocaleString('tr-TR') + ' ₺';
         document.getElementById('recordCount').innerText = records.length;
     }
 
-    function clearCurrentList() { if(confirm('Hazırlanan liste silinsin mi?')) { records = []; saveLocal(); renderTable(); } }
+    function clearCurrentList() { if(confirm('Liste silinsin mi?')) { records = []; saveLocal(); renderTable(); } }
 
+    // --- PDF RAPORU GÜNCELLEMESİ (V24) ---
     function generatePDF() {
         if(records.length === 0) return;
-        const { jsPDF } = window.jspdf; const doc = new jsPDF('l', 'mm', 'a4');
-        const tr = (str) => { const m={'ğ':'g','Ğ':'G','ş':'s','Ş':'S','ı':'i','İ':'I','ü':'u','Ü':'U','ö':'o','Ö':'O','ç':'c','Ç':'C'}; return str ? str.replace(/[ğĞşŞıİüÜöÖçÇ]/g, k=>m[k]) : ""; };
-        doc.autoTable({
-            head: [['PERSONEL', 'OTOPARK', 'ILETISIM/IBAN', 'MESAI DETAYLARI', 'SAAT', 'TUTAR']],
-            body: records.map(r => [tr(r.name), tr(r.location), `${r.phone}\n${r.iban}`, r.shifts.map(s => `${s.date.split('-').reverse().join('/')} (${s.start}-${s.end})`).join('\n'), r.totalHours, parseFloat(r.totalCost).toLocaleString('tr-TR') + " TL"]),
-            styles: { fontSize: 8, overflow: 'linebreak' },
-            columnStyles: { 3: { cellWidth: 70 } },
-            foot: [['', '', '', '', 'TOPLAM:', document.getElementById('grandTotal').innerText.replace('₺','TL')]],
-            footStyles: { fillColor: [39, 174, 96], halign: 'right' }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4'); 
+
+        const tr = (str) => { 
+            const m={'ğ':'g','Ğ':'G','ş':'s','Ş':'S','ı':'i','İ':'I','ü':'u','Ü':'U','ö':'o','Ö':'O','ç':'c','Ç':'C'}; 
+            return str ? str.replace(/[ğĞşŞıİüÜöÖçÇ]/g, k=>m[k]) : ""; 
+        };
+
+        const head = [['PERSONEL', 'OTOPARK', 'ILETISIM / IBAN', 'MESAI DETAYLARI (Tarih ve Saat)', 'SAAT', 'TUTAR']];
+        
+        const body = records.map(r => {
+            const shiftDetails = r.shifts.map(s => {
+                const p = s.date.split('-');
+                return `${p[2]}/${p[1]}/${p[0]} (${s.start}-${s.end})`;
+            }).join('\n');
+
+            return [
+                tr(r.name),
+                tr(r.location),
+                `${r.phone}\n${r.iban}`,
+                shiftDetails,
+                r.totalHours + " Sa",
+                parseFloat(r.totalCost).toLocaleString('tr-TR') + " TL"
+            ];
         });
+
+        doc.setFontSize(14);
+        doc.text("MESAI VE HAKEDIS RAPORU", 14, 15);
+        
+        doc.autoTable({
+            startY: 20,
+            head: head,
+            body: body,
+            theme: 'grid', // Çizgili tema
+            styles: { 
+                fontSize: 8, 
+                cellPadding: 3, 
+                overflow: 'linebreak', 
+                valign: 'middle', // Dikey ortalama
+                lineColor: [0, 0, 0], // Çizgi rengi: Siyah
+                lineWidth: 0.1 // Çizgi kalınlığı
+            },
+            headStyles: { 
+                fillColor: [44, 62, 80], 
+                textColor: [255, 255, 255], 
+                fontStyle: 'bold',
+                lineWidth: 0.1,
+                lineColor: [0, 0, 0]
+            },
+            columnStyles: {
+                0: { cellWidth: 35 },
+                1: { cellWidth: 30 },
+                2: { cellWidth: 45 },
+                3: { cellWidth: 80 }, // Detay sütunu geniş
+                4: { halign: 'center', cellWidth: 20 },
+                5: { halign: 'right', fontStyle: 'bold', cellWidth: 35 }
+            },
+            foot: [['', '', '', '', 'TOPLAM:', document.getElementById('grandTotal').innerText.replace('₺','TL')]],
+            footStyles: { fillColor: [39, 174, 96], textColor: [255,255,255], fontStyle: 'bold', halign: 'right', lineWidth: 0.1, lineColor: [0, 0, 0] }
+        });
+
         doc.save("Mesai_Raporu.pdf");
     }
 
