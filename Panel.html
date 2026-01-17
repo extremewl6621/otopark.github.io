@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY MASTER - Mobil Yönetim</title>
+    <title>iSTAY MASTER - Mobil Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,7 +14,7 @@
 <body class="bg-slate-900 text-white pb-24">
     <div class="max-w-md mx-auto px-4">
         <header class="flex justify-between items-center py-6 border-b border-slate-800 mb-6">
-            <h1 class="text-xl font-black text-rose-500 italic uppercase italic">iSTAY MASTER</h1>
+            <h1 class="text-xl font-black text-rose-500 italic uppercase">iSTAY MASTER</h1>
             <button onclick="ayarlariAc()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></button>
         </header>
 
@@ -25,16 +25,15 @@
 
         <div id="section-sube" class="space-y-6">
             <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-xl">
-                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Yeni Şube & Fiyat Tanımla</h3>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Şube & Fiyat Tanımla</h3>
                 <div class="space-y-4">
                     <input type="text" id="parkName" placeholder="Otopark / Okul Adı" class="w-full bg-slate-900 p-4 rounded-2xl outline-none border border-slate-700 focus:border-rose-500 transition text-sm">
-                    
                     <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
-                        <div>0-1S (₺)<input type="number" id="f1" value="170" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
-                        <div>1-2S (₺)<input type="number" id="f2" value="210" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
-                        <div>2-4S (₺)<input type="number" id="f4" value="250" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
-                        <div>4-8S (₺)<input type="number" id="f8" value="300" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
-                        <div class="col-span-2">24 Saat (₺)<input type="number" id="f24" value="400" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
+                        <div>0-1S<input type="number" id="f1" value="170" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
+                        <div>1-2S<input type="number" id="f2" value="210" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
+                        <div>2-4S<input type="number" id="f4" value="250" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
+                        <div>4-8S<input type="number" id="f8" value="300" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
+                        <div class="col-span-2">24S+<input type="number" id="f24" value="400" class="w-full bg-slate-900 p-3 mt-1 rounded-xl border border-slate-700 text-white outline-none"></div>
                     </div>
                     <button onclick="otoparkEkle()" class="w-full bg-emerald-600 p-4 rounded-2xl font-black text-xs uppercase shadow-lg active:scale-95 transition">Şubeyi Kaydet</button>
                 </div>
@@ -49,7 +48,7 @@
                     <select id="pParkSelect" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none text-sm text-slate-300"></select>
                     <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none text-sm">
                     <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none text-sm">
-                    <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-2xl font-black text-xs uppercase shadow-lg active:scale-95 transition">PERSONELİ OLUŞTUR</button>
+                    <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-2xl font-black text-xs uppercase shadow-lg active:scale-95 transition">Personeli Oluştur</button>
                 </div>
             </div>
             <div id="personelListesi" class="space-y-3"></div>
@@ -58,7 +57,7 @@
 
     <div id="configModal" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6 hidden">
         <div class="bg-slate-800 p-8 rounded-[2.5rem] w-full max-w-sm border border-slate-700 shadow-2xl">
-            <h2 class="text-xl font-black text-rose-500 mb-6 uppercase italic">Bağlantı Ayarı</h2>
+            <h2 class="text-xl font-black text-rose-500 mb-6 uppercase">Bağlantı Ayarı</h2>
             <div class="space-y-4">
                 <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700 text-sm">
                 <input type="text" id="ghRepo" placeholder="Repo Adı" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700 text-sm">
@@ -71,20 +70,17 @@
     <script>
         const b64e = (s) => btoa(unescape(encodeURIComponent(s)));
         const b64d = (s) => decodeURIComponent(escape(atob(s)));
-        
         let config = { token: localStorage.getItem('m_t') ? b64d(localStorage.getItem('m_t')) : '', owner: localStorage.getItem('m_o') || '', repo: localStorage.getItem('m_r') || '', path: 'database.json' };
         let db = { otoparklar: [], personeller: [], kayitlar: [] };
         let sha = "";
 
         window.onload = () => { if(!config.token) ayarlariAc(); else verileriCek(); };
-
-        function tabDegistir(target) {
-            document.getElementById('section-sube').classList.toggle('hidden', target !== 'sube');
-            document.getElementById('section-personel').classList.toggle('hidden', target !== 'personel');
-            document.getElementById('tab-sube').classList.toggle('tab-active', target === 'sube');
-            document.getElementById('tab-personel').classList.toggle('tab-active', target === 'personel');
+        function tabDegistir(t) {
+            document.getElementById('section-sube').classList.toggle('hidden', t !== 'sube');
+            document.getElementById('section-personel').classList.toggle('hidden', t !== 'personel');
+            document.getElementById('tab-sube').classList.toggle('tab-active', t === 'sube');
+            document.getElementById('tab-personel').classList.toggle('tab-active', t === 'personel');
         }
-
         function ayarlariAc() { document.getElementById('configModal').classList.remove('hidden'); }
         function ayarlariKaydet() {
             localStorage.setItem('m_o', document.getElementById('ghOwner').value.trim());
@@ -92,7 +88,6 @@
             localStorage.setItem('m_t', b64e(document.getElementById('ghToken').value.trim()));
             location.reload();
         }
-
         async function verileriCek() {
             try {
                 const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?t=${Date.now()}`, { headers: { Authorization: `token ${config.token}` } });
@@ -101,7 +96,6 @@
                 renderAll();
             } catch (e) { console.error(e); }
         }
-
         async function verileriKaydet() {
             const content = b64e(JSON.stringify(db));
             const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
@@ -110,7 +104,6 @@
             });
             const d = await r.json(); sha = d.content.sha; verileriCek();
         }
-
         function otoparkEkle() {
             const name = document.getElementById('parkName').value.trim();
             const prices = [parseInt(document.getElementById('f1').value), parseInt(document.getElementById('f2').value), parseInt(document.getElementById('f4').value), parseInt(document.getElementById('f8').value), parseInt(document.getElementById('f24').value)];
@@ -118,7 +111,6 @@
             db.otoparklar.push({ id: Date.now(), name, prices });
             verileriKaydet();
         }
-
         function personelEkle() {
             const user = document.getElementById('pUser').value.trim();
             const pass = document.getElementById('pPass').value.trim();
@@ -128,22 +120,19 @@
             db.personeller.push({ user, pass, parkId, parkName: park.name, status: 'active' });
             verileriKaydet();
         }
-
         function renderAll() {
             const select = document.getElementById('pParkSelect');
             select.innerHTML = '<option value="">Şube Seç...</option>';
             db.otoparklar.forEach(p => select.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-
             const sList = document.getElementById('subeListesi');
             sList.innerHTML = "";
             db.otoparklar.forEach(p => {
-                sList.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex justify-between items-center"><div class="flex flex-col"><b class="text-rose-400 uppercase text-xs">${p.name}</b><small class="text-[9px] text-slate-500 font-bold uppercase mt-1">Tarife: ${p.prices[0]}₺ - ${p.prices[4]}₺</small></div><button onclick="db.otoparklar=db.otoparklar.filter(x=>x.id!=${p.id});verileriKaydet()" class="w-8 h-8 rounded-lg bg-slate-900 text-rose-500 text-[10px]"><i class="fas fa-trash"></i></button></div>`;
+                sList.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex justify-between items-center"><div class="flex flex-col"><b class="text-rose-400 uppercase text-xs">${p.name}</b><small class="text-[9px] text-slate-500 font-bold uppercase mt-1">Tarife: ${p.prices[0]}₺ - ${p.prices[4]}₺</small></div><button onclick="db.otoparklar=db.otoparklar.filter(x=>x.id!=${p.id});verileriKaydet()" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`;
             });
-
             const pList = document.getElementById('personelListesi');
             pList.innerHTML = "";
             db.personeller.forEach(p => {
-                pList.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex justify-between items-center"><div><b class="text-xs">${p.user}</b><p class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">${p.parkName}</p></div><button onclick="db.personeller=db.personeller.filter(x=>x.user!='${p.user}');verileriKaydet()" class="w-8 h-8 rounded-lg bg-slate-900 text-rose-500 text-[10px]"><i class="fas fa-trash"></i></button></div>`;
+                pList.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex justify-between items-center"><div><b class="text-xs">${p.user}</b><p class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">${p.parkName}</p></div><button onclick="db.personeller=db.personeller.filter(x=>x.user!='${p.user}');verileriKaydet()" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`;
             });
         }
     </script>
