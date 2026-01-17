@@ -1,1 +1,1 @@
-{"otoparklar":[{"id":1768667076248,"name":"Muhsin adil","prices":[100,150,200,250,300,350,450],"minibusPrices":[150,200,250,150,180,200,550]}],"personeller":[],"kayitlar":[]}
+{"otoparklar":[{"id":1768667076248,"name":"Muhsin adil","prices":[100,150,200,250,300,350,450],"minibusPrices":[150,200,250,150,180,200,550]}],"personeller":[{"user":"Sabri","pass":"1111","parkId":"1768667076248","parkName":"Muhsin adil"}],"kayitlar":[]}
