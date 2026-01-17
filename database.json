@@ -1,1 +1,1 @@
-{"otoparklar":[{"id":1768652397139,"name":"Sarayburnu","prices":[100,150,200,250,300,350,450],"minibusPrices":[150,200,250,300,350,400,550]}],"personeller":[],"kayitlar":[]}
+{"otoparklar":[{"id":1768652397139,"name":"Sarayburnu","prices":[100,150,200,250,300,350,450],"minibusPrices":[150,200,250,300,350,400,550]}],"personeller":[{"user":"Test","pass":"1111","parkId":"1768652397139","parkName":"Sarayburnu"}],"kayitlar":[]}
