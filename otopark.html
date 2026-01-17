@@ -1,194 +1,92 @@
 <!DOCTYPE html>
-<html lang="tr" class="light">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY PARK - PERSONEL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iSTAY Personel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .dark .glass { background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes pop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    </style>
 </head>
-<body class="bg-slate-100 dark:bg-[#0f172a] dark:text-white transition-colors duration-500 pb-20">
-
-    <div id="authScreen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6">
-        <div class="bg-white dark:bg-[#1e293b] rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl animate-pop">
-            <h2 class="font-black text-2xl mb-2 dark:text-white text-slate-800">Sistem Girişi</h2>
-            <p class="text-[10px] text-slate-400 mb-8 uppercase font-bold tracking-widest">Güvenli Personel Terminali</p>
-            
+<body class="bg-[#0f172a] text-white">
+    <div id="login" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6">
+        <div class="bg-[#1e293b] p-8 rounded-[2.5rem] w-full max-w-sm text-center shadow-2xl">
+            <h2 class="font-black text-2xl mb-6">Personel Girişi</h2>
             <div class="space-y-3">
-                <input type="password" id="ghToken" placeholder="Sistem Anahtarı (GitHub Token)" class="w-full p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl outline-none border-2 border-transparent focus:border-rose-500 font-mono text-xs">
-                <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl outline-none border-2 border-transparent focus:border-rose-500">
-                <input type="password" id="pPass" placeholder="Şifre" class="w-full p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl outline-none border-2 border-transparent focus:border-rose-500">
-                <button onclick="sistemiAc()" class="w-full bg-rose-600 text-white p-4 rounded-2xl font-black shadow-lg shadow-rose-500/30 active:scale-95 transition mt-4 uppercase">Sistemi Başlat</button>
+                <input type="password" id="tInp" placeholder="Sistem Anahtarı (ghp_...)" class="w-full p-4 bg-slate-900 rounded-2xl outline-none border-2 border-transparent focus:border-rose-500 text-xs">
+                <input type="text" id="uInp" placeholder="Kullanıcı Adı" class="w-full p-4 bg-slate-900 rounded-2xl outline-none">
+                <input type="password" id="pInp" placeholder="Şifre" class="w-full p-4 bg-slate-900 rounded-2xl outline-none">
+                <button onclick="login()" class="w-full bg-rose-600 p-4 rounded-2xl font-black mt-4">SİSTEMİ AÇ</button>
             </div>
         </div>
     </div>
 
-    <div id="mainUI" class="hidden">
-        <header class="glass fixed top-0 w-full z-40 px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="font-black italic text-rose-500">iSTAY <span class="text-slate-800 dark:text-white">PARK</span></span>
-                <div id="syncStatus" class="w-2 h-2 rounded-full bg-emerald-500"></div>
-            </div>
-            <button onclick="window.location.reload()" class="text-slate-400 text-xs font-bold uppercase"><i class="fas fa-sign-out-alt"></i> Çıkış</button>
+    <div id="app" class="hidden">
+        <header class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0">
+            <span class="font-black italic text-rose-500">iSTAY PARK</span>
+            <div id="dot" class="w-3 h-3 rounded-full bg-emerald-500"></div>
         </header>
-
-        <main class="max-w-lg mx-auto pt-24 px-4">
-            <div class="bg-white dark:bg-[#1e293b] rounded-[2rem] p-6 shadow-xl mb-6 border border-white/10">
-                <input type="text" id="plakaInput" placeholder="PLAKA GİRİN" class="w-full h-16 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center text-3xl font-black uppercase outline-none focus:ring-4 ring-rose-500/20 transition-all">
-                <button onclick="aracGiris()" class="w-full bg-rose-600 text-white py-4 rounded-2xl font-black mt-4 shadow-lg active:scale-95 transition">GİRİŞİ KAYDET</button>
-            </div>
-
-            <div id="aracListesi" class="space-y-4">
-                </div>
+        <main class="p-4 max-w-lg mx-auto">
+            <input type="text" id="plaka" placeholder="PLAKA GİRİN" class="w-full h-16 bg-[#1e293b] rounded-2xl text-center text-3xl font-black uppercase outline-none mb-4">
+            <button onclick="giris()" class="w-full bg-rose-600 py-4 rounded-2xl font-black mb-6">KAYDET</button>
+            <div id="liste" class="space-y-4"></div>
         </main>
     </div>
 
     <script>
-        const config = {
-            owner: 'GITHUB_KULLANICI_ADIN', // BURAYI DOLDUR
-            repo: 'REPO_ADIN',             // BURAYI DOLDUR
-            path: 'database.json',
-            token: ''
-        };
-
+        const gh = { owner: 'KULLANICI_ADIN', repo: 'REPO_ADIN', path: 'database.json', token: '' };
         let db = { personeller: [], kayitlar: [] };
-        let currentSha = "";
-        let aktifKullanici = "";
+        let sha = ""; let user = "";
 
-        async function sistemiAc() {
-            const t = document.getElementById('ghToken').value.trim();
-            const u = document.getElementById('pUser').value.trim();
-            const p = document.getElementById('pPass').value.trim();
-
-            if(!t || !u || !p) return alert("Eksik bilgi!");
-
-            config.token = t;
-            const success = await bulutCek();
-
-            if(!success) return alert("Bağlantı başarısız! Token geçersiz olabilir.");
-
-            // Personel Kontrol ve Durum Yönetimi
-            const personel = db.personeller.find(x => x.user === u && x.pass === p);
-            
-            if(personel) {
-                if(personel.status === 'blocked') return alert("HESABINIZ ENGELLENMİŞTİR!");
-                if(personel.status === 'frozen') return alert("HESABINIZ DONDURULMUŞTUR!");
-
-                aktifKullanici = u;
-                document.getElementById('authScreen').classList.add('hidden');
-                document.getElementById('mainUI').classList.remove('hidden');
-                renderList();
-            } else {
-                alert("Kullanıcı adı veya şifre yanlış!");
-            }
-        }
-
-        async function bulutCek() {
-            const status = document.getElementById('syncStatus');
-            if(status) status.className = "w-2 h-2 rounded-full bg-yellow-500 animate-pulse";
+        async function login() {
+            gh.token = document.getElementById('tInp').value.trim();
+            const u = document.getElementById('uInp').value.trim();
+            const p = document.getElementById('pInp').value.trim();
             
             try {
-                const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
-                    headers: { Authorization: `token ${config.token}` }
+                const r = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${gh.path}`, {
+                    headers: { Authorization: `token ${gh.token}` }
                 });
-                if(!r.ok) return false;
-                const d = await r.json();
-                currentSha = d.sha;
+                const d = await r.json(); sha = d.sha;
                 db = JSON.parse(decodeURIComponent(escape(atob(d.content))));
-                if(status) status.className = "w-2 h-2 rounded-full bg-emerald-500";
-                return true;
-            } catch (e) { return false; }
+                
+                const pers = db.personeller.find(x => x.user === u && x.pass === p);
+                if(pers) {
+                    if(pers.status !== 'active') return alert("Hesap aktif değil!");
+                    user = u; document.getElementById('login').classList.add('hidden');
+                    document.getElementById('app').classList.remove('hidden'); render();
+                } else alert("Hatalı giriş!");
+            } catch(e) { alert("Token Geçersiz!"); }
         }
 
-        async function bulutKaydet() {
+        async function save() {
             const content = btoa(unescape(encodeURIComponent(JSON.stringify(db))));
-            try {
-                const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
-                    method: "PUT",
-                    headers: { Authorization: `token ${config.token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: "Staff Update", content, sha: currentSha })
-                });
-                const d = await r.json();
-                currentSha = d.content.sha;
-                renderList();
-            } catch (e) { alert("Senkronizasyon Hatası!"); }
-        }
-
-        function aracGiris() {
-            const plaka = document.getElementById('plakaInput').value.trim().toUpperCase();
-            if(!plaka) return;
-
-            db.kayitlar.push({
-                id: Date.now(),
-                plaka: plaka,
-                giris: new Date().toISOString(),
-                ekleyen: aktifKullanici,
-                tutar: 0,
-                odeme: '',
-                silindi: false
+            const r = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${gh.path}`, {
+                method: "PUT",
+                headers: { Authorization: `token ${gh.token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "Staff Sync", content, sha })
             });
-
-            bulutKaydet();
-            document.getElementById('plakaInput').value = "";
+            const d = await r.json(); sha = d.content.sha; render();
         }
 
-        function renderList() {
-            const liste = document.getElementById('aracListesi');
-            liste.innerHTML = "";
-            const aktifAraclar = db.kayitlar.filter(x => x.ekleyen === aktifKullanici && x.silindi === false);
+        function giris() {
+            const pl = document.getElementById('plaka').value.trim().toUpperCase();
+            if(!pl) return;
+            db.kayitlar.push({ id: Date.now(), plaka: pl, giris: new Date().toISOString(), ekleyen: user, tutar: 0, silindi: false });
+            save(); document.getElementById('plaka').value = "";
+        }
 
-            if(aktifAraclar.length === 0) {
-                liste.innerHTML = `<div class="text-center py-10 text-slate-500 font-bold uppercase text-[10px] tracking-widest">İçeride Araç Yok</div>`;
-                return;
-            }
-
-            [...aktifAraclar].reverse().forEach(a => {
-                liste.innerHTML += `
-                    <div class="bg-white dark:bg-[#1e293b] p-5 rounded-[2rem] flex justify-between items-center shadow-lg border border-white/5 animate-pop">
-                        <div>
-                            <h3 class="text-2xl font-black uppercase text-slate-800 dark:text-white">${a.plaka}</h3>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">${new Date(a.giris).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} • AKTİF</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="islemTamamla(${a.id}, 'NAKİT')" class="w-12 h-12 rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 active:scale-90 transition"><i class="fas fa-money-bill-wave"></i></button>
-                            <button onclick="islemTamamla(${a.id}, 'KART')" class="w-12 h-12 rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-90 transition"><i class="fas fa-credit-card"></i></button>
-                            <button onclick="kayitGizle(${a.id})" class="w-12 h-12 rounded-2xl bg-slate-700 text-white active:scale-90 transition"><i class="fas fa-times"></i></button>
-                        </div>
-                    </div>
-                `;
+        function render() {
+            const l = document.getElementById('liste'); l.innerHTML = "";
+            db.kayitlar.filter(x => x.ekleyen === user && !x.silindi).reverse().forEach(a => {
+                l.innerHTML += `<div class="bg-[#1e293b] p-5 rounded-[2rem] flex justify-between items-center"><div><h3 class="text-xl font-black uppercase">${a.plaka}</h3><p class="text-[10px] text-slate-500">${a.giris.substring(11,16)}</p></div><div class="flex gap-2"><button onclick="out(${a.id},'NAKİT')" class="w-10 h-10 rounded-xl bg-emerald-600"><i class="fas fa-money-bill-wave"></i></button><button onclick="out(${a.id},'KART')" class="w-10 h-10 rounded-xl bg-blue-600"><i class="fas fa-credit-card"></i></button></div></div>`;
             });
         }
 
-        function islemTamamla(id, tip) {
-            const tutar = prompt("Ödeme Tutarı (₺):", "100");
-            if(tutar === null) return;
+        function out(id, t) {
+            const p = prompt("Tutar:", "100"); if(!p) return;
             const a = db.kayitlar.find(x => x.id === id);
-            if(a) {
-                a.tutar = parseInt(tutar);
-                a.odeme = tip;
-                a.cikis = new Date().toISOString();
-                a.silindi = true;
-                bulutKaydet();
-            }
+            a.tutar = parseInt(p); a.odeme = t; a.silindi = true; save();
         }
-
-        function kayitGizle(id) {
-            if(confirm("Bu kaydı ekranınızdan gizlemek istiyor musunuz? (Admin görebilir)")) {
-                const a = db.kayitlar.find(x => x.id === id);
-                if(a) { a.silindi = true; bulutKaydet(); }
-            }
-        }
-        
-        // Otomatik Güncelleme (2 dakikada bir)
-        setInterval(() => { if(aktifKullanici) bulutCek(); }, 120000);
     </script>
 </body>
 </html>
