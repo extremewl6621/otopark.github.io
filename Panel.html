@@ -40,8 +40,7 @@
 
         <section id="section-takip" class="space-y-4">
             <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700 shadow-2xl">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase text-center mb-4 tracking-widest">ÖDEME DETAYLARI</h3>
-                <div class="space-y-2 mb-4 border-b border-slate-700/50 pb-4">
+                <div class="space-y-2 mb-4">
                     <div class="flex justify-between text-xs font-bold bg-slate-900/50 p-3 rounded-xl">
                         <span class="text-emerald-500"><i class="fas fa-money-bill-wave mr-2"></i>NAKİT</span>
                         <span id="nakitOzet">0₺</span>
@@ -55,49 +54,28 @@
                         <span id="hgsOzet">0₺</span>
                     </div>
                     <div class="flex justify-between text-sm font-black bg-slate-900 p-3 rounded-xl mt-2 border border-slate-700">
-                        <span class="text-white uppercase">TOPLAM</span>
+                        <span class="text-white uppercase">GENEL TOPLAM</span>
                         <span id="toplamKazanc" class="text-rose-500">0₺</span>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <select id="filterPark" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none"><option value="all">TÜM OKULLAR</option></select>
+                    <select id="filterPark" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none"><option value="all">TÜM ŞUBELER</option></select>
                     <input type="date" id="filterDate" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none">
                 </div>
             </div>
+
             <div id="islemListesi" class="space-y-3"></div>
         </section>
 
-        <section id="section-sube" class="hidden space-y-6">
-            <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-xl">
-                <input type="text" id="parkName" placeholder="Şube Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none text-sm mb-4">
-                
-                <h4 class="text-[10px] font-black text-rose-500 mb-2 uppercase italic">Otomobil Tarifesi</h4>
-                <div class="grid grid-cols-2 gap-2 text-[9px] mb-4">
-                    <input type="number" id="f1" placeholder="0-1S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="f2" placeholder="1-2S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="f4" placeholder="2-4S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="f6" placeholder="4-6S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="f8" placeholder="6-8S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="f12" placeholder="8-12S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="f24" placeholder="12-24S" class="bg-slate-900 p-2 rounded-lg border border-slate-700 col-span-2">
-                </div>
-
-                <h4 class="text-[10px] font-black text-blue-500 mb-2 uppercase italic">Minibüs Tarifesi</h4>
-                <div class="grid grid-cols-2 gap-2 text-[9px] mb-4">
-                    <input type="number" id="m1" placeholder="0-1S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="m2" placeholder="1-2S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="m4" placeholder="2-4S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="m6" placeholder="4-6S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="m8" placeholder="6-8S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="m12" placeholder="8-12S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
-                    <input type="number" id="m24" placeholder="12-24S" class="bg-slate-900 p-2 rounded-lg border border-slate-700 col-span-2">
-                </div>
-                <button onclick="otoparkEkle()" class="w-full bg-emerald-600 p-4 rounded-2xl font-black text-xs uppercase">KAYDET</button>
+        <section id="section-sube" class="hidden space-y-4">
+             <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700">
+                <input type="text" id="parkName" placeholder="Şube Adı" class="w-full bg-slate-900 p-4 rounded-xl mb-4 text-sm border border-slate-700">
+                <button onclick="otoparkEkle()" class="w-full bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase">ŞUBEYİ KAYDET</button>
             </div>
             <div id="subeListesi" class="space-y-2"></div>
         </section>
 
-        <section id="section-personel" class="hidden space-y-6">
+        <section id="section-personel" class="hidden space-y-4">
             <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700">
                 <select id="pParkSelect" class="w-full bg-slate-900 p-4 rounded-xl mb-3 text-sm"></select>
                 <input type="text" id="pUser" placeholder="Kullanıcı" class="w-full bg-slate-900 p-4 rounded-xl mb-2 text-sm border border-slate-700">
@@ -110,10 +88,11 @@
 
     <div id="configModal" class="fixed inset-0 z-[100] bg-slate-900/95 flex items-center justify-center p-6 hidden">
         <div class="bg-slate-800 p-8 rounded-[2rem] w-full max-w-sm border border-slate-700">
-            <input type="text" id="ghOwner" placeholder="User" class="w-full bg-slate-900 p-4 rounded-xl mb-2 border border-slate-700">
-            <input type="text" id="ghRepo" placeholder="Repo" class="w-full bg-slate-900 p-4 rounded-xl mb-2 border border-slate-700">
-            <input type="password" id="ghToken" placeholder="Token" class="w-full bg-slate-900 p-4 rounded-xl mb-4 border border-slate-700">
-            <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 py-4 rounded-xl font-bold">BAĞLAN</button>
+            <h2 class="text-rose-500 font-black mb-4 uppercase">GitHub Ayarları</h2>
+            <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı" class="w-full bg-slate-900 p-4 rounded-xl mb-2 border border-slate-700">
+            <input type="text" id="ghRepo" placeholder="Repo Adı" class="w-full bg-slate-900 p-4 rounded-xl mb-2 border border-slate-700">
+            <input type="password" id="ghToken" placeholder="GitHub Token" class="w-full bg-slate-900 p-4 rounded-xl mb-4 border border-slate-700">
+            <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 py-4 rounded-xl font-bold">AYARLARI KAYDET</button>
         </div>
     </div>
 
@@ -135,19 +114,21 @@
                 const r = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?t=${Date.now()}`, { headers: { Authorization: `token ${cfg.token}` } });
                 const d = await r.json(); sha = d.sha;
                 db = JSON.parse(b64d(d.content));
-                document.getElementById('connDot').className = "status-dot bg-emerald-500";
-                document.getElementById('connText').innerText = "BAĞLI";
+                document.getElementById('connDot').className = "status-dot bg-emerald-500 animate-none";
+                document.getElementById('connText').innerText = "BAĞLANDI";
                 renderAll();
-            } catch (e) { document.getElementById('connDot').className = "status-dot bg-rose-500"; document.getElementById('connText').innerText = "HATA"; }
+            } catch (e) { document.getElementById('connDot').className = "status-dot bg-rose-500"; document.getElementById('connText').innerText = "BAĞLANTI HATASI"; }
         }
 
         async function verileriKaydet() {
-            const content = b64e(JSON.stringify(db));
-            const r = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`, {
-                method: "PUT", headers: { Authorization: `token ${cfg.token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ message: "Update", content, sha })
-            });
-            if(r.ok) { const d = await r.json(); sha = d.content.sha; verileriCek(); }
+            try {
+                const content = b64e(JSON.stringify(db));
+                const r = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`, {
+                    method: "PUT", headers: { Authorization: `token ${cfg.token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: "Update", content, sha })
+                });
+                if(r.ok) { const data = await r.json(); sha = data.content.sha; verileriCek(); }
+            } catch (e) { alert("Veri kaydedilemedi!"); }
         }
 
         function renderAll() {
@@ -156,7 +137,8 @@
             const selDate = document.getElementById('filterDate').value;
             const selPark = fPark.value;
 
-            fPark.innerHTML = '<option value="all">TÜM OKULLAR</option>';
+            // Filtreleri Güncelle
+            fPark.innerHTML = '<option value="all">TÜM ŞUBELER</option>';
             pPark.innerHTML = '';
             db.otoparklar.forEach(p => {
                 fPark.innerHTML += `<option value="${p.id}">${p.name.toUpperCase()}</option>`;
@@ -164,20 +146,44 @@
             });
             fPark.value = selPark || 'all';
 
-            const logs = db.kayitlar.filter(a => {
-                const isDate = new Date(a.giris).toISOString().split('T')[0] === selDate;
-                return isDate && (fPark.value === 'all' || a.parkId == fPark.value);
+            // Takip Listesi ve Finansal Hesaplama
+            const iList = document.getElementById('islemListesi'); iList.innerHTML = "";
+            let n=0, k=0, h=0;
+
+            const filteredLogs = db.kayitlar.filter(a => {
+                const dateMatches = new Date(a.giris).toISOString().split('T')[0] === selDate;
+                const parkMatches = (fPark.value === 'all' || a.parkId == fPark.value);
+                return dateMatches && parkMatches;
             });
 
-            let n=0, k=0, h=0;
-            const iList = document.getElementById('islemListesi'); iList.innerHTML = "";
-            logs.reverse().forEach(a => {
+            filteredLogs.reverse().forEach(a => {
+                const giris = new Date(a.giris).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+                const cikis = a.cikis ? new Date(a.cikis).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}) : '--:--';
+                const odemeYontemi = a.odeme || 'BEKLİYOR';
+                const tutar = a.tutar || 0;
+
                 if(a.durum === 'tamamlandi') {
-                    if(a.odeme === 'NAKİT') n += (a.tutar || 0);
-                    else if(a.odeme === 'KART') k += (a.tutar || 0);
-                    else if(a.odeme === 'HGS') h += (a.tutar || 0);
+                    if(a.odeme === 'NAKİT') n += tutar;
+                    else if(a.odeme === 'KART') k += tutar;
+                    else if(a.odeme === 'HGS') h += tutar;
                 }
-                iList.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-between items-center"><div><b class="text-rose-500 uppercase">${a.plaka}</b><p class="text-[9px] text-slate-500">${a.odeme || 'İÇERİDE'}</p></div><div class="flex items-center gap-3"><b class="text-emerald-500">${a.tutar || 0}₺</b><button onclick="db.kayitlar.splice(db.kayitlar.indexOf(${JSON.stringify(a)}),1);verileriKaydet()" class="text-rose-500"><i class="fas fa-trash"></i></button></div></div>`;
+
+                iList.innerHTML += `
+                <div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 shadow-lg">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
+                        <b class="text-rose-500 text-lg uppercase">${a.plaka}</b>
+                        <span class="text-[9px] font-bold text-slate-500 uppercase px-2 py-1 bg-slate-900 rounded">${a.parkName}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-2 text-[10px] font-bold">
+                        <div class="text-slate-400">GİRİŞ: <span class="text-white">${giris}</span></div>
+                        <div class="text-slate-400 text-right">ÇIKIŞ: <span class="text-white">${cikis}</span></div>
+                        <div class="text-slate-400">ÖDEME: <span class="text-blue-400">${odemeYontemi}</span></div>
+                        <div class="text-right text-emerald-500 text-lg font-black">${tutar}₺</div>
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                        <button onclick="kayitSil(${a.id})" class="text-rose-500/50 hover:text-rose-500 transition px-2"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>`;
             });
 
             document.getElementById('nakitOzet').innerText = n + "₺";
@@ -185,20 +191,30 @@
             document.getElementById('hgsOzet').innerText = h + "₺";
             document.getElementById('toplamKazanc').innerText = (n+k+h) + "₺";
 
+            // Şube ve Personel Listeleri
             const sList = document.getElementById('subeListesi'); sList.innerHTML = "";
-            db.otoparklar.forEach((p, i) => { sList.innerHTML += `<div class="bg-slate-800 p-3 rounded-xl flex justify-between border border-slate-700"><b>${p.name}</b><button onclick="db.otoparklar.splice(${i},1);verileriKaydet()" class="text-rose-500"><i class="fas fa-trash text-xs"></i></button></div>`; });
+            db.otoparklar.forEach((p, idx) => {
+                sList.innerHTML += `<div class="bg-slate-800 p-4 rounded-xl flex justify-between border border-slate-700"><b>${p.name}</b><button onclick="subeSil(${idx})" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`;
+            });
 
             const pList = document.getElementById('personelListesi'); pList.innerHTML = "";
-            db.personeller.forEach((p, i) => { pList.innerHTML += `<div class="bg-slate-800 p-3 rounded-xl flex justify-between border border-slate-700"><div><b>${p.user}</b><p class="text-[9px] text-blue-400">${p.parkName}</p></div><button onclick="db.personeller.splice(${i},1);verileriKaydet()" class="text-rose-500"><i class="fas fa-trash text-xs"></i></button></div>`; });
+            db.personeller.forEach((p, idx) => {
+                pList.innerHTML += `<div class="bg-slate-800 p-4 rounded-xl flex justify-between border border-slate-700"><div><b>${p.user}</b><p class="text-[9px] text-blue-400 uppercase font-bold">${p.parkName}</p></div><button onclick="personelSil(${idx})" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`;
+            });
         }
 
+        // Silme Fonksiyonları
+        function kayitSil(id) { if(confirm('Bu işlem kaydını silmek istediğine emin misin?')) { db.kayitlar = db.kayitlar.filter(x => x.id !== id); verileriKaydet(); } }
+        function subeSil(idx) { if(confirm('Şubeyi silmek şubeye ait personelleri etkileyebilir. Silinsin mi?')) { db.otoparklar.splice(idx, 1); verileriKaydet(); } }
+        function personelSil(idx) { if(confirm('Personel silinsin mi?')) { db.personeller.splice(idx, 1); verileriKaydet(); } }
+
+        // Ekleme Fonksiyonları
         function otoparkEkle() {
             const name = document.getElementById('parkName').value.trim();
-            const oto = [parseInt(document.getElementById('f1').value)||0, parseInt(document.getElementById('f2').value)||0, parseInt(document.getElementById('f4').value)||0, parseInt(document.getElementById('f6').value)||0, parseInt(document.getElementById('f8').value)||0, parseInt(document.getElementById('f12').value)||0, parseInt(document.getElementById('f24').value)||0];
-            const mini = [parseInt(document.getElementById('m1').value)||0, parseInt(document.getElementById('m2').value)||0, parseInt(document.getElementById('m4').value)||0, parseInt(document.getElementById('m6').value)||0, parseInt(document.getElementById('m8').value)||0, parseInt(document.getElementById('m12').value)||0, parseInt(document.getElementById('m24').value)||0];
             if(!name) return;
-            db.otoparklar.push({ id: Date.now(), name, prices: oto, minibusPrices: mini });
+            db.otoparklar.push({ id: Date.now(), name, prices: [0,0,0,0,0,0,0], minibusPrices: [0,0,0,0,0,0,0] });
             verileriKaydet();
+            document.getElementById('parkName').value = "";
         }
 
         function personelEkle() {
@@ -207,8 +223,9 @@
             const parkId = document.getElementById('pParkSelect').value;
             if(!u || !p || !parkId) return;
             const park = db.otoparklar.find(x => x.id == parkId);
-            db.personeller.push({ user: u, pass: p, parkId, parkName: park.name, status: 'active' });
+            db.personeller.push({ user: u, pass: p, parkId, parkName: park.name });
             verileriKaydet();
+            document.getElementById('pUser').value = ""; document.getElementById('pPass').value = "";
         }
 
         function tabDegistir(t) {
@@ -218,7 +235,12 @@
             });
         }
         function ayarlariAc() { document.getElementById('configModal').classList.remove('hidden'); }
-        function ayarlariKaydet() { localStorage.setItem('m_o', document.getElementById('ghOwner').value.trim()); localStorage.setItem('m_r', document.getElementById('ghRepo').value.trim()); localStorage.setItem('m_t', b64e(document.getElementById('ghToken').value.trim())); location.reload(); }
+        function ayarlariKaydet() { 
+            localStorage.setItem('m_o', document.getElementById('ghOwner').value.trim()); 
+            localStorage.setItem('m_r', document.getElementById('ghRepo').value.trim()); 
+            localStorage.setItem('m_t', b64e(document.getElementById('ghToken').value.trim())); 
+            location.reload(); 
+        }
     </script>
 </body>
 </html>
