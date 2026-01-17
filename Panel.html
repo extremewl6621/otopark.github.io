@@ -3,27 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY MASTER - Mobil Panel</title>
+    <title>iSTAY MASTER - Yönetim & Takip</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .tab-active { border-bottom: 3px solid #e11d48; color: #e11d48; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-900 text-white pb-24">
-    <div class="max-w-md mx-auto px-4">
+    <div class="max-w-4xl mx-auto px-4">
         <header class="flex justify-between items-center py-6 border-b border-slate-800 mb-6">
             <h1 class="text-xl font-black text-rose-500 italic uppercase">iSTAY MASTER</h1>
-            <button onclick="ayarlariAc()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></button>
+            <div class="flex gap-2">
+                <button onclick="verileriCek()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-emerald-500"><i class="fas fa-sync-alt"></i></button>
+                <button onclick="ayarlariAc()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></button>
+            </div>
         </header>
 
-        <div class="flex justify-around mb-8 border-b border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-widest">
-            <button onclick="tabDegistir('sube')" id="tab-sube" class="pb-3 tab-active">Şubeler</button>
+        <div class="flex justify-around mb-8 border-b border-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <button onclick="tabDegistir('takip')" id="tab-takip" class="pb-3 tab-active">İşlem Takibi</button>
+            <button onclick="tabDegistir('sube')" id="tab-sube" class="pb-3">Şubeler</button>
             <button onclick="tabDegistir('personel')" id="tab-personel" class="pb-3">Personel</button>
         </div>
 
-        <div id="section-sube" class="space-y-6">
+        <div id="section-takip" class="space-y-4">
+            <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Tüm Şubelerden Gelen Kayıtlar</h3>
+            <div id="islemListesi" class="space-y-3">
+                </div>
+        </div>
+
+        <div id="section-sube" class="hidden space-y-6">
             <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-xl">
                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Şube & Fiyat Tanımla</h3>
                 <div class="space-y-4">
@@ -59,9 +71,9 @@
         <div class="bg-slate-800 p-8 rounded-[2.5rem] w-full max-w-sm border border-slate-700 shadow-2xl">
             <h2 class="text-xl font-black text-rose-500 mb-6 uppercase">Bağlantı Ayarı</h2>
             <div class="space-y-4">
-                <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700 text-sm">
-                <input type="text" id="ghRepo" placeholder="Repo Adı" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700 text-sm">
-                <input type="password" id="ghToken" placeholder="GitHub Token" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700 text-sm">
+                <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700">
+                <input type="text" id="ghRepo" placeholder="Repo Adı" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700">
+                <input type="password" id="ghToken" placeholder="GitHub Token" class="w-full bg-slate-900 p-4 rounded-xl outline-none text-white border border-slate-700">
                 <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 py-4 rounded-xl font-black text-white active:scale-95 transition">KAYDET</button>
             </div>
         </div>
@@ -75,12 +87,16 @@
         let sha = "";
 
         window.onload = () => { if(!config.token) ayarlariAc(); else verileriCek(); };
+
         function tabDegistir(t) {
             document.getElementById('section-sube').classList.toggle('hidden', t !== 'sube');
             document.getElementById('section-personel').classList.toggle('hidden', t !== 'personel');
+            document.getElementById('section-takip').classList.toggle('hidden', t !== 'takip');
             document.getElementById('tab-sube').classList.toggle('tab-active', t === 'sube');
             document.getElementById('tab-personel').classList.toggle('tab-active', t === 'personel');
+            document.getElementById('tab-takip').classList.toggle('tab-active', t === 'takip');
         }
+
         function ayarlariAc() { document.getElementById('configModal').classList.remove('hidden'); }
         function ayarlariKaydet() {
             localStorage.setItem('m_o', document.getElementById('ghOwner').value.trim());
@@ -88,6 +104,7 @@
             localStorage.setItem('m_t', b64e(document.getElementById('ghToken').value.trim()));
             location.reload();
         }
+
         async function verileriCek() {
             try {
                 const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?t=${Date.now()}`, { headers: { Authorization: `token ${config.token}` } });
@@ -96,6 +113,7 @@
                 renderAll();
             } catch (e) { console.error(e); }
         }
+
         async function verileriKaydet() {
             const content = b64e(JSON.stringify(db));
             const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
@@ -104,6 +122,7 @@
             });
             const d = await r.json(); sha = d.content.sha; verileriCek();
         }
+
         function otoparkEkle() {
             const name = document.getElementById('parkName').value.trim();
             const prices = [parseInt(document.getElementById('f1').value), parseInt(document.getElementById('f2').value), parseInt(document.getElementById('f4').value), parseInt(document.getElementById('f8').value), parseInt(document.getElementById('f24').value)];
@@ -111,6 +130,7 @@
             db.otoparklar.push({ id: Date.now(), name, prices });
             verileriKaydet();
         }
+
         function personelEkle() {
             const user = document.getElementById('pUser').value.trim();
             const pass = document.getElementById('pPass').value.trim();
@@ -120,20 +140,68 @@
             db.personeller.push({ user, pass, parkId, parkName: park.name, status: 'active' });
             verileriKaydet();
         }
+
         function renderAll() {
+            // Dropdown Güncelle
             const select = document.getElementById('pParkSelect');
             select.innerHTML = '<option value="">Şube Seç...</option>';
             db.otoparklar.forEach(p => select.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+
+            // Şube Listesi
             const sList = document.getElementById('subeListesi');
             sList.innerHTML = "";
             db.otoparklar.forEach(p => {
                 sList.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex justify-between items-center"><div class="flex flex-col"><b class="text-rose-400 uppercase text-xs">${p.name}</b><small class="text-[9px] text-slate-500 font-bold uppercase mt-1">Tarife: ${p.prices[0]}₺ - ${p.prices[4]}₺</small></div><button onclick="db.otoparklar=db.otoparklar.filter(x=>x.id!=${p.id});verileriKaydet()" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`;
             });
+
+            // Personel Listesi
             const pList = document.getElementById('personelListesi');
             pList.innerHTML = "";
             db.personeller.forEach(p => {
                 pList.innerHTML += `<div class="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex justify-between items-center"><div><b class="text-xs">${p.user}</b><p class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">${p.parkName}</p></div><button onclick="db.personeller=db.personeller.filter(x=>x.user!='${p.user}');verileriKaydet()" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`;
             });
+
+            // İŞLEM TAKİBİ (YENİ)
+            const iList = document.getElementById('islemListesi');
+            iList.innerHTML = "";
+            const tumIslemler = [...db.kayitlar].reverse();
+
+            if(tumIslemler.length === 0) {
+                iList.innerHTML = `<div class="text-center py-20 text-slate-600 font-bold uppercase text-[10px] tracking-widest">Henüz Kayıt Yok</div>`;
+                return;
+            }
+
+            tumIslemler.forEach((a, idx) => {
+                const giris = new Date(a.giris);
+                const cikis = a.cikis ? new Date(a.cikis) : null;
+                const bekleme = cikis ? Math.floor((cikis - giris) / 60000) : null;
+                const saat = bekleme ? Math.floor(bekleme / 60) : 0;
+                const dk = bekleme ? bekleme % 60 : 0;
+
+                iList.innerHTML += `
+                <div class="bg-slate-800 p-4 rounded-3xl border border-slate-700 flex flex-col gap-2">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <b class="text-rose-500 text-lg uppercase">${a.plaka}</b>
+                        <span class="text-[9px] px-2 py-1 bg-slate-900 rounded-lg text-slate-400 font-bold uppercase">${a.parkName || 'Şube Belirsiz'}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-medium">
+                        <p><i class="fas fa-user mr-1"></i> ${a.ekleyen}</p>
+                        <p><i class="fas fa-money-bill mr-1 text-emerald-500"></i> ${a.odeme || 'BEKLİYOR'} (${a.tutar}₺)</p>
+                        <p><i class="fas fa-clock mr-1"></i> Giriş: ${giris.toLocaleString('tr-TR', {hour:'2-digit', minute:'2-digit'})}</p>
+                        <p><i class="fas fa-hourglass-half mr-1"></i> Süre: ${saat}S ${dk}D</p>
+                    </div>
+                    <div class="flex justify-end mt-2">
+                        <button onclick="islemSil(${db.kayitlar.length - 1 - idx})" class="text-[9px] font-bold text-rose-500 uppercase"><i class="fas fa-trash"></i> Sil</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function islemSil(idx) {
+            if(confirm("Bu işlem kaydı kalıcı olarak silinsin mi?")) {
+                db.kayitlar.splice(idx, 1);
+                verileriKaydet();
+            }
         }
     </script>
 </body>
