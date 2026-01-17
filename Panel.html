@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY MASTER - Finansal Denetim</title>
+    <title>iSTAY MASTER - Yönetim Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -26,69 +26,96 @@
                 <button onclick="verileriCek()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-emerald-500 active:rotate-180 transition-all">
                     <i class="fas fa-sync-alt"></i>
                 </button>
+                <button onclick="ayarlariAc()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400">
+                    <i class="fas fa-cog"></i>
+                </button>
             </div>
         </header>
 
         <nav class="flex justify-around mb-6 border-b border-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            <button onclick="tabDegistir('takip')" id="tab-takip" class="pb-3 tab-active">İşlem Takibi</button>
+            <button onclick="tabDegistir('takip')" id="tab-takip" class="pb-3 tab-active">Takip</button>
             <button onclick="tabDegistir('sube')" id="tab-sube" class="pb-3">Şubeler</button>
+            <button onclick="tabDegistir('personel')" id="tab-personel" class="pb-3">Personel</button>
         </nav>
 
         <section id="section-takip" class="space-y-4">
-            
             <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700 shadow-2xl">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase text-center mb-4 tracking-widest">Seçili Tarih Ödeme Detayları</h3>
-                
-                <div class="space-y-3 mb-5 border-b border-slate-700/50 pb-5">
-                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-2xl">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                                <i class="fas fa-money-bill-wave"></i>
-                            </div>
-                            <span class="text-xs font-bold text-slate-300">NAKİT TOPLAM</span>
-                        </div>
-                        <b class="text-emerald-500" id="nakitOzet">0₺</b>
+                <h3 class="text-[10px] font-black text-slate-500 uppercase text-center mb-4 tracking-widest">ÖDEME DETAYLARI</h3>
+                <div class="space-y-2 mb-4 border-b border-slate-700/50 pb-4">
+                    <div class="flex justify-between text-xs font-bold bg-slate-900/50 p-3 rounded-xl">
+                        <span class="text-emerald-500"><i class="fas fa-money-bill-wave mr-2"></i>NAKİT</span>
+                        <span id="nakitOzet">0₺</span>
                     </div>
-                    
-                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-2xl">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
-                                <i class="fas fa-credit-card"></i>
-                            </div>
-                            <span class="text-xs font-bold text-slate-300">KART TOPLAM</span>
-                        </div>
-                        <b class="text-blue-500" id="kartOzet">0₺</b>
+                    <div class="flex justify-between text-xs font-bold bg-slate-900/50 p-3 rounded-xl">
+                        <span class="text-blue-500"><i class="fas fa-credit-card mr-2"></i>KART</span>
+                        <span id="kartOzet">0₺</span>
                     </div>
-
-                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-2xl">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500">
-                                <i class="fas fa-rss"></i>
-                            </div>
-                            <span class="text-xs font-bold text-slate-300">HGS TOPLAM</span>
-                        </div>
-                        <b class="text-amber-500" id="hgsOzet">0₺</b>
+                    <div class="flex justify-between text-xs font-bold bg-slate-900/50 p-3 rounded-xl">
+                        <span class="text-amber-500"><i class="fas fa-rss mr-2"></i>HGS</span>
+                        <span id="hgsOzet">0₺</span>
+                    </div>
+                    <div class="flex justify-between text-sm font-black bg-slate-900 p-3 rounded-xl mt-2 border border-slate-700">
+                        <span class="text-white uppercase">TOPLAM</span>
+                        <span id="toplamKazanc" class="text-rose-500">0₺</span>
                     </div>
                 </div>
-
-                <div class="text-center">
-                    <p class="text-[9px] font-black text-rose-500 uppercase tracking-tighter">GENEL TOPLAM KAZANÇ</p>
-                    <h2 class="text-4xl font-black text-white mt-1" id="toplamKazanc">0₺</h2>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 mt-6">
-                    <select id="filterPark" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none">
-                        <option value="all">TÜM OKULLAR</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="filterPark" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none"><option value="all">TÜM OKULLAR</option></select>
                     <input type="date" id="filterDate" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none">
                 </div>
             </div>
-
-            <div id="islemListesi" class="space-y-3">
-                </div>
+            <div id="islemListesi" class="space-y-3"></div>
         </section>
-        
+
+        <section id="section-sube" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-xl">
+                <input type="text" id="parkName" placeholder="Şube Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none text-sm mb-4">
+                
+                <h4 class="text-[10px] font-black text-rose-500 mb-2 uppercase italic">Otomobil Tarifesi</h4>
+                <div class="grid grid-cols-2 gap-2 text-[9px] mb-4">
+                    <input type="number" id="f1" placeholder="0-1S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="f2" placeholder="1-2S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="f4" placeholder="2-4S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="f6" placeholder="4-6S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="f8" placeholder="6-8S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="f12" placeholder="8-12S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="f24" placeholder="12-24S" class="bg-slate-900 p-2 rounded-lg border border-slate-700 col-span-2">
+                </div>
+
+                <h4 class="text-[10px] font-black text-blue-500 mb-2 uppercase italic">Minibüs Tarifesi</h4>
+                <div class="grid grid-cols-2 gap-2 text-[9px] mb-4">
+                    <input type="number" id="m1" placeholder="0-1S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="m2" placeholder="1-2S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="m4" placeholder="2-4S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="m6" placeholder="4-6S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="m8" placeholder="6-8S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="m12" placeholder="8-12S" class="bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <input type="number" id="m24" placeholder="12-24S" class="bg-slate-900 p-2 rounded-lg border border-slate-700 col-span-2">
+                </div>
+                <button onclick="otoparkEkle()" class="w-full bg-emerald-600 p-4 rounded-2xl font-black text-xs uppercase">KAYDET</button>
+            </div>
+            <div id="subeListesi" class="space-y-2"></div>
+        </section>
+
+        <section id="section-personel" class="hidden space-y-6">
+            <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700">
+                <select id="pParkSelect" class="w-full bg-slate-900 p-4 rounded-xl mb-3 text-sm"></select>
+                <input type="text" id="pUser" placeholder="Kullanıcı" class="w-full bg-slate-900 p-4 rounded-xl mb-2 text-sm border border-slate-700">
+                <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-xl mb-4 text-sm border border-slate-700">
+                <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-xl font-black text-xs">PERSONEL EKLE</button>
+            </div>
+            <div id="personelListesi" class="space-y-2"></div>
+        </section>
+    </div>
+
+    <div id="configModal" class="fixed inset-0 z-[100] bg-slate-900/95 flex items-center justify-center p-6 hidden">
+        <div class="bg-slate-800 p-8 rounded-[2rem] w-full max-w-sm border border-slate-700">
+            <input type="text" id="ghOwner" placeholder="User" class="w-full bg-slate-900 p-4 rounded-xl mb-2 border border-slate-700">
+            <input type="text" id="ghRepo" placeholder="Repo" class="w-full bg-slate-900 p-4 rounded-xl mb-2 border border-slate-700">
+            <input type="password" id="ghToken" placeholder="Token" class="w-full bg-slate-900 p-4 rounded-xl mb-4 border border-slate-700">
+            <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 py-4 rounded-xl font-bold">BAĞLAN</button>
         </div>
+    </div>
 
     <script>
         const b64e = (s) => btoa(unescape(encodeURIComponent(s)));
@@ -97,9 +124,9 @@
         let db = { otoparklar: [], personeller: [], kayitlar: [] };
         let sha = "";
 
-        window.onload = () => {
+        window.onload = () => { 
             document.getElementById('filterDate').valueAsDate = new Date();
-            if(!cfg.token) ayarlariAc(); else verileriCek();
+            if(!cfg.token) ayarlariAc(); else verileriCek(); 
         };
 
         async function verileriCek() {
@@ -111,59 +138,87 @@
                 document.getElementById('connDot').className = "status-dot bg-emerald-500";
                 document.getElementById('connText').innerText = "BAĞLI";
                 renderAll();
-            } catch (e) { document.getElementById('connDot').className = "status-dot bg-rose-500"; }
+            } catch (e) { document.getElementById('connDot').className = "status-dot bg-rose-500"; document.getElementById('connText').innerText = "HATA"; }
+        }
+
+        async function verileriKaydet() {
+            const content = b64e(JSON.stringify(db));
+            const r = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`, {
+                method: "PUT", headers: { Authorization: `token ${cfg.token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "Update", content, sha })
+            });
+            if(r.ok) { const d = await r.json(); sha = d.content.sha; verileriCek(); }
         }
 
         function renderAll() {
             const fPark = document.getElementById('filterPark');
-            const selectedPark = fPark.value;
-            const selectedDate = document.getElementById('filterDate').value;
-            
-            // Okul Listesi
-            if(fPark.options.length <= 1) {
-                db.otoparklar.forEach(p => { fPark.innerHTML += `<option value="${p.id}">${p.name.toUpperCase()}</option>`; });
-            }
+            const pPark = document.getElementById('pParkSelect');
+            const selDate = document.getElementById('filterDate').value;
+            const selPark = fPark.value;
+
+            fPark.innerHTML = '<option value="all">TÜM OKULLAR</option>';
+            pPark.innerHTML = '';
+            db.otoparklar.forEach(p => {
+                fPark.innerHTML += `<option value="${p.id}">${p.name.toUpperCase()}</option>`;
+                pPark.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+            fPark.value = selPark || 'all';
 
             const logs = db.kayitlar.filter(a => {
-                const isDate = new Date(a.giris).toISOString().split('T')[0] === selectedDate;
-                const isPark = selectedPark === 'all' || a.parkId == selectedPark;
-                return isDate && isPark;
+                const isDate = new Date(a.giris).toISOString().split('T')[0] === selDate;
+                return isDate && (fPark.value === 'all' || a.parkId == fPark.value);
             });
 
-            let tNakit = 0, tKart = 0, tHgs = 0;
-
-            logs.forEach(a => {
-                if(a.durum === 'tamamlandi') {
-                    if(a.odeme === 'NAKİT') tNakit += (a.tutar || 0);
-                    else if(a.odeme === 'KART') tKart += (a.tutar || 0);
-                    else if(a.odeme === 'HGS') tHgs += (a.tutar || 0);
-                }
-            });
-
-            // Üst Paneli Güncelle
-            document.getElementById('nakitOzet').innerText = tNakit + "₺";
-            document.getElementById('kartOzet').innerText = tKart + "₺";
-            document.getElementById('hgsOzet').innerText = tHgs + "₺";
-            document.getElementById('toplamKazanc').innerText = (tNakit + tKart + tHgs) + "₺";
-
-            // Liste kısmını çiz
-            const iList = document.getElementById('islemListesi');
-            iList.innerHTML = "";
+            let n=0, k=0, h=0;
+            const iList = document.getElementById('islemListesi'); iList.innerHTML = "";
             logs.reverse().forEach(a => {
-                const gTarih = new Date(a.giris).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-                iList.innerHTML += `
-                <div class="bg-slate-800 p-4 rounded-3xl border border-slate-700">
-                    <div class="flex justify-between items-center">
-                        <b class="text-rose-500 uppercase">${a.plaka}</b>
-                        <span class="text-[10px] text-slate-400">${a.odeme || 'AKTİF'}</span>
-                        <b class="text-emerald-500">${a.tutar || 0}₺</b>
-                    </div>
-                </div>`;
+                if(a.durum === 'tamamlandi') {
+                    if(a.odeme === 'NAKİT') n += (a.tutar || 0);
+                    else if(a.odeme === 'KART') k += (a.tutar || 0);
+                    else if(a.odeme === 'HGS') h += (a.tutar || 0);
+                }
+                iList.innerHTML += `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-between items-center"><div><b class="text-rose-500 uppercase">${a.plaka}</b><p class="text-[9px] text-slate-500">${a.odeme || 'İÇERİDE'}</p></div><div class="flex items-center gap-3"><b class="text-emerald-500">${a.tutar || 0}₺</b><button onclick="db.kayitlar.splice(db.kayitlar.indexOf(${JSON.stringify(a)}),1);verileriKaydet()" class="text-rose-500"><i class="fas fa-trash"></i></button></div></div>`;
             });
+
+            document.getElementById('nakitOzet').innerText = n + "₺";
+            document.getElementById('kartOzet').innerText = k + "₺";
+            document.getElementById('hgsOzet').innerText = h + "₺";
+            document.getElementById('toplamKazanc').innerText = (n+k+h) + "₺";
+
+            const sList = document.getElementById('subeListesi'); sList.innerHTML = "";
+            db.otoparklar.forEach((p, i) => { sList.innerHTML += `<div class="bg-slate-800 p-3 rounded-xl flex justify-between border border-slate-700"><b>${p.name}</b><button onclick="db.otoparklar.splice(${i},1);verileriKaydet()" class="text-rose-500"><i class="fas fa-trash text-xs"></i></button></div>`; });
+
+            const pList = document.getElementById('personelListesi'); pList.innerHTML = "";
+            db.personeller.forEach((p, i) => { pList.innerHTML += `<div class="bg-slate-800 p-3 rounded-xl flex justify-between border border-slate-700"><div><b>${p.user}</b><p class="text-[9px] text-blue-400">${p.parkName}</p></div><button onclick="db.personeller.splice(${i},1);verileriKaydet()" class="text-rose-500"><i class="fas fa-trash text-xs"></i></button></div>`; });
         }
 
-        function tabDegistir(t) { ['takip', 'sube'].forEach(s => { document.getElementById(`section-${s}`).classList.toggle('hidden', s !== t); document.getElementById(`tab-${s}`).classList.toggle('tab-active', s === t); }); }
-        function ayarlariAc() { /* Modal açma kodu */ }
+        function otoparkEkle() {
+            const name = document.getElementById('parkName').value.trim();
+            const oto = [parseInt(document.getElementById('f1').value)||0, parseInt(document.getElementById('f2').value)||0, parseInt(document.getElementById('f4').value)||0, parseInt(document.getElementById('f6').value)||0, parseInt(document.getElementById('f8').value)||0, parseInt(document.getElementById('f12').value)||0, parseInt(document.getElementById('f24').value)||0];
+            const mini = [parseInt(document.getElementById('m1').value)||0, parseInt(document.getElementById('m2').value)||0, parseInt(document.getElementById('m4').value)||0, parseInt(document.getElementById('m6').value)||0, parseInt(document.getElementById('m8').value)||0, parseInt(document.getElementById('m12').value)||0, parseInt(document.getElementById('m24').value)||0];
+            if(!name) return;
+            db.otoparklar.push({ id: Date.now(), name, prices: oto, minibusPrices: mini });
+            verileriKaydet();
+        }
+
+        function personelEkle() {
+            const u = document.getElementById('pUser').value.trim();
+            const p = document.getElementById('pPass').value.trim();
+            const parkId = document.getElementById('pParkSelect').value;
+            if(!u || !p || !parkId) return;
+            const park = db.otoparklar.find(x => x.id == parkId);
+            db.personeller.push({ user: u, pass: p, parkId, parkName: park.name, status: 'active' });
+            verileriKaydet();
+        }
+
+        function tabDegistir(t) {
+            ['takip', 'sube', 'personel'].forEach(s => {
+                document.getElementById(`section-${s}`).classList.toggle('hidden', s !== t);
+                document.getElementById(`tab-${s}`).classList.toggle('tab-active', s === t);
+            });
+        }
+        function ayarlariAc() { document.getElementById('configModal').classList.remove('hidden'); }
+        function ayarlariKaydet() { localStorage.setItem('m_o', document.getElementById('ghOwner').value.trim()); localStorage.setItem('m_r', document.getElementById('ghRepo').value.trim()); localStorage.setItem('m_t', b64e(document.getElementById('ghToken').value.trim())); location.reload(); }
     </script>
 </body>
 </html>
