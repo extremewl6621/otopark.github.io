@@ -241,10 +241,32 @@
             const mini = [parseInt(document.getElementById('m1').value)||0, parseInt(document.getElementById('m2').value)||0, parseInt(document.getElementById('m4').value)||0, parseInt(document.getElementById('m6').value)||0, parseInt(document.getElementById('m8').value)||0, parseInt(document.getElementById('m12').value)||0, parseInt(document.getElementById('m24').value)||0];
             if(n) { db.otoparklar.push({id:Date.now(), name:n, prices:oto, minibusPrices:mini}); verileriKaydet(); document.getElementById('parkName').value = ""; }
         }
-        function personelEkle() { const u=document.getElementById('pUser').value; const p=document.getElementById('pPass').value; const pk=document.getElementById('pParkSelect').value; if(u&&p&&pk) { db.personeller.push({user:u, pass:p, parkId:pk, parkName:db.otoparklar.find(x => x.id == pk).name}); verileriKaydet(); } }
-        function kayitSil(id) { if(confirm('Silinsin mi?')) { db.kayitlar = db.kayitlar.filter(x => x.id !== id); verileriKaydet(); } }
-        function subeSil(idx) { if(confirm('Silinsin mi?')) { db.otoparklar.splice(idx, 1); verileriKaydet(); } }
-        function personelSil(idx) { if(confirm('Silinsin mi?')) { db.personeller.splice(idx, 1); verileriKaydet(); } }
+
+        function personelEkle() { 
+            const u=document.getElementById('pUser').value.trim(); 
+            const p=document.getElementById('pPass').value.trim(); 
+            const pk=document.getElementById('pParkSelect').value; 
+            if(u&&p&&pk) { 
+                db.personeller.push({user:u, pass:p, parkId:pk, parkName:db.otoparklar.find(x => x.id == pk).name}); 
+                verileriKaydet(); 
+                document.getElementById('pUser').value = "";
+                document.getElementById('pPass').value = "";
+            } 
+        }
+
+        function personelSil(idx) { 
+            const u = db.personeller[idx].user;
+            if(confirm(`DİKKAT: "${u}" isimli personeli sildiğinizde, bu personelin girdiği TÜM araç kayıtları da silinecektir. Emin misiniz?`)) { 
+                // Önce o personelin kayıtlarını temizle
+                db.kayitlar = db.kayitlar.filter(a => a.ekleyen !== u);
+                // Sonra personeli sil
+                db.personeller.splice(idx, 1); 
+                verileriKaydet(); 
+            } 
+        }
+
+        function kayitSil(id) { if(confirm('Araç kaydı silinsin mi?')) { db.kayitlar = db.kayitlar.filter(x => x.id !== id); verileriKaydet(); } }
+        function subeSil(idx) { if(confirm('Şube silinsin mi?')) { db.otoparklar.splice(idx, 1); verileriKaydet(); } }
         function pdfOlustur() { const el = document.getElementById('pdfTemplate'); el.style.display = 'block'; html2pdf().from(el).set({margin:1, filename:'rapor.pdf', jsPDF:{format:'a4'}}).save().then(() => el.style.display = 'none'); }
         function tabDegistir(t) { ['takip','sube','personel'].forEach(s => { document.getElementById('section-'+s).classList.toggle('hidden', s!==t); document.getElementById('tab-'+s).classList.toggle('tab-active', s===t); }); }
         function ayarlariAc() { document.getElementById('configModal').classList.remove('hidden'); }
