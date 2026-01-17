@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY MASTER - Raporlama Merkezi</title>
+    <title>iSTAY MASTER - Gelişmiş Raporlama</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -11,7 +11,14 @@
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .tab-active { border-bottom: 3px solid #e11d48; color: #e11d48; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        @media print { .no-print { display: none; } }
+        
+        /* PDF Şablonu Özel Stilleri */
+        #pdfTemplate { font-family: 'DejaVu Sans', Arial, sans-serif; color: #000; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+        .pdf-table th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px; text-transform: uppercase; font-weight: 800; }
+        .pdf-table td { border: 1px solid #cbd5e1; padding: 7px; text-align: center; }
+        .pdf-header { border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .summary-box { margin-top: 20px; border: 2px solid #000; padding: 15px; background: #fafafa; }
     </style>
 </head>
 <body class="bg-slate-900 text-white pb-24">
@@ -25,12 +32,8 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="verileriCek()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-emerald-500 active:rotate-180 transition-all">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button onclick="ayarlariAc()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400">
-                    <i class="fas fa-cog"></i>
-                </button>
+                <button onclick="verileriCek()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-emerald-500 active:rotate-180 transition-all"><i class="fas fa-sync-alt"></i></button>
+                <button onclick="ayarlariAc()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></button>
             </div>
         </header>
 
@@ -54,40 +57,51 @@
                     <div class="flex justify-between text-sm font-black text-white border-t border-slate-700 pt-2 mt-2"><span>TOPLAM:</span><span id="toplamKazanc">0₺</span></div>
                 </div>
 
-                <button onclick="pdfOlustur()" class="w-full bg-rose-600 hover:bg-rose-700 py-4 rounded-2xl font-black text-xs uppercase shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
-                    <i class="fas fa-file-pdf"></i> PDF RAPORU OLUŞTUR
+                <button onclick="pdfOlustur()" class="w-full bg-rose-600 py-4 rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2">
+                    <i class="fas fa-file-pdf"></i> PROFESYONEL PDF RAPORU
                 </button>
             </div>
-
             <div id="islemListesi" class="space-y-3 no-print"></div>
         </section>
 
-        <div id="pdfTemplate" class="hidden bg-white text-black p-10 font-sans">
-            <div class="text-center border-b-2 border-black pb-4 mb-6">
-                <h1 class="text-2xl font-black uppercase">iSTAY PARK PRO - FİNANSAL RAPOR</h1>
-                <p id="pdfMeta" class="text-sm font-bold mt-2"></p>
+        <div id="pdfTemplate" class="hidden bg-white text-black p-8 font-sans">
+            <div class="pdf-header text-center">
+                <h1 style="font-size: 24px; font-weight: 900; margin: 0;">iSTAY PARK PRO</h1>
+                <p style="font-size: 14px; font-weight: 700; margin-top: 5px;" id="pdfMeta"></p>
+                <p style="font-size: 10px; color: #666; margin-top: 3px;">Bu rapor sistem tarafından otomatik oluşturulmuştur.</p>
             </div>
-            <table class="w-full border-collapse border border-slate-300 text-sm">
+
+            <table class="pdf-table">
                 <thead>
-                    <tr class="bg-slate-100">
-                        <th class="border border-slate-300 p-2 text-left">Plaka</th>
-                        <th class="border border-slate-300 p-2 text-left">Giriş</th>
-                        <th class="border border-slate-300 p-2 text-left">Çıkış</th>
-                        <th class="border border-slate-300 p-2 text-left">Ödeme</th>
-                        <th class="border border-slate-300 p-2 text-right">Tutar</th>
+                    <tr>
+                        <th style="width: 5%;">NO</th>
+                        <th style="width: 20%;">OTOPARK ADI</th>
+                        <th style="width: 20%;">PLAKA</th>
+                        <th style="width: 15%;">GİRİŞ</th>
+                        <th style="width: 15%;">ÇIKIŞ</th>
+                        <th style="width: 15%;">ÖDEME</th>
+                        <th style="width: 10%;">TUTAR</th>
                     </tr>
                 </thead>
                 <tbody id="pdfTableBody"></tbody>
             </table>
-            <div class="mt-8 border-t-2 border-black pt-4">
-                <div class="flex justify-between font-bold"><span>Nakit Toplam:</span><span id="pdfNakit"></span></div>
-                <div class="flex justify-between font-bold"><span>Kart Toplam:</span><span id="pdfKart"></span></div>
-                <div class="flex justify-between font-bold"><span>HGS Toplam:</span><span id="pdfHgs"></span></div>
-                <div class="flex justify-between text-xl font-black mt-4 bg-slate-100 p-2"><span>GENEL TOPLAM:</span><span id="pdfGenel"></span></div>
+
+            <div class="summary-box">
+                <div style="display: flex; justify-between; font-weight: 700; margin-bottom: 5px;">
+                    <span style="flex:1">NAKİT TOPLAM:</span><span id="pdfNakit"></span>
+                </div>
+                <div style="display: flex; justify-between; font-weight: 700; margin-bottom: 5px;">
+                    <span style="flex:1">KART TOPLAM:</span><span id="pdfKart"></span>
+                </div>
+                <div style="display: flex; justify-between; font-weight: 700; margin-bottom: 10px;">
+                    <span style="flex:1">HGS TOPLAM:</span><span id="pdfHgs"></span>
+                </div>
+                <div style="display: flex; justify-between; font-size: 20px; font-weight: 900; border-top: 2px solid #000; pt-10;">
+                    <span style="flex:1">GENEL TOPLAM:</span><span id="pdfGenel"></span>
+                </div>
             </div>
         </div>
-
-        </div>
+    </div>
 
     <script>
         const b64e = (s) => btoa(unescape(encodeURIComponent(s)));
@@ -108,7 +122,7 @@
                 const d = await r.json(); sha = d.sha;
                 db = JSON.parse(b64d(d.content));
                 document.getElementById('connDot').className = "status-dot bg-emerald-500 animate-none";
-                document.getElementById('connText').innerText = "SİSTEM ÇEVRİMİÇİ";
+                document.getElementById('connText').innerText = "SİSTEM BAĞLI";
                 renderAll();
             } catch (e) { document.getElementById('connDot').className = "status-dot bg-rose-500"; }
         }
@@ -116,49 +130,28 @@
         function renderAll() {
             const fPark = document.getElementById('filterPark');
             const selDate = document.getElementById('filterDate').value;
-            const selPark = fPark.value;
+            if(fPark.options.length <= 1) db.otoparklar.forEach(p => fPark.innerHTML += `<option value="${p.id}">${p.name.toUpperCase()}</option>`);
 
-            // Filtreleri doldur
-            if(fPark.options.length <= 1) {
-                db.otoparklar.forEach(p => { fPark.innerHTML += `<option value="${p.id}">${p.name.toUpperCase()}</option>`; });
-            }
+            const logs = db.kayitlar.filter(a => new Date(a.giris).toISOString().split('T')[0] === selDate && (fPark.value === 'all' || a.parkId == fPark.value));
 
-            const logs = db.kayitlar.filter(a => {
-                const dMatches = new Date(a.giris).toISOString().split('T')[0] === selDate;
-                const pMatches = (fPark.value === 'all' || a.parkId == fPark.value);
-                return dMatches && pMatches;
-            });
-
-            let n=0, k=0, h=0;
+            let n=0, k=0, h=0, count = 1;
             const iList = document.getElementById('islemListesi'); iList.innerHTML = "";
-            const tableBody = document.getElementById('pdfTableBody'); tableBody.innerHTML = "";
+            const tBody = document.getElementById('pdfTableBody'); tBody.innerHTML = "";
 
             logs.reverse().forEach(a => {
                 const g = new Date(a.giris).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
                 const c = a.cikis ? new Date(a.cikis).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}) : '--:--';
                 const tutar = a.tutar || 0;
-
                 if(a.durum === 'tamamlandi') {
-                    if(a.odeme === 'NAKİT') n += tutar;
-                    else if(a.odeme === 'KART') k += tutar;
-                    else if(a.odeme === 'HGS') h += tutar;
+                    if(a.odeme === 'NAKİT') n += tutar; else if(a.odeme === 'KART') k += tutar; else if(a.odeme === 'HGS') h += tutar;
                 }
 
                 // Ekran Listesi
-                iList.innerHTML += `
-                <div class="bg-slate-800 p-4 rounded-3xl border border-slate-700">
-                    <div class="flex justify-between items-center mb-2">
-                        <b class="text-rose-500 uppercase">${a.plaka}</b>
-                        <b class="text-emerald-500">${tutar}₺</b>
-                    </div>
-                    <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-                        <span>${g} - ${c}</span>
-                        <span>${a.odeme || 'BEKLEMEDE'}</span>
-                    </div>
-                </div>`;
+                iList.innerHTML += `<div class="bg-slate-800 p-4 rounded-3xl border border-slate-700 flex justify-between items-center"><div><b class="text-rose-500 uppercase">${a.plaka}</b><p class="text-[9px] text-slate-500 uppercase">${a.parkName} • ${a.odeme || 'AKTİF'}</p></div><b class="text-emerald-500">${tutar}₺</b></div>`;
 
-                // PDF Tablosu İçin
-                tableBody.innerHTML += `<tr><td class="border p-2">${a.plaka}</td><td class="border p-2">${g}</td><td class="border p-2">${c}</td><td class="border p-2">${a.odeme || '-'}</td><td class="border p-2 text-right">${tutar}₺</td></tr>`;
+                // PDF Tablosu (Sıralama ve Otopark Adı Eklendi)
+                tBody.innerHTML += `<tr><td>${count}</td><td>${a.parkName}</td><td style="font-weight:bold">${a.plaka}</td><td>${g}</td><td>${c}</td><td>${a.odeme || '-'}</td><td style="font-weight:bold">${tutar}₺</td></tr>`;
+                count++;
             });
 
             const total = n+k+h;
@@ -167,32 +160,30 @@
             document.getElementById('hgsOzet').innerText = h + "₺";
             document.getElementById('toplamKazanc').innerText = total + "₺";
 
-            // PDF Verilerini Hazırla
+            // PDF Verilerini doldur
             document.getElementById('pdfNakit').innerText = n + "₺";
             document.getElementById('pdfKart').innerText = k + "₺";
             document.getElementById('pdfHgs').innerText = h + "₺";
             document.getElementById('pdfGenel').innerText = total + "₺";
-            document.getElementById('pdfMeta').innerText = `TARİH: ${selDate} | ŞUBE: ${fPark.options[fPark.selectedIndex].text}`;
+            document.getElementById('pdfMeta').innerText = `TARİH: ${selDate} | KAPSAM: ${fPark.options[fPark.selectedIndex].text}`;
         }
 
         function pdfOlustur() {
             const element = document.getElementById('pdfTemplate');
             element.classList.remove('hidden');
             const opt = {
-                margin: 1,
-                filename: `iSTAY_RAPOR_${document.getElementById('filterDate').value}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                margin: 0.2,
+                filename: `istay_rapor_${document.getElementById('filterDate').value}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 3, letterRendering: true, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.classList.add('hidden');
-            });
+            html2pdf().set(opt).from(element).save().then(() => element.classList.add('hidden'));
         }
 
         function tabDegistir(t) { ['takip', 'sube', 'personel'].forEach(s => { document.getElementById(`section-${s}`).classList.toggle('hidden', s !== t); document.getElementById(`tab-${s}`).classList.toggle('tab-active', s === t); }); }
         function ayarlariAc() { document.getElementById('configModal').classList.remove('hidden'); }
-        async function verileriKaydet() { /* Kaydetme kodları aynı kalacak */ }
+        function ayarlariKaydet() { localStorage.setItem('m_o', document.getElementById('ghOwner').value.trim()); localStorage.setItem('m_r', document.getElementById('ghRepo').value.trim()); localStorage.setItem('m_t', b64e(document.getElementById('ghToken').value.trim())); location.reload(); }
     </script>
 </body>
 </html>
