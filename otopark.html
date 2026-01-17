@@ -75,9 +75,9 @@
                 <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA" 
                     class="w-full h-16 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-center text-3xl font-black uppercase outline-none dark:text-white focus:ring-2 ring-rose-500/30 transition-all">
                 <div class="flex gap-2 my-4">
-                    <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-brand-500 text-white shadow-lg transition-all">OTO</button>
-                    <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 transition-all">MİNİ</button>
-                    <button id="type_abone" onclick="setAracTipi('abone')" class="flex-1 py-3 rounded-xl font-black text-[10px] border-2 border-purple-500 text-purple-500 bg-transparent transition-all">ABONE</button>
+                    <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-brand-500 text-white shadow-lg transition-all uppercase">Otomobil</button>
+                    <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 transition-all uppercase">Minibüs</button>
+                    <button id="type_abone" onclick="setAracTipi('abone')" class="flex-1 py-3 rounded-xl font-black text-[10px] border-2 border-purple-500 text-purple-500 bg-transparent transition-all uppercase">Abone</button>
                 </div>
                 <button onclick="aracGiris()" class="w-full bg-slate-900 dark:bg-white dark:text-black text-white py-4 rounded-xl font-black uppercase shadow-lg active:scale-95 transition-all text-xs tracking-widest">KAYDI OLUŞTUR</button>
             </div>
@@ -123,7 +123,6 @@
         let currentPark = null;
         let selectedType = 'otomobil';
 
-        // TEMA VE OTURUM KONTROLÜ
         function initTheme() {
             const savedTheme = localStorage.getItem('p_theme') || 'light';
             if (savedTheme === 'dark') document.documentElement.classList.add('dark');
@@ -169,23 +168,32 @@
             } catch (e) { alert("Bulut hatası!"); }
         }
 
-        // GELİŞMİŞ ÜCRET HESAPLAMA MOTORU (24 SAAT ÜSTÜ HESAPLAR)
-        
+        // SÜRE HESAPLAMA FONKSİYONU
+        function getDurationText(giris) {
+            const diffMs = new Date() - new Date(giris);
+            const totalMins = Math.floor(diffMs / 60000);
+            const gun = Math.floor(totalMins / 1440);
+            const saat = Math.floor((totalMins % 1440) / 60);
+            const dak = totalMins % 60;
+
+            let text = "";
+            if (gun > 0) text += gun + " Gün ";
+            if (saat > 0) text += saat + " Saat ";
+            text += dak + " Dakika";
+            return text;
+        }
+
         function calculateFee(giris, tip) {
             if(tip === 'abone') return 0;
             const diffMin = Math.floor((new Date() - new Date(giris)) / 60000);
-            if(diffMin <= 4) return 0; // 4 DK ÜCRETSİZ
-
+            if(diffMin <= 4) return 0;
             const p = currentPark;
             let tarifeler = (tip === 'minibus' && p.minibusPrices) ? p.minibusPrices : p.prices;
-            
-            const gun = Math.floor(diffMin / 1440); // Tam gün sayısı
+            const gun = Math.floor(diffMin / 1440);
             const kalanDakika = diffMin % 1440;
             const kalanSaat = Math.ceil(kalanDakika / 60);
-
             let gunlukUcret = tarifeler[6] || 0;
             let toplamUcret = gun * gunlukUcret;
-
             if (kalanSaat > 0) {
                 if(kalanSaat <= 1) toplamUcret += tarifeler[0];
                 else if(kalanSaat <= 2) toplamUcret += tarifeler[1];
@@ -205,15 +213,12 @@
             if(!currentPark) return;
 
             const today = new Date().toDateString();
-            
-            // FİLTRE DÜZELTİLDİ: İçeridekiler her zaman, bugün çıkanlar pasif olarak görünür.
             const todayLogs = db.kayitlar.filter(a => {
                 const isMyPark = a.parkId == currentPark.id;
-                const matchesFilter = a.plaka.includes(filter);
                 const isAktif = a.durum === 'aktif';
                 const isCikisBugun = a.cikis && new Date(a.cikis).toDateString() === today;
-                return isMyPark && matchesFilter && (isAktif || isCikisBugun);
-            });
+                return isMyPark && (isAktif || isCikisBugun);
+            }).filter(a => a.plaka.includes(filter));
 
             document.getElementById('toplamGirisSayisi').innerText = todayLogs.length;
             document.getElementById('toplamCikisSayisi').innerText = todayLogs.filter(a => a.durum === 'tamamlandi').length;
@@ -224,6 +229,7 @@
             todayLogs.forEach(a => {
                 const isAktif = a.durum === 'aktif';
                 const fee = isAktif ? calculateFee(a.giris, a.tip) : a.tutar;
+                const durationText = isAktif ? getDurationText(a.giris) : "";
                 const gFull = new Date(a.giris).toLocaleString('tr-TR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
                 const cFull = a.cikis ? new Date(a.cikis).toLocaleString('tr-TR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
 
@@ -237,7 +243,8 @@
                             <div>
                                 <h3 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">${a.plaka}</h3>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Giriş: ${gFull}</p>
-                                ${!isAktif ? `<p class="text-[9px] font-bold text-rose-500 uppercase tracking-widest">Çıkış: ${cFull}</p>` : ''}
+                                ${isAktif ? `<p class="text-[9px] font-black text-blue-500 uppercase italic mt-1 tracking-tight"><i class="far fa-clock mr-1"></i>Süre: ${durationText}</p>` : ''}
+                                ${!isAktif ? `<p class="text-[9px] font-bold text-rose-500 uppercase tracking-widest mt-1">Çıkış: ${cFull}</p>` : ''}
                             </div>
                         </div>
                         <div class="flex flex-col items-end">
@@ -256,7 +263,7 @@
                                 <i class="fas fa-check-circle text-emerald-500"></i>
                             </div>
                         `}
-                        <button onclick="sil(${a.id})" class="w-12 py-3 bg-slate-100 dark:bg-slate-800 text-rose-500 rounded-xl flex items-center justify-center">
+                        <button onclick="sil(${a.id})" class="w-12 py-3 bg-slate-100 dark:bg-slate-800 text-rose-500 rounded-xl transition flex items-center justify-center">
                             <i class="fas fa-trash-alt text-xs"></i>
                         </button>
                     </div>
@@ -277,30 +284,10 @@
         }
 
         function sil(id) { if(confirm("Kayıt silinsin mi?")) { const i = db.kayitlar.findIndex(a => a.id === id); if(i !== -1) { db.kayitlar.splice(i, 1); uploadCloud(); } } }
-        
         function startSystem() { document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainInterface').classList.remove('hidden'); syncCloud().then(() => { const p = db.personeller.find(x => x.user === currentUser); if(p) { currentPark = db.otoparklar.find(x => x.id == p.parkId); document.getElementById('subeAdiLabel').innerText = p.parkName; document.getElementById('aktifUserLabel').innerText = currentUser; renderList(); } }); }
-        
-        async function handleLogin() { 
-            const u = document.getElementById('pUser').value.trim(); const p = document.getElementById('pPass').value.trim(); 
-            const success = await syncCloud(); 
-            if(success) { 
-                const user = db.personeller.find(x => x.user === u && x.pass === p); 
-                if(user) { localStorage.setItem('p_active_user', u); localStorage.setItem('p_login_time', new Date().getTime().toString()); currentUser = u; startSystem(); } 
-                else { alert("Hata!"); }
-            } 
-        }
-
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('p_theme', isDark ? 'dark' : 'light');
-            updateThemeIcon(isDark);
-        }
-
-        function updateThemeIcon(isDark) {
-            const icon = document.getElementById('themeIcon');
-            if(icon) icon.className = isDark ? "fas fa-sun text-yellow-400" : "fas fa-moon text-slate-600";
-        }
-
+        async function handleLogin() { const u = document.getElementById('pUser').value.trim(); const p = document.getElementById('pPass').value.trim(); const success = await syncCloud(); if(success) { const user = db.personeller.find(x => x.user === u && x.pass === p); if(user) { localStorage.setItem('p_active_user', u); localStorage.setItem('p_login_time', new Date().getTime().toString()); currentUser = u; startSystem(); } } }
+        function toggleTheme() { const isDark = document.documentElement.classList.toggle('dark'); localStorage.setItem('p_theme', isDark ? 'dark' : 'light'); updateThemeIcon(isDark); }
+        function updateThemeIcon(isDark) { const icon = document.getElementById('themeIcon'); if(icon) icon.className = isDark ? "fas fa-sun text-yellow-400" : "fas fa-moon text-slate-600"; }
         function logOut() { localStorage.removeItem('p_active_user'); localStorage.removeItem('p_login_time'); location.reload(); }
         function openSetup() { document.getElementById('setupScreen').classList.remove('hidden'); }
         function saveSetup() { localStorage.setItem('p_o', document.getElementById('ghOwner').value.trim()); localStorage.setItem('p_r', document.getElementById('ghRepo').value.trim()); localStorage.setItem('p_t', b64e(document.getElementById('ghToken').value.trim())); location.reload(); }
