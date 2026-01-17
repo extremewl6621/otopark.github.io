@@ -13,26 +13,32 @@
         .status-blocked { color: #ef4444; }
         @media (max-width: 768px) { .desktop-view { display: none; } .mobile-view { display: block; } }
         @media (min-width: 769px) { .desktop-view { display: block; } .mobile-view { display: none; } }
+        /* Animasyonlu giriş */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body class="bg-slate-900 text-white pb-10">
+<body class="bg-slate-900 text-white pb-10 fade-in">
 
     <div class="max-w-6xl mx-auto px-4 md:px-8">
         <header class="flex justify-between items-center py-6 border-b border-slate-800 mb-6">
             <div>
-                <h1 class="text-2xl font-black text-rose-500 italic uppercase">iSTAY MASTER</h1>
-                <div id="syncStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">SİSTEM BAŞLATILIYOR</div>
+                <h1 class="text-2xl font-black text-rose-500 italic uppercase tracking-tighter">iSTAY MASTER</h1>
+                <div id="syncStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">SİSTEM BEKLEMEDE</div>
             </div>
-            <button onclick="ayarlariAc()" class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center active:scale-95 transition shadow-lg shadow-black/20">
-                <i class="fas fa-cog text-slate-400"></i>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="verileriCek()" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button onclick="ayarlariAc()" class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center active:scale-95 transition shadow-lg border border-slate-700">
+                    <i class="fas fa-cog text-slate-400"></i>
+                </button>
+            </div>
         </header>
-
-        
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             <div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700/50 text-center">
-                <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Toplam Ciro</p>
+                <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Toplam Hasılat</p>
                 <h2 id="statCiro" class="text-2xl font-black text-emerald-500">0₺</h2>
             </div>
             <div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700/50 text-center text-blue-400">
@@ -54,9 +60,9 @@
                 <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700 shadow-xl">
                     <h3 class="font-bold mb-4 text-slate-400 uppercase text-[10px] tracking-widest">Yeni Personel Tanımla</h3>
                     <div class="space-y-3">
-                        <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition">
-                        <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition">
-                        <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-2xl font-black active:scale-95 transition shadow-lg uppercase text-sm">HESABI OLUŞTUR</button>
+                        <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition text-white">
+                        <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition text-white">
+                        <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-2xl font-black active:scale-95 transition shadow-lg uppercase text-sm">PERSONEL OLUŞTUR</button>
                     </div>
                 </div>
 
@@ -65,16 +71,9 @@
             </div>
 
             <div class="lg:col-span-2 space-y-4">
-                <h3 class="font-bold text-slate-400 uppercase text-[10px] tracking-widest ml-2">Canlı İşlem Akışı</h3>
-                <div class="bg-slate-800 rounded-[2.5rem] border border-slate-700 overflow-hidden hidden md:block">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-700/30 text-[10px] text-slate-500 uppercase">
-                            <tr><th class="p-5">Personel</th><th class="p-5">Plaka</th><th class="p-5">Tutar</th><th class="p-5 text-right">İşlem</th></tr>
-                        </thead>
-                        <tbody id="dataBodyDesktop" class="divide-y divide-slate-700"></tbody>
-                    </table>
-                </div>
-                <div id="dataBodyMobile" class="mobile-view space-y-3"></div>
+                <h3 class="font-bold text-slate-400 uppercase text-[10px] tracking-widest ml-2">Giriş/Çıkış Hareketleri</h3>
+                <div id="dataBodyMobile" class="space-y-3">
+                    </div>
             </div>
         </div>
     </div>
@@ -83,20 +82,24 @@
         <div class="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 w-full max-w-md shadow-2xl">
             <h2 class="text-xl font-black text-rose-500 mb-6 uppercase">Bağlantı Ayarları</h2>
             <div class="space-y-4">
-                <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none">
-                <input type="text" id="ghRepo" placeholder="Repo Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none">
-                <input type="password" id="ghToken" placeholder="GitHub Token (ghp_...)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none">
-                <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 text-white p-5 rounded-2xl font-black mt-4">KAYDET VE BAĞLAN</button>
-                <button onclick="ayarlariKapat()" class="w-full p-2 text-slate-500 font-bold text-xs uppercase">Vazgeç</button>
+                <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı (Örn: istay-admin)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none text-white">
+                <input type="text" id="ghRepo" placeholder="Repo Adı (Örn: otopark-sistemi)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none text-white">
+                <input type="password" id="ghToken" placeholder="GitHub Token (ghp_...)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none border-rose-500/50 text-white">
+                <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 text-white p-5 rounded-2xl font-black mt-4 active:scale-95 transition">AYARLARI KAYDET VE BAĞLAN</button>
+                <button onclick="ayarlariKapat()" class="w-full p-2 text-slate-500 font-bold text-xs uppercase hover:text-white transition">Vazgeç</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Şifreleme yardımı (GitHub botlarını aşmak için)
+        const encode = (str) => btoa(unescape(encodeURIComponent(str)));
+        const decode = (str) => decodeURIComponent(escape(atob(str)));
+
         const getSafeConfig = () => ({
-            token: localStorage.getItem('s_t') ? atob(localStorage.getItem('s_t')) : '',
-            owner: localStorage.getItem('s_o') || '',
-            repo: localStorage.getItem('s_r') || '',
+            token: localStorage.getItem('_ist_t') ? atob(localStorage.getItem('_ist_t')) : '',
+            owner: localStorage.getItem('_ist_o') || '',
+            repo: localStorage.getItem('_ist_r') || '',
             path: 'database.json'
         });
 
@@ -127,11 +130,11 @@
             const o = document.getElementById('ghOwner').value.trim();
             const r = document.getElementById('ghRepo').value.trim();
 
-            if(!t || !o || !r) return alert("Tüm alanları doldurun!");
+            if(!t || !o || !r) return alert("HATA: Tüm alanları doldurun!");
 
-            localStorage.setItem('s_t', btoa(t));
-            localStorage.setItem('s_o', o);
-            localStorage.setItem('s_r', r);
+            localStorage.setItem('_ist_t', btoa(t)); // Token'ı basitçe maskeleyerek sakla
+            localStorage.setItem('_ist_o', o);
+            localStorage.setItem('_ist_r', r);
 
             ayarlariKapat();
             verileriCek();
@@ -140,47 +143,68 @@
         async function verileriCek() {
             const config = getSafeConfig();
             const status = document.getElementById('syncStatus');
-            status.innerText = "BAĞLANIYOR...";
+            status.innerText = "VERİLER ÇEKİLİYOR...";
+            status.className = "text-[9px] font-bold text-yellow-500 uppercase tracking-widest mt-1";
             
             try {
-                const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
-                    headers: { Authorization: `token ${config.token}`, "Cache-Control": "no-cache" }
+                // Cache engellemek için rastgele parametre ekle
+                const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?t=${Date.now()}`, {
+                    headers: { 
+                        Authorization: `token ${config.token}`,
+                        "Accept": "application/vnd.github.v3+json"
+                    }
                 });
 
-                if(!response.ok) throw new Error("Bağlantı Hatası");
+                if(!response.ok) {
+                    if(response.status === 401) throw new Error("TOKEN GEÇERSİZ");
+                    if(response.status === 404) throw new Error("REPO VEYA DOSYA BULUNAMADI");
+                    throw new Error("BAĞLANTI HATASI");
+                }
 
                 const data = await response.json();
                 currentSha = data.sha;
-                const content = decodeURIComponent(escape(atob(data.content)));
-                db = JSON.parse(content);
+                db = JSON.parse(decode(data.content));
                 
                 status.innerText = "BAĞLANTI BAŞARILI";
+                status.className = "text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-1";
                 renderPanel();
             } catch (e) {
-                status.innerText = "BAĞLANTI HATASI";
+                status.innerText = "HATA: " + e.message;
+                status.className = "text-[9px] font-bold text-rose-500 uppercase tracking-widest mt-1";
                 console.error(e);
             }
         }
 
         async function verileriGonder() {
             const config = getSafeConfig();
-            const content = btoa(unescape(encodeURIComponent(JSON.stringify(db))));
+            const content = encode(JSON.stringify(db));
             try {
                 const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
                     method: "PUT",
-                    headers: { Authorization: `token ${config.token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: "Admin Sync", content, sha: currentSha })
+                    headers: { 
+                        Authorization: `token ${config.token}`, 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify({ 
+                        message: "Admin Master Sync", 
+                        content, 
+                        sha: currentSha 
+                    })
                 });
+                
+                if(!response.ok) throw new Error("GÖNDERİM HATASI");
+                
                 const resData = await response.json();
                 currentSha = resData.content.sha;
                 verileriCek();
-            } catch (e) { alert("Güncelleme Hatası!"); }
+            } catch (e) { alert("HATA: Veriler buluta yazılamadı!"); }
         }
 
         function personelEkle() {
             const u = document.getElementById('pUser').value.trim();
             const p = document.getElementById('pPass').value.trim();
-            if(!u || !p) return alert("Eksik bilgi!");
+            if(!u || !p) return alert("Kullanıcı adı ve şifre girin!");
+            
             db.personeller.push({ user: u, pass: p, status: 'active' });
             verileriGonder().then(() => {
                 document.getElementById('pUser').value = "";
@@ -189,49 +213,60 @@
         }
 
         function personelDurum(i, s) { db.personeller[i].status = s; verileriGonder(); }
-        function personelSil(i) { if(confirm("Kullanıcıyı silmek istiyor musunuz?")) { db.personeller.splice(i, 1); verileriGonder(); } }
+        function personelSil(i) { if(confirm("DİKKAT: Personeli silmek istediğinize emin misiniz?")) { db.personeller.splice(i, 1); verileriGonder(); } }
 
         function renderPanel() {
             document.getElementById('statPersonel').innerText = db.personeller.length;
             document.getElementById('statGiris').innerText = db.kayitlar.filter(x => !x.silindi).length;
             
-            let ciro = 0, nakit = 0, kart = 0, dHtml = "", mHtml = "", pHtml = "";
+            let ciro = 0, n = 0, k = 0, mHtml = "", pHtml = "";
             
+            // İşlem Akışı (Tersten sırala)
             [...db.kayitlar].reverse().forEach((r, idx) => {
                 const realIdx = db.kayitlar.length - 1 - idx;
                 ciro += (r.tutar || 0);
-                if(r.odeme === 'NAKİT') nakit++; else if(r.odeme === 'KART') kart++;
+                if(r.odeme === 'NAKİT') n++; else if(r.odeme === 'KART') k++;
                 
-                const row = `<tr class="hover:bg-slate-700/20 transition"><td class="p-5 text-blue-400 font-bold text-xs">${r.ekleyen}</td><td class="p-5 font-black uppercase text-sm">${r.plaka}</td><td class="p-5 font-bold text-emerald-500 text-sm">${r.tutar || 0}₺</td><td class="p-5 text-right"><button onclick="kayitSil(${realIdx})" class="text-rose-500"><i class="fas fa-trash"></i></button></td></tr>`;
-                dHtml += row;
-                
-                const card = `<div class="bg-slate-800 p-5 rounded-[1.5rem] flex justify-between items-center border border-slate-700/50 mb-3"><div class="flex gap-3 items-center"><div><h4 class="font-black text-sm uppercase">${r.plaka}</h4><p class="text-[9px] text-slate-500 font-bold uppercase">${r.ekleyen} • ${r.odeme || 'İÇERİDE'}</p></div></div><div class="flex items-center gap-4"><span class="font-black text-emerald-500 text-sm">${r.tutar || 0}₺</span><button onclick="kayitSil(${realIdx})" class="text-rose-500"><i class="fas fa-trash text-xs"></i></button></div></div>`;
-                mHtml += card;
-            });
-
-            db.personeller.forEach((p, i) => {
-                pHtml += `<div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700 mb-3 animate-slide-in">
-                    <div class="flex justify-between items-start mb-2">
-                        <div><h4 class="font-black text-sm text-white">${p.user}</h4><p class="text-[10px] text-slate-500">Şifre: ${p.pass}</p></div>
-                        <i class="fas fa-circle ${p.status === 'active' ? 'text-emerald-500' : 'text-rose-500'} text-[10px]"></i>
+                mHtml += `<div class="bg-slate-800 p-5 rounded-[1.5rem] flex justify-between items-center border border-slate-700/50 mb-3">
+                    <div class="flex gap-3 items-center">
+                        <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-blue-400 font-black text-[10px] uppercase">${r.ekleyen ? r.ekleyen.substring(0,2) : '??'}</div>
+                        <div><h4 class="font-black text-sm uppercase">${r.plaka}</h4><p class="text-[9px] text-slate-500 font-bold uppercase">${r.ekleyen} • ${r.odeme || 'İÇERİDE'}</p></div>
                     </div>
-                    <div class="flex gap-1">
-                        <button onclick="personelDurum(${i},'active')" class="bg-emerald-500/10 p-1 rounded text-[8px] font-bold flex-1">AKTİF</button>
-                        <button onclick="personelDurum(${i},'frozen')" class="bg-amber-500/10 p-1 rounded text-[8px] font-bold flex-1">DONDUR</button>
-                        <button onclick="personelDurum(${i},'blocked')" class="bg-rose-500/10 p-1 rounded text-[8px] font-bold flex-1">ENGELLE</button>
-                        <button onclick="personelSil(${i})" class="bg-slate-700 p-1 rounded text-[8px] w-8"><i class="fas fa-trash"></i></button>
+                    <div class="flex items-center gap-4">
+                        <span class="font-black text-emerald-500 text-sm">${r.tutar || 0}₺</span>
+                        <button onclick="kayitSil(${realIdx})" class="text-rose-500 p-2"><i class="fas fa-trash-alt text-xs"></i></button>
                     </div>
                 </div>`;
             });
 
-            document.getElementById('dataBodyDesktop').innerHTML = dHtml;
-            document.getElementById('dataBodyMobile').innerHTML = mHtml;
-            document.getElementById('personelListContainer').innerHTML = pHtml || '<p class="text-center text-slate-600 text-xs py-4">Personel Tanımlanmadı</p>';
+            // Personel Kartları
+            db.personeller.forEach((p, i) => {
+                pHtml += `<div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700 mb-3 shadow-inner">
+                    <div class="flex justify-between items-start mb-3">
+                        <div><h4 class="font-black text-sm text-white">${p.user}</h4><p class="text-[10px] text-slate-500 font-mono">Şifre: ${p.pass}</p></div>
+                        <i class="fas fa-circle ${p.status === 'active' ? 'text-emerald-500' : 'text-rose-500'} text-[10px]"></i>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="personelDurum(${i},'active')" class="bg-emerald-500/10 p-2 rounded-lg text-[8px] font-bold flex-1 hover:bg-emerald-500/20 transition">AKTİF</button>
+                        <button onclick="personelDurum(${i},'frozen')" class="bg-amber-500/10 p-2 rounded-lg text-[8px] font-bold flex-1 hover:bg-amber-500/20 transition">DONDUR</button>
+                        <button onclick="personelDurum(${i},'blocked')" class="bg-rose-500/10 p-2 rounded-lg text-[8px] font-bold flex-1 hover:bg-rose-500/20 transition">ENGELLE</button>
+                        <button onclick="personelSil(${i})" class="bg-slate-700 p-2 rounded-lg text-[8px] w-10 hover:bg-rose-600 transition"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('dataBodyMobile').innerHTML = mHtml || '<div class="text-center py-10 text-slate-600 text-xs font-bold uppercase">Henüz İşlem Yok</div>';
+            document.getElementById('personelListContainer').innerHTML = pHtml || '<div class="text-center py-4 text-slate-600 text-[10px] uppercase">Personel Yok</div>';
             document.getElementById('statCiro').innerText = ciro + "₺";
-            document.getElementById('statOdeme').innerText = `${nakit}N / ${kart}K`;
+            document.getElementById('statOdeme').innerText = `${n}N / ${k}K`;
         }
 
-        function kayitSil(idx) { if(confirm("Kaydı Kalıcı Olarak Sil?")) { db.kayitlar.splice(idx, 1); verileriGonder(); } }
+        function kayitSil(idx) { 
+            if(confirm("DİKKAT: Bu kayıt veritabanından KALICI olarak silinecektir. Onaylıyor musunuz?")) { 
+                db.kayitlar.splice(idx, 1); 
+                verileriGonder(); 
+            } 
+        }
     </script>
 </body>
 </html>
