@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>iSTAY PARK - Master Kontrol Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-white p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10 border-b border-slate-700 pb-6">
+            <h1 class="text-3xl font-black text-rose-500">ADMİN PANELİ</h1>
+            <div id="syncStatus" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-800">Bulut Bağlantısı Bekleniyor...</div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700">
+                <h3 class="font-bold mb-4 text-slate-400 uppercase text-xs">Yeni Otopark/Personel Tanımla</h3>
+                <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-3 rounded-xl mb-3 outline-none border border-slate-700 focus:border-rose-500">
+                <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-3 rounded-xl mb-4 outline-none border border-slate-700 focus:border-rose-500">
+                <button onclick="personelEkle()" class="w-full bg-rose-600 p-3 rounded-xl font-bold hover:bg-rose-500 transition">HESABI OLUŞTUR</button>
+            </div>
+
+            <div class="col-span-2 bg-slate-800 p-6 rounded-3xl border border-slate-700 grid grid-cols-3 gap-4">
+                <div class="text-center p-4 bg-slate-900 rounded-2xl">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">Toplam Giriş</p>
+                    <h2 id="statGiris" class="text-3xl font-black">0</h2>
+                </div>
+                <div class="text-center p-4 bg-slate-900 rounded-2xl">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">Toplam Ciro</p>
+                    <h2 id="statCiro" class="text-3xl font-black text-emerald-500">0₺</h2>
+                </div>
+                <div class="text-center p-4 bg-slate-900 rounded-2xl">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">Kayıtlı Personel</p>
+                    <h2 id="statPersonel" class="text-3xl font-black text-blue-500">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-700/50 text-slate-400 text-xs uppercase">
+                    <tr>
+                        <th class="p-4">Otopark/Personel</th>
+                        <th class="p-4">Plaka</th>
+                        <th class="p-4">Giriş/Çıkış</th>
+                        <th class="p-4">Ödeme</th>
+                        <th class="p-4">Tutar</th>
+                    </tr>
+                </thead>
+                <tbody id="dataBody" class="divide-y divide-slate-700">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const config = {
+            token: 'GITHUB_TOKEN_BURAYA',
+            owner: 'KULLANICI_ADINIZ',
+            repo: 'REPO_ADINIZ',
+            path: 'database.json'
+        };
+
+        let db = { personeller: [], kayitlar: [] };
+        let sha = "";
+
+        async function dbCek() {
+            try {
+                const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
+                    headers: { Authorization: `token ${config.token}` }
+                });
+                const d = await r.json();
+                sha = d.sha;
+                db = JSON.parse(atob(d.content));
+                statusUpdate("Bağlantı Başarılı", "bg-emerald-500/20 text-emerald-500");
+                renderPanel();
+            } catch (e) { statusUpdate("Hata: database.json bulunamadı", "bg-rose-500/20 text-rose-500"); }
+        }
+
+        async function dbKaydet() {
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(db))));
+            const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
+                method: "PUT",
+                headers: { Authorization: `token ${config.token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "DB Update", content, sha })
+            });
+            const d = await r.json();
+            sha = d.content.sha;
+        }
+
+        function personelEkle() {
+            const user = document.getElementById('pUser').value;
+            const pass = document.getElementById('pPass').value;
+            if(!user || !pass) return alert("Bilgileri girin");
+            db.personeller.push({ user, pass });
+            dbKaydet().then(() => { alert("Personel Eklendi!"); renderPanel(); });
+        }
+
+        function renderPanel() {
+            document.getElementById('statPersonel').innerText = db.personeller.length;
+            document.getElementById('statGiris').innerText = db.kayitlar.length;
+            let totalCiro = 0;
+            let html = "";
+            db.kayitlar.forEach(k => {
+                totalCiro += (k.tutar || 0);
+                html += `<tr>
+                    <td class="p-4 font-bold text-blue-400">${k.ekleyen}</td>
+                    <td class="p-4 font-black">${k.plaka}</td>
+                    <td class="p-4 text-xs text-slate-400">${k.giris} <br> ${k.cikis || '-'}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded bg-slate-900 text-[10px]">${k.odeme || 'İÇERİDE'}</span></td>
+                    <td class="p-4 font-bold text-emerald-500">${k.tutar || 0}₺</td>
+                </tr>`;
+            });
+            document.getElementById('dataBody').innerHTML = html;
+            document.getElementById('statCiro').innerText = totalCiro + "₺";
+        }
+
+        function statusUpdate(msg, cls) {
+            const s = document.getElementById('syncStatus');
+            s.innerText = msg;
+            s.className = "text-xs font-bold px-3 py-1 rounded-full " + cls;
+        }
+
+        dbCek();
+    </script>
+</body>
+</html>
