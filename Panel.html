@@ -7,28 +7,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-900 text-white p-8">
-    <div id="loginOverlay" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-6">
-        <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700 w-full max-w-md shadow-2xl">
+    <div id="authOverlay" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6">
+        <div class="bg-slate-800 p-8 rounded-[2.5rem] border border-slate-700 w-full max-w-md shadow-2xl text-center">
             <h2 class="text-2xl font-black text-rose-500 mb-2">Admin Girişi</h2>
-            <p class="text-slate-400 text-sm mb-6">Sistemi yönetmek için GitHub Access Token giriniz.</p>
-            <input type="password" id="adminToken" placeholder="ghp_xxxxxxxxxxxx" class="w-full bg-slate-900 p-4 rounded-2xl mb-4 outline-none border border-slate-700 focus:border-rose-500">
-            <button onclick="panelBaslat()" class="w-full bg-rose-600 p-4 rounded-2xl font-black hover:bg-rose-500 transition">SİSTEMİ AÇ</button>
+            <p class="text-slate-400 text-sm mb-8">Sistemi yönetmek için GitHub Access Token giriniz.</p>
+            <input type="password" id="adminTokenInput" placeholder="ghp_xxxxxxxxxxxx" 
+                class="w-full bg-slate-900 p-4 rounded-2xl mb-4 outline-none border border-slate-700 focus:border-rose-500 text-center font-mono">
+            <button onclick="paneliBaslat()" class="w-full bg-rose-600 p-4 rounded-2xl font-black hover:bg-rose-500 transition active:scale-95">SİSTEMİ AÇ</button>
         </div>
     </div>
 
-    <div id="panelContent" class="max-w-6xl mx-auto hidden">
+    <div id="mainContent" class="max-w-6xl mx-auto hidden">
         <header class="flex justify-between items-center mb-10 border-b border-slate-700 pb-6">
             <h1 class="text-3xl font-black text-rose-500">ADMİN PANELİ</h1>
             <div id="syncStatus" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-800">Bağlanıyor...</div>
         </header>
 
-        
-
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700">
                 <h3 class="font-bold mb-4 text-slate-400 uppercase text-xs">Yeni Personel Tanımla</h3>
-                <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-3 rounded-xl mb-3 border border-slate-700">
-                <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700">
+                <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-3 rounded-xl mb-3 border border-slate-700 outline-none">
+                <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-3 rounded-xl mb-4 border border-slate-700 outline-none">
                 <button onclick="personelEkle()" class="w-full bg-rose-600 p-3 rounded-xl font-bold">HESABI OLUŞTUR</button>
             </div>
 
@@ -62,8 +61,8 @@
 
     <script>
         const config = {
-            owner: 'extremewl6621', 
-            repo: 'otopark.github.io',
+            owner: 'KULLANICI_ADIN', 
+            repo: 'REPO_ADIN',
             path: 'database.json',
             token: ''
         };
@@ -71,14 +70,16 @@
         let db = { personeller: [], kayitlar: [] };
         let sha = "";
 
-        async function panelBaslat() {
-            const token = document.getElementById('adminToken').value;
-            if(!token) return alert("Token girin!");
-            config.token = token;
+        async function paneliBaslat() {
+            const t = document.getElementById('adminTokenInput').value;
+            if(!t) return alert("Token giriniz!");
+            config.token = t;
+            
             const success = await dbCek();
             if(success) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('panelContent').classList.remove('hidden');
+                document.getElementById('authOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                sessionStorage.setItem('master_token', t);
             } else {
                 alert("Bağlantı hatası! Token veya bilgiler yanlış.");
             }
@@ -114,7 +115,7 @@
             const pass = document.getElementById('pPass').value;
             if(!user || !pass) return;
             db.personeller.push({ user, pass });
-            dbKaydet().then(() => { alert("Eklendi!"); renderPanel(); });
+            dbKaydet().then(() => { alert("Personel Eklendi!"); renderPanel(); });
         }
 
         function renderPanel() {
@@ -136,6 +137,14 @@
             document.getElementById('statCiro').innerText = total + "₺";
             document.getElementById('syncStatus').innerText = "Bulut Güncel";
         }
+
+        window.onload = () => {
+            const saved = sessionStorage.getItem('master_token');
+            if(saved) {
+                document.getElementById('adminTokenInput').value = saved;
+                paneliBaslat();
+            }
+        };
     </script>
 </body>
 </html>
