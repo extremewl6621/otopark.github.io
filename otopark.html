@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY PARK PRO - TERMINAL</title>
+    <title>iSTAY PARK PRO - TERMİNAL</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -34,30 +34,33 @@
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-darkbg dark:text-slate-100 pb-24 selection:bg-brand-500 selection:text-white">
 
-    <div id="setupOverlay" class="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center p-6 hidden">
-        <div class="bg-slate-800 p-8 rounded-[2rem] w-full max-w-sm border border-slate-700 shadow-2xl text-center fade-in">
-            <h2 class="text-xl font-black text-rose-500 mb-2 uppercase italic">BULUT BAĞLANTISI</h2>
-            <div class="space-y-4 mt-6">
-                <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none text-white focus:border-rose-500 transition">
-                <input type="text" id="ghRepo" placeholder="Repo Adı" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none text-white focus:border-rose-500 transition">
-                <input type="password" id="ghToken" placeholder="GitHub Token" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none text-white focus:border-rose-500 transition">
-                <button onclick="saveSetup()" class="w-full bg-rose-600 py-4 rounded-xl font-black text-white shadow-lg active:scale-95 transition">BAĞLANTIYI KAYDET</button>
+    <div id="authLayers">
+        <div id="setupScreen" class="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center p-6 hidden">
+            <div class="bg-slate-800 p-8 rounded-[2rem] w-full max-w-sm border border-slate-700 shadow-2xl text-center fade-in">
+                <h2 class="text-xl font-black text-rose-500 mb-2 uppercase italic tracking-tighter">SİSTEM KURULUMU</h2>
+                <p class="text-[10px] text-slate-400 mb-6 uppercase tracking-widest">GitHub Ayarlarını Girin</p>
+                <div class="space-y-4">
+                    <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none text-white focus:border-rose-500 transition">
+                    <input type="text" id="ghRepo" placeholder="Repo Adı" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none text-white focus:border-rose-500 transition">
+                    <input type="password" id="ghToken" placeholder="GitHub Token" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none text-white focus:border-rose-500 transition">
+                    <button onclick="saveSetup()" class="w-full bg-rose-600 py-4 rounded-xl font-black text-white shadow-lg active:scale-95 transition">AYARLARI KAYDET</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="loginOverlay" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6 hidden">
-        <div class="w-full max-w-sm text-center fade-in">
-            <h1 class="text-3xl font-black italic text-rose-500 mb-8 uppercase tracking-tighter">iSTAY PARK</h1>
-            <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-700 shadow-2xl relative">
-                <button onclick="openSetup()" class="absolute top-6 right-6 text-slate-600"><i class="fas fa-cog text-xs"></i></button>
-                <h2 class="text-lg font-bold mb-6 text-white">Personel Girişi</h2>
-                <div class="space-y-3">
-                    <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl outline-none text-white text-center border border-slate-700 focus:border-rose-500 transition">
-                    <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl outline-none text-white text-center border border-slate-700 focus:border-rose-500 transition">
-                    <button onclick="handleLogin()" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black mt-2 active:scale-95 transition shadow-lg shadow-emerald-500/20">SİSTEMİ AÇ</button>
+        <div id="loginScreen" class="fixed inset-0 z-[100] bg-[#0f172a] flex items-center justify-center p-6 hidden">
+            <div class="w-full max-w-sm text-center fade-in">
+                <h1 class="text-3xl font-black italic text-rose-500 mb-8 uppercase tracking-tighter">iSTAY PARK</h1>
+                <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl relative">
+                    <button onclick="openSetup()" class="absolute top-6 right-6 text-slate-600"><i class="fas fa-cog text-xs"></i></button>
+                    <h2 class="text-lg font-bold mb-6 text-white">Personel Girişi</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl outline-none text-white text-center border border-slate-700 focus:border-brand-500">
+                        <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl outline-none text-white text-center border border-slate-700 focus:border-brand-500">
+                        <button onclick="handleLogin()" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black mt-2 active:scale-95 transition shadow-lg shadow-emerald-500/20">SİSTEMİ AÇ</button>
+                    </div>
+                    <p id="loginStatus" class="mt-4 text-[10px] text-slate-500 font-mono h-4 italic uppercase font-bold"></p>
                 </div>
-                <p id="loginStatus" class="mt-4 text-[10px] text-slate-500 font-mono h-4 italic uppercase font-bold"></p>
             </div>
         </div>
     </div>
@@ -66,8 +69,8 @@
         <header class="glass fixed top-0 w-full z-40 px-4 h-16 flex items-center justify-between no-print">
             <div class="flex items-center gap-3">
                 <div class="flex flex-col">
-                    <span id="otoparkAdiLabel" class="font-black italic text-brand-500 text-lg uppercase leading-tight">İSTAY PARK</span>
-                    <span id="activeUserLabel" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">--</span>
+                    <span id="subeAdiLabel" class="font-black italic text-brand-500 text-lg uppercase leading-tight tracking-tighter">İSTAY PARK</span>
+                    <span id="aktifUserLabel" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">--</span>
                 </div>
                 <div id="cloudDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></div>
             </div>
@@ -97,18 +100,9 @@
             </div>
 
             <div class="bg-white dark:bg-darkcard rounded-[2rem] p-5 shadow-xl mb-8 border dark:border-slate-700 flex justify-between items-center text-center">
-                <div class="flex-1">
-                    <p class="text-[9px] font-bold uppercase text-slate-400">İçeride</p>
-                    <h2 class="text-2xl font-black dark:text-white" id="icerideSayisi">0</h2>
-                </div>
-                <div class="flex-1 border-x border-slate-100 dark:border-slate-700 px-6">
-                    <p class="text-[9px] font-bold uppercase text-slate-400">Bugün Ciro</p>
-                    <h2 class="text-2xl font-black text-emerald-500" id="gunlukCiro">0₺</h2>
-                </div>
-                <div class="flex-1">
-                    <p class="text-[9px] font-bold uppercase text-slate-400">Boş Yer</p>
-                    <h2 class="text-2xl font-black text-brand-500" id="bosYer">50</h2>
-                </div>
+                <div class="flex-1"><p class="text-[9px] font-bold uppercase text-slate-400">İçeride</p><h2 class="text-2xl font-black dark:text-white" id="icerideSayisi">0</h2></div>
+                <div class="flex-1 border-x border-slate-100 dark:border-slate-700 px-2"><p class="text-[9px] font-bold uppercase text-slate-400">Ciro (Şube)</p><h2 class="text-2xl font-black text-emerald-500" id="gunlukCiro">0₺</h2></div>
+                <div class="flex-1"><p class="text-[9px] font-bold uppercase text-slate-400">Boş Yer</p><h2 class="text-2xl font-black text-brand-500" id="bosYer">50</h2></div>
             </div>
 
             <div id="aracListesi" class="space-y-4 pb-10"></div>
@@ -128,7 +122,7 @@
 
     <div id="raporModal" class="fixed inset-0 z-50 bg-black/95 hidden flex flex-col p-6 backdrop-blur-md no-print">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="font-black text-3xl text-white italic uppercase tracking-tighter">RAPOR</h2>
+            <h2 class="font-black text-3xl text-white italic uppercase tracking-tighter">ŞUBE RAPORU</h2>
             <button onclick="raporuKapat()" class="text-white text-3xl"><i class="fas fa-times"></i></button>
         </div>
         <div id="raporIcerik" class="bg-white dark:bg-darkcard rounded-[2.5rem] p-6 overflow-y-auto flex-1 mb-6 shadow-2xl"></div>
@@ -155,10 +149,10 @@
 
         // --- BAŞLANGIÇ KONTROLÜ ---
         window.onload = () => {
-            if(localStorage.theme === 'dark') document.documentElement.classList.add('dark');
+            initTheme();
             const cfg = getSafeCfg();
-            if(!cfg.token || !cfg.owner) document.getElementById('setupOverlay').classList.remove('hidden');
-            else if(!currentUser) document.getElementById('loginOverlay').classList.remove('hidden');
+            if(!cfg.token || !cfg.owner) document.getElementById('setupScreen').classList.remove('hidden');
+            else if(!currentUser) document.getElementById('loginScreen').classList.remove('hidden');
             else startSystem();
         };
 
@@ -166,10 +160,12 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainInterface').classList.remove('hidden');
             syncCloud().then(() => {
-                const p = db.personeller.find(x => x.user === currentUser);
-                currentPark = db.otoparklar.find(x => x.id == p.parkId);
-                document.getElementById('otoparkAdiLabel').innerText = p.parkName || "İSTAY PARK";
-                document.getElementById('activeUserLabel').innerText = currentUser;
+                const personel = db.personeller.find(x => x.user === currentUser);
+                if(!personel) { logOut(); return; }
+                
+                currentPark = db.otoparklar.find(x => x.id == personel.parkId);
+                document.getElementById('subeAdiLabel').innerText = personel.parkName || "İSTAY PARK";
+                document.getElementById('aktifUserLabel').innerText = currentUser;
                 renderList();
             });
         }
@@ -211,17 +207,18 @@
             if(tip === 'abone') return 0;
             const diffMin = Math.floor((new Date() - new Date(giris)) / 60000);
             
-            // 4 Dakika Ücretsiz Kontrolü
+            // İLK 4 DAKİKA ÜCRETSİZ
             if(diffMin <= 4) return 0;
 
             const hour = Math.ceil(diffMin / 60) || 1;
-            const prices = currentPark ? currentPark.prices : [100, 150, 200, 250, 350]; // Yedek fiyatlar
+            // Panelden bu otoparka özel girilen fiyat listesi: [1S, 2S, 4S, 8S, 24S]
+            const p = currentPark ? currentPark.prices : [100, 150, 200, 250, 350]; 
 
-            if(hour <= 1) return prices[0];
-            if(hour <= 2) return prices[1];
-            if(hour <= 4) return prices[2];
-            if(hour <= 8) return prices[3];
-            return prices[4]; // 24 Saat
+            if(hour <= 1) return p[0];
+            if(hour <= 2) return p[1];
+            if(hour <= 4) return p[2];
+            if(hour <= 8) return p[3];
+            return p[4]; // 24 Saat ve sonrası
         }
 
         // --- UI İŞLEMLERİ ---
@@ -239,10 +236,20 @@
             const pl = document.getElementById('plakaInput').value.trim().toUpperCase();
             if(!pl) return;
             db.kayitlar.push({
-                id: Date.now(), plaka: pl, tip: selectedType, giris: new Date().toISOString(),
-                ekleyen: currentUser, parkId: currentPark.id, parkName: currentPark.name, durum: 'aktif', tutar: 0, odeme: '', silindi: false
+                id: Date.now(), 
+                plaka: pl, 
+                tip: selectedType, 
+                giris: new Date().toISOString(),
+                ekleyen: currentUser, 
+                parkId: currentPark.id, 
+                parkName: currentPark.name, 
+                durum: 'aktif', 
+                tutar: 0, 
+                odeme: '', 
+                silindi: false
             });
-            uploadCloud(); document.getElementById('plakaInput').value = "";
+            uploadCloud(); 
+            document.getElementById('plakaInput').value = "";
         }
 
         function renderList() {
@@ -250,7 +257,7 @@
             const filter = document.getElementById('plakaInput').value.toUpperCase();
             list.innerHTML = "";
             
-            // Personel sadece kendi şubesinde olan aktif araçları görür
+            // Personel sadece kendi şubesindeki aktif araçları görür
             const actives = db.kayitlar.filter(a => !a.silindi && a.durum === 'aktif' && a.parkId == currentPark.id && a.plaka.includes(filter)).reverse();
 
             document.getElementById('icerideSayisi').innerText = actives.length;
@@ -271,9 +278,9 @@
                     <div class="flex flex-col items-end gap-2">
                         <span class="text-xl font-black dark:text-white">${ucret === 0 ? 'ÜCRETSİZ' : ucret + '₺'}</span>
                         <div class="flex gap-1">
-                            <button onclick="cikis(${a.id},${ucret},'NAKİT')" class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black active:scale-95 transition">NAKİT</button>
-                            <button onclick="cikis(${a.id},${ucret},'KART')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[10px] font-black active:scale-95 transition">KART</button>
-                            <button onclick="cikis(${a.id},${ucret},'HGS')" class="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black active:scale-95 transition">HGS</button>
+                            <button onclick="cikis(${a.id},${ucret},'NAKİT')" class="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black active:scale-95 transition shadow-lg shadow-emerald-500/20">NAKİT</button>
+                            <button onclick="cikis(${a.id},${ucret},'KART')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-[10px] font-black active:scale-95 transition shadow-lg shadow-blue-500/20">KART</button>
+                            <button onclick="cikis(${a.id},${ucret},'HGS')" class="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black active:scale-95 transition shadow-lg shadow-amber-500/20">HGS</button>
                         </div>
                         <div class="flex gap-4 mt-1 pr-1">
                             <button onclick="openEdit(${a.id})" class="text-slate-400 text-xs hover:text-brand-500"><i class="fas fa-edit"></i></button>
@@ -323,9 +330,11 @@
         function openSetup() { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('setupOverlay').classList.remove('hidden'); }
         function logOut() { sessionStorage.clear(); location.reload(); }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
+        function initTheme() { if(localStorage.theme === 'dark') document.documentElement.classList.add('dark'); }
         function raporuGoster() {
             const ic = document.getElementById('raporIcerik'); ic.innerHTML = "";
             const today = new Date().toDateString();
+            // Sadece bu şubedeki tamamlanan işlemler
             db.kayitlar.filter(a => a.parkId == currentPark.id && a.durum === 'tamamlandi' && new Date(a.cikis).toDateString() === today).forEach(a => {
                 ic.innerHTML += `<div class="flex justify-between border-b dark:border-slate-800 py-3 font-bold"><span class="dark:text-white uppercase">${a.plaka}</span><span class="text-emerald-500">${a.tutar}₺ (${a.odeme})</span></div>`;
             });
