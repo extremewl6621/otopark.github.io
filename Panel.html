@@ -60,6 +60,27 @@
         </div>
     </div>
 
+<script>
+        // TOKEN GÜVENLİK SİSTEMİ
+        const mask = (s) => btoa(unescape(encodeURIComponent(s)));
+        const unmask = (s) => decodeURIComponent(escape(atob(s)));
+
+        let config = {
+            token: localStorage.getItem('_secure_t') ? unmask(localStorage.getItem('_secure_t')) : '',
+            owner: localStorage.getItem('_secure_o') || '',
+            repo: localStorage.getItem('_secure_r') || '',
+            path: 'database.json'
+        };
+
+        // Ayarları kaydederken maskeleyerek kaydet
+        function ayarlariKaydet() {
+            const t = document.getElementById('ghToken').value.trim();
+            localStorage.setItem('_secure_t', mask(t));
+            // ... diğer owner ve repo kayıtları ...
+            location.reload(); 
+        }
+    </script>
+
     <script>
         // MASKELİ TOKEN SİSTEMİ (GITHUB BOTLARINI AŞAR)
         const mask = (s) => btoa(unescape(encodeURIComponent(s)));

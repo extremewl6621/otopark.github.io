@@ -3,103 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY Terminal</title>
+    <title>iSTAY PARK - PERSONEL TERMİNALİ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body{-webkit-tap-highlight-color:transparent;}</style>
 </head>
-<body class="bg-[#0f172a] text-white">
-    <div id="auth" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6 text-center">
+<body class="bg-[#0f172a] text-white transition-colors duration-500 pb-20">
+
+    <div id="authScreen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6 text-center">
         <div class="bg-[#1e293b] p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl border border-slate-800">
-            <h2 class="text-rose-500 font-black text-2xl mb-8 italic">iSTAY GİRİŞ</h2>
+            <h2 class="text-rose-500 font-black text-2xl mb-8 italic uppercase">iSTAY GİRİŞ</h2>
             <div class="space-y-3">
-                <input type="password" id="t" placeholder="Sistem Anahtarı (ghp_...)" class="w-full p-4 bg-slate-900 rounded-2xl outline-none border-2 border-transparent focus:border-rose-500 text-xs text-white">
-                <input type="text" id="u" placeholder="Kullanıcı Adı" class="w-full p-4 bg-slate-900 rounded-2xl outline-none text-white">
-                <input type="password" id="p" placeholder="Şifre" class="w-full p-4 bg-slate-900 rounded-2xl outline-none text-white">
-                <button onclick="ac()" class="w-full bg-rose-600 p-4 rounded-2xl font-black mt-4 shadow-lg active:scale-95 transition uppercase text-sm">Terminali Bağla</button>
+                <input type="password" id="ghToken" placeholder="Sistem Anahtarı (ghp_...)" class="w-full p-4 bg-slate-900 rounded-2xl outline-none border-2 border-transparent focus:border-rose-500 text-xs font-mono">
+                <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full p-4 bg-slate-900 rounded-2xl outline-none text-white">
+                <input type="password" id="pPass" placeholder="Şifre" class="w-full p-4 bg-slate-900 rounded-2xl outline-none text-white">
+                <button onclick="sistemiAc()" class="w-full bg-rose-600 p-4 rounded-2xl font-black mt-4 shadow-lg active:scale-95 transition uppercase text-sm">Terminali Başlat</button>
             </div>
         </div>
     </div>
 
-    <div id="ui" class="hidden">
+    <div id="mainUI" class="hidden">
         <header class="p-6 border-b border-slate-800 flex justify-between items-center bg-[#0f172a] sticky top-0 z-50">
             <span class="font-black italic text-rose-500">iSTAY PARK</span>
-            <div id="dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+            <div id="syncStatus" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
         </header>
         <main class="p-4 max-w-lg mx-auto">
             <div class="bg-[#1e293b] p-6 rounded-[2rem] border border-slate-800 mb-6 shadow-xl">
-                <input type="text" id="plaka" placeholder="PLAKA GİRİN" class="w-full h-16 bg-slate-900 rounded-2xl text-center text-3xl font-black uppercase outline-none focus:ring-4 ring-rose-500/10 transition-all text-white">
-                <button onclick="giris()" class="w-full bg-rose-600 py-4 rounded-2xl font-black mt-4 shadow-lg active:scale-95 transition">KAYDI TAMAMLA</button>
+                <input type="text" id="plakaInput" placeholder="PLAKA GİRİN" class="w-full h-16 bg-slate-900 rounded-2xl text-center text-3xl font-black uppercase outline-none focus:ring-4 ring-rose-500/10 transition-all">
+                <button onclick="aracGiris()" class="w-full bg-rose-600 py-4 rounded-2xl font-black mt-4 shadow-lg active:scale-95 transition">KAYDI TAMAMLA</button>
             </div>
-            <div id="araclar" class="space-y-3"></div>
+            <div id="aracListesi" class="space-y-3"></div>
         </main>
     </div>
 
     <script>
-        const mask = (s) => btoa(unescape(encodeURIComponent(s)));
-        const unmask = (s) => decodeURIComponent(escape(atob(s)));
+        const config = {
+            owner: 'GITHUB_KULLANICI_ADIN', // Burayı doldur
+            repo: 'REPO_ADIN',             // Burayı doldur
+            path: 'database.json',
+            token: ''
+        };
 
-        const config = { owner: 'KULLANICI_ADIN', repo: 'REPO_ADIN', path: 'database.json', token: '' };
         let db = { personeller: [], kayitlar: [] };
-        let sha = ""; let user = "";
+        let sha = ""; let aktifKullanici = "";
 
-        async function ac() {
-            config.token = document.getElementById('t').value.trim();
-            const u = document.getElementById('u').value.trim();
-            const p = document.getElementById('p').value.trim();
-            if(!config.token || !u || !p) return alert("Eksik Bilgi!");
+        async function sistemiAc() {
+            const t = document.getElementById('ghToken').value.trim();
+            const u = document.getElementById('pUser').value.trim();
+            const p = document.getElementById('pPass').value.trim();
+            if(!t || !u || !p) return alert("Eksik bilgi!");
 
+            config.token = t;
             try {
                 const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?t=${Date.now()}`, {
                     headers: { Authorization: `token ${config.token}` }
                 });
                 if(!r.ok) throw new Error();
                 const d = await r.json(); sha = d.sha;
-                db = JSON.parse(unmask(d.content));
+                db = JSON.parse(decodeURIComponent(escape(atob(d.content))));
                 
                 const pers = db.personeller.find(x => x.user === u && x.pass === p);
                 if(pers) {
                     if(pers.status === 'blocked') return alert("HESABINIZ ENGELLENDİ!");
                     if(pers.status === 'frozen') return alert("HESABINIZ DONDURULDU!");
-                    user = u; document.getElementById('auth').style.display = 'none'; document.getElementById('ui').classList.remove('hidden'); render();
+
+                    aktifKullanici = u;
+                    document.getElementById('authScreen').style.display = 'none';
+                    document.getElementById('mainUI').classList.remove('hidden');
+                    render();
                 } else alert("Hatalı Giriş!");
             } catch(e) { alert("Sistem Anahtarı Geçersiz!"); }
         }
 
-        async function save() {
-            const content = mask(JSON.stringify(db));
+        async function bulutKaydet() {
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(db))));
             try {
                 const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
                     method: "PUT", headers: { Authorization: `token ${config.token}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ message: "Staff Update", content, sha })
                 });
-                const d = await r.json(); sha = d.content.sha; render();
+                const d = await r.json(); sha = d.content.sha;
+                render();
             } catch(e) { console.error("Sync Error"); }
         }
 
-        function giris() {
-            const pl = document.getElementById('plaka').value.trim().toUpperCase();
+        function aracGiris() {
+            const pl = document.getElementById('plakaInput').value.trim().toUpperCase();
             if(!pl) return;
-            db.kayitlar.push({ id: Date.now(), plaka: pl, giris: new Date().toLocaleString('tr-TR'), ekleyen: user, tutar: 0, odeme: '', silindi: false });
-            save(); document.getElementById('plaka').value = "";
+            db.kayitlar.push({ id: Date.now(), plaka: pl, giris: new Date().toLocaleString('tr-TR'), ekleyen: aktifKullanici, tutar: 0, silindi: false });
+            bulutKaydet(); document.getElementById('plakaInput').value = "";
         }
 
         function render() {
-            const l = document.getElementById('araclar'); l.innerHTML = "";
-            const list = db.kayitlar.filter(x => x.ekleyen === user && x.silindi === false);
-            if(list.length === 0) { l.innerHTML = '<div class="text-center py-10 text-slate-500 text-[10px] font-bold uppercase tracking-widest">İçeride Araç Yok</div>'; return; }
+            const l = document.getElementById('aracListesi'); l.innerHTML = "";
+            const list = db.kayitlar.filter(x => x.ekleyen === aktifKullanici && !x.silindi);
             list.reverse().forEach(a => {
-                l.innerHTML += `<div class="bg-[#1e293b] p-5 rounded-[1.5rem] flex justify-between items-center border border-slate-800 shadow-xl"><div class="flex gap-4 items-center"><div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-rose-500 shadow-inner text-xs"><i class="fas fa-car"></i></div><div><h4 class="font-black text-sm uppercase">${a.plaka}</h4><p class="text-[9px] text-slate-500 font-bold uppercase">${a.giris.substring(11,16)}</p></div></div><div class="flex gap-2"><button onclick="out(${a.id},'NAKİT')" class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 active:scale-90 transition"><i class="fas fa-money-bill-wave"></i></button><button onclick="out(${a.id},'KART')" class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 active:scale-90 transition"><i class="fas fa-credit-card"></i></button><button onclick="gizle(${a.id})" class="w-10 h-10 rounded-xl bg-slate-800 text-slate-500 border border-slate-700/50 active:scale-90 transition"><i class="fas fa-times text-xs"></i></button></div></div>`;
+                l.innerHTML += `<div class="bg-[#1e293b] p-5 rounded-[1.5rem] flex justify-between items-center border border-slate-800 shadow-xl">
+                    <div><h3 class="text-xl font-black uppercase tracking-tight">${a.plaka}</h3><p class="text-[9px] text-slate-500 font-bold uppercase">${a.giris.substring(11,16)}</p></div>
+                    <div class="flex gap-2">
+                        <button onclick="cikis(${a.id},'NAKİT')" class="w-10 h-10 rounded-xl bg-emerald-600 active:scale-90 transition"><i class="fas fa-money-bill-wave"></i></button>
+                        <button onclick="cikis(${a.id},'KART')" class="w-10 h-10 rounded-xl bg-blue-600 active:scale-90 transition"><i class="fas fa-credit-card"></i></button>
+                        <button onclick="gizle(${a.id})" class="w-10 h-10 rounded-xl bg-slate-800 text-slate-500 active:scale-90 transition"><i class="fas fa-times text-xs"></i></button>
+                    </div>
+                </div>`;
             });
         }
 
-        function out(id, tip) {
-            const tutar = prompt("Tutar (₺):", "100"); if(!tutar) return;
+        function cikis(id, odeme) {
+            const t = prompt("Tutar Giriniz:", "100"); if(!t) return;
             const a = db.kayitlar.find(x => x.id === id);
-            a.tutar = parseInt(tutar); a.odeme = tip; a.cikis = new Date().toLocaleString('tr-TR'); a.silindi = true; save();
+            a.tutar = parseInt(t); a.odeme = odeme; a.cikis = new Date().toLocaleString('tr-TR'); a.silindi = true;
+            bulutKaydet();
         }
 
-        function gizle(id) { if(confirm("Gizlensin mi?")) { db.kayitlar.find(x => x.id === id).silindi = true; save(); } }
+        function gizle(id) { if(confirm("Gizlensin mi?")) { db.kayitlar.find(x => x.id === id).silindi = true; bulutKaydet(); } }
     </script>
 </body>
 </html>
