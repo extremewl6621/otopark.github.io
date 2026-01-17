@@ -2,33 +2,37 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iSTAY PARK - Master Kontrol Paneli</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iSTAY Master Panel - Gelişmiş Yönetim</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .status-active { color: #10b981; }
+        .status-frozen { color: #f59e0b; }
+        .status-blocked { color: #ef4444; }
+        @media (max-width: 768px) { .desktop-view { display: none; } .mobile-view { display: block; } }
+        @media (min-width: 769px) { .desktop-view { display: block; } .mobile-view { display: none; } }
+    </style>
 </head>
 <body class="bg-slate-900 text-white pb-10">
+
     <div class="max-w-6xl mx-auto px-4 md:px-8">
         <header class="flex justify-between items-center py-6 border-b border-slate-800 mb-6">
             <div>
                 <h1 class="text-2xl font-black text-rose-500 italic">iSTAY MASTER</h1>
-                <div id="syncStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Bağlantı Bekleniyor</div>
+                <div id="syncStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Sistem Hazır</div>
             </div>
-            <button onclick="ayarlariAc()" class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center active:scale-95 transition shadow-lg shadow-black/20">
+            <button onclick="ayarlariAc()" class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center active:scale-95 transition shadow-lg">
                 <i class="fas fa-cog text-slate-400"></i>
             </button>
         </header>
 
-        
-
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             <div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700/50">
-                <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Toplam İşlem</p>
-                <h2 id="statGiris" class="text-2xl font-black">0</h2>
-            </div>
-            <div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700/50 text-emerald-500">
                 <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Toplam Ciro</p>
-                <h2 id="statCiro" class="text-2xl font-black">0₺</h2>
+                <h2 id="statCiro" class="text-2xl font-black text-emerald-500">0₺</h2>
             </div>
             <div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700/50 text-blue-400">
                 <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Nakit/Kart</p>
@@ -38,40 +42,53 @@
                 <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Personel</p>
                 <h2 id="statPersonel" class="text-2xl font-black">0</h2>
             </div>
+            <div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700/50">
+                <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Aktif Araç</p>
+                <h2 id="statGiris" class="text-2xl font-black">0</h2>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700 shadow-xl h-fit">
-                <h3 class="font-bold mb-4 text-slate-400 uppercase text-[10px] tracking-widest">Personel Tanımla</h3>
-                <div class="space-y-3">
-                    <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition">
-                    <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition">
-                    <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-2xl font-black active:scale-95 transition shadow-lg shadow-rose-900/20 uppercase text-sm">OLUŞTUR</button>
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700 shadow-xl">
+                    <h3 class="font-bold mb-4 text-slate-400 uppercase text-[10px] tracking-widest">Yeni Personel Tanımla</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition">
+                        <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500 transition">
+                        <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-2xl font-black active:scale-95 transition shadow-lg uppercase text-sm">HESABI OLUŞTUR</button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700 shadow-xl">
+                    <h3 class="font-bold mb-4 text-slate-400 uppercase text-[10px] tracking-widest">Kayıtlı Personeller</h3>
+                    <div id="personelListContainer" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                        </div>
                 </div>
             </div>
 
             <div class="lg:col-span-2 space-y-4">
                 <h3 class="font-bold text-slate-400 uppercase text-[10px] tracking-widest ml-2">İşlem Akışı</h3>
-                <div class="bg-slate-800 rounded-[2.5rem] border border-slate-700 overflow-hidden shadow-xl">
+                <div class="bg-slate-800 rounded-[2.5rem] border border-slate-700 overflow-hidden hidden md:block shadow-xl">
                     <table class="w-full text-left">
                         <thead class="bg-slate-700/30 text-[10px] text-slate-500 uppercase">
                             <tr><th class="p-5">Personel</th><th class="p-5">Plaka</th><th class="p-5">Tutar</th><th class="p-5 text-right">İşlem</th></tr>
                         </thead>
-                        <tbody id="dataBody" class="divide-y divide-slate-700"></tbody>
+                        <tbody id="dataBodyDesktop" class="divide-y divide-slate-700"></tbody>
                     </table>
                 </div>
+                <div id="dataBodyMobile" class="mobile-view space-y-3"></div>
             </div>
         </div>
     </div>
 
-    <div id="configModal" class="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 w-full max-w-md shadow-2xl">
+    <div id="configModal" class="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md hidden flex items-end md:items-center justify-center">
+        <div class="bg-slate-800 p-8 rounded-t-[3rem] md:rounded-[3rem] border-t md:border border-slate-700 w-full max-w-md shadow-2xl">
             <h2 class="text-xl font-black text-rose-500 mb-6 uppercase">Bağlantı Ayarları</h2>
             <div class="space-y-4">
                 <input type="text" id="ghOwner" placeholder="GitHub Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none">
                 <input type="text" id="ghRepo" placeholder="Repository Adı" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none">
-                <input type="password" id="ghToken" placeholder="GitHub Token (ghp_...)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500">
-                <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 p-5 rounded-2xl font-black active:scale-95 transition">KAYDET VE BAĞLAN</button>
+                <input type="password" id="ghToken" placeholder="GitHub Personal Token" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 outline-none focus:border-rose-500">
+                <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 p-5 rounded-2xl font-black active:scale-95 transition shadow-lg">AYARLARI KAYDET</button>
                 <button onclick="ayarlariKapat()" class="w-full p-2 text-slate-500 font-bold text-xs uppercase">Kapat</button>
             </div>
         </div>
@@ -114,16 +131,11 @@
                 const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`, {
                     headers: { Authorization: `token ${config.token}` }
                 });
-                if(!r.ok) throw new Error();
-                const d = await r.json();
-                currentSha = d.sha;
+                const d = await r.json(); currentSha = d.sha;
                 db = JSON.parse(decodeURIComponent(escape(atob(d.content))));
-                document.getElementById('syncStatus').innerText = "ÇEVRİMİÇİ";
                 renderPanel();
-            } catch (e) {
-                document.getElementById('syncStatus').innerText = "HATA: TOKEN GEÇERSİZ";
-                ayarlariAc();
-            }
+                document.getElementById('syncStatus').innerText = "BULUT GÜNCEL";
+            } catch (e) { document.getElementById('syncStatus').innerText = "BAĞLANTI HATASI"; }
         }
 
         async function verileriGonder() {
@@ -133,39 +145,76 @@
                 headers: { Authorization: `token ${config.token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ message: "Admin Update", content, sha: currentSha })
             });
-            const d = await r.json();
-            currentSha = d.content.sha;
+            const d = await r.json(); currentSha = d.content.sha;
             verileriCek();
         }
 
+        // PERSONEL İŞLEMLERİ
         function personelEkle() {
             const u = document.getElementById('pUser').value.trim();
             const p = document.getElementById('pPass').value.trim();
-            if(!u || !p) return alert("Bilgileri girin");
-            db.personeller.push({ user: u, pass: p });
+            if(!u || !p) return alert("Eksik bilgi!");
+            db.personeller.push({ user: u, pass: p, status: 'active' }); // Varsayılan durum: aktif
             verileriGonder().then(() => {
-                alert("Personel Eklendi!");
                 document.getElementById('pUser').value = "";
                 document.getElementById('pPass').value = "";
             });
         }
 
+        function personelSil(index) {
+            if(confirm("Bu personeli silmek istediğinize emin misiniz? Tüm geçmişi panelde kalmaya devam edecek.")) {
+                db.personeller.splice(index, 1);
+                verileriGonder();
+            }
+        }
+
+        function personelDurumDegistir(index, yeniDurum) {
+            db.personeller[index].status = yeniDurum;
+            verileriGonder();
+        }
+
+        // RENDER PANEL
         function renderPanel() {
+            // İstatistikler
             document.getElementById('statPersonel').innerText = db.personeller.length;
-            document.getElementById('statGiris').innerText = db.kayitlar.length;
-            let ciro = 0, n = 0, k = 0, html = "";
+            document.getElementById('statGiris').innerText = db.kayitlar.filter(x => !x.silindi).length;
+            
+            let ciro = 0, n = 0, k = 0, dHtml = "", mHtml = "", pHtml = "";
+            
+            // İşlem Akışı Render
             [...db.kayitlar].reverse().forEach((record, index) => {
                 const realIdx = db.kayitlar.length - 1 - index;
                 ciro += (record.tutar || 0);
                 if(record.odeme === 'NAKİT') n++; else if(record.odeme === 'KART') k++;
-                html += `<tr class="hover:bg-slate-700/20 transition">
-                    <td class="p-5 text-blue-400 font-bold text-xs">${record.ekleyen}</td>
-                    <td class="p-5 font-black uppercase text-sm">${record.plaka}</td>
-                    <td class="p-5 font-bold text-emerald-500 text-sm">${record.tutar || 0}₺</td>
-                    <td class="p-5 text-right"><button onclick="kayitSil(${realIdx})" class="text-rose-500"><i class="fas fa-trash"></i></button></td>
-                </tr>`;
+                dHtml += `<tr><td class="p-5 text-blue-400 font-bold">${record.ekleyen}</td><td class="p-5 font-black uppercase">${record.plaka}</td><td class="p-5 font-bold text-emerald-500">${record.tutar || 0}₺</td><td class="p-5 text-right"><button onclick="kayitSil(${realIdx})" class="text-rose-500"><i class="fas fa-trash"></i></button></td></tr>`;
+                mHtml += `<div class="bg-slate-800 p-5 rounded-[1.5rem] flex justify-between items-center border border-slate-700/50 mb-3"><div class="flex gap-3 items-center"><div><h4 class="font-black text-sm uppercase">${record.plaka}</h4><p class="text-[9px] text-slate-500 font-bold">${record.ekleyen} • ${record.odeme || 'İÇERİDE'}</p></div></div><div class="flex items-center gap-4"><span class="font-black text-emerald-500">${record.tutar || 0}₺</span><button onclick="kayitSil(${realIdx})" class="text-rose-500"><i class="fas fa-trash text-xs"></i></button></div></div>`;
             });
-            document.getElementById('dataBody').innerHTML = html;
+
+            // Personel Listesi Render
+            db.personeller.forEach((p, i) => {
+                const statusIcon = p.status === 'active' ? 'fa-check-circle status-active' : (p.status === 'frozen' ? 'fa-pause-circle status-frozen' : 'fa-ban status-blocked');
+                pHtml += `
+                    <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-black text-sm">${p.user}</h4>
+                                <p class="text-[10px] text-slate-500 font-mono">Şifre: ${p.pass}</p>
+                            </div>
+                            <i class="fas ${statusIcon} text-lg"></i>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="personelDurumDegistir(${i}, 'active')" class="flex-1 py-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg text-[9px] font-bold">AKTİF</button>
+                            <button onclick="personelDurumDegistir(${i}, 'frozen')" class="flex-1 py-1.5 bg-amber-500/10 text-amber-500 rounded-lg text-[9px] font-bold">DONDUR</button>
+                            <button onclick="personelDurumDegistir(${i}, 'blocked')" class="flex-1 py-1.5 bg-rose-500/10 text-rose-500 rounded-lg text-[9px] font-bold">ENGELLE</button>
+                            <button onclick="personelSil(${i})" class="w-8 h-8 bg-slate-800 text-slate-400 rounded-lg flex items-center justify-center"><i class="fas fa-trash text-[10px]"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('dataBodyDesktop').innerHTML = dHtml;
+            document.getElementById('dataBodyMobile').innerHTML = mHtml;
+            document.getElementById('personelListContainer').innerHTML = pHtml || `<p class="text-center text-slate-600 text-[10px] py-4">Henüz personel tanımlanmadı</p>`;
             document.getElementById('statCiro').innerText = ciro + "₺";
             document.getElementById('statOdeme').innerText = `${n}N / ${k}K`;
         }
