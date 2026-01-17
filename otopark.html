@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>iSTAY PARK PRO - TERMİNAL</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -23,6 +25,9 @@
         ::-webkit-scrollbar { width: 0px; }
         .park-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .done-card { opacity: 0.7; filter: grayscale(0.2); border-left: 4px solid #94a3b8 !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        .error-box { background: rgba(225, 29, 72, 0.1); border: 1px solid #e11d48; color: #e11d48; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 dark:bg-darkbg dark:text-white pb-24">
@@ -35,19 +40,26 @@
                     <input type="text" id="ghOwner" placeholder="GitHub User" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none">
                     <input type="text" id="ghRepo" placeholder="Repo Name" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none">
                     <input type="password" id="ghToken" placeholder="Token" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-600 outline-none text-center">
-                    <button onclick="saveSetup()" class="w-full bg-rose-600 py-4 rounded-xl font-black shadow-lg">AYARLARI KAYDET</button>
+                    <button onclick="saveSetup()" class="w-full bg-rose-600 py-4 rounded-xl font-black shadow-lg">KAYDET</button>
                 </div>
             </div>
         </div>
+
         <div id="loginScreen" class="fixed inset-0 z-[100] bg-[#0f172a] flex items-center justify-center p-6 hidden">
             <div class="w-full max-w-sm text-center">
-                <h1 class="text-3xl font-black italic text-rose-500 mb-8 uppercase italic">iSTAY PARK</h1>
-                <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl relative text-white">
+                <h1 class="text-3xl font-black italic text-rose-500 mb-8 uppercase">iSTAY PARK</h1>
+                <div id="loginCard" class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl relative text-white">
                     <button onclick="openSetup()" class="absolute top-6 right-6 text-slate-600"><i class="fas fa-cog text-xs"></i></button>
+                    <h2 class="text-xs font-bold mb-6 text-slate-400 uppercase tracking-widest">Personel Girişi</h2>
+                    
+                    <div id="errorDisplay" class="hidden p-3 rounded-xl mb-4 text-[10px] font-bold uppercase error-box">
+                        <i class="fas fa-exclamation-circle mr-2"></i> <span id="errorText"></span>
+                    </div>
+
                     <div class="space-y-3">
                         <input type="text" id="pUser" placeholder="Kullanıcı" class="w-full bg-slate-900 p-4 rounded-2xl outline-none text-center border border-slate-700">
                         <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-2xl outline-none text-center border border-slate-700">
-                        <button onclick="handleLogin()" class="w-full bg-emerald-500 py-4 rounded-2xl font-black mt-2">GİRİŞ YAP</button>
+                        <button onclick="handleLogin()" class="w-full bg-emerald-500 py-4 rounded-2xl font-black mt-2 shadow-lg">SİSTEMİ AÇ</button>
                     </div>
                 </div>
             </div>
@@ -57,7 +69,7 @@
     <div id="mainInterface" class="hidden">
         <header class="fixed top-0 w-full z-40 px-4 h-16 bg-white/90 dark:bg-darkbg/90 backdrop-blur-md flex items-center justify-between border-b dark:border-slate-800">
             <div class="flex flex-col">
-                <span id="subeAdiLabel" class="font-black italic text-brand-500 text-lg uppercase tracking-tighter">İSTAY PARK</span>
+                <span id="subeAdiLabel" class="font-black italic text-brand-500 text-lg uppercase leading-tight tracking-tighter">İSTAY PARK</span>
                 <span id="aktifUserLabel" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">--</span>
             </div>
             <div class="flex gap-2">
@@ -75,8 +87,8 @@
                 <input type="text" id="plakaInput" oninput="renderList()" placeholder="PLAKA" 
                     class="w-full h-16 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-center text-3xl font-black uppercase outline-none dark:text-white focus:ring-2 ring-rose-500/30 transition-all">
                 <div class="flex gap-2 my-4">
-                    <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-brand-500 text-white shadow-lg transition-all uppercase">Otomobil</button>
-                    <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 transition-all uppercase">Minibüs</button>
+                    <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-brand-500 text-white shadow-lg transition-all uppercase">Oto</button>
+                    <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-black text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 transition-all uppercase">Mini</button>
                     <button id="type_abone" onclick="setAracTipi('abone')" class="flex-1 py-3 rounded-xl font-black text-[10px] border-2 border-purple-500 text-purple-500 bg-transparent transition-all uppercase">Abone</button>
                 </div>
                 <button onclick="aracGiris()" class="w-full bg-slate-900 dark:bg-white dark:text-black text-white py-4 rounded-xl font-black uppercase shadow-lg active:scale-95 transition-all text-xs tracking-widest">KAYDI OLUŞTUR</button>
@@ -103,7 +115,7 @@
 
     <div id="editModal" class="fixed inset-0 z-[150] bg-black/80 hidden flex items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white dark:bg-darkcard p-6 rounded-[2rem] w-full max-w-xs shadow-2xl border dark:border-slate-700">
-            <h3 class="font-black text-sm mb-4 text-slate-900 dark:text-white uppercase text-center">Giriş Saati Düzelt</h3>
+            <h3 class="font-black text-sm mb-4 text-slate-900 dark:text-white uppercase text-center">Saati Düzelt</h3>
             <input type="datetime-local" id="editDateTime" class="w-full p-4 bg-slate-100 dark:bg-slate-900 rounded-xl mb-4 text-slate-900 dark:text-white outline-none font-bold text-sm text-center">
             <div class="flex gap-2">
                 <button onclick="closeEditModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold text-xs text-slate-500 uppercase">İptal</button>
@@ -168,14 +180,12 @@
             } catch (e) { alert("Bulut hatası!"); }
         }
 
-        // SÜRE HESAPLAMA FONKSİYONU
         function getDurationText(giris) {
             const diffMs = new Date() - new Date(giris);
             const totalMins = Math.floor(diffMs / 60000);
             const gun = Math.floor(totalMins / 1440);
             const saat = Math.floor((totalMins % 1440) / 60);
             const dak = totalMins % 60;
-
             let text = "";
             if (gun > 0) text += gun + " Gün ";
             if (saat > 0) text += saat + " Saat ";
@@ -209,8 +219,8 @@
         function renderList() {
             const list = document.getElementById('aracListesi');
             const filter = document.getElementById('plakaInput').value.toUpperCase();
+            if(!list || !currentPark) return;
             list.innerHTML = "";
-            if(!currentPark) return;
 
             const today = new Date().toDateString();
             const todayLogs = db.kayitlar.filter(a => {
@@ -243,7 +253,7 @@
                             <div>
                                 <h3 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">${a.plaka}</h3>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Giriş: ${gFull}</p>
-                                ${isAktif ? `<p class="text-[9px] font-black text-blue-500 uppercase italic mt-1 tracking-tight"><i class="far fa-clock mr-1"></i>Süre: ${durationText}</p>` : ''}
+                                ${isAktif ? `<p class="text-[9px] font-black text-blue-500 uppercase italic mt-1"><i class="far fa-clock mr-1"></i>Süre: ${durationText}</p>` : ''}
                                 ${!isAktif ? `<p class="text-[9px] font-bold text-rose-500 uppercase tracking-widest mt-1">Çıkış: ${cFull}</p>` : ''}
                             </div>
                         </div>
@@ -284,10 +294,53 @@
         }
 
         function sil(id) { if(confirm("Kayıt silinsin mi?")) { const i = db.kayitlar.findIndex(a => a.id === id); if(i !== -1) { db.kayitlar.splice(i, 1); uploadCloud(); } } }
+        
         function startSystem() { document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainInterface').classList.remove('hidden'); syncCloud().then(() => { const p = db.personeller.find(x => x.user === currentUser); if(p) { currentPark = db.otoparklar.find(x => x.id == p.parkId); document.getElementById('subeAdiLabel').innerText = p.parkName; document.getElementById('aktifUserLabel').innerText = currentUser; renderList(); } }); }
-        async function handleLogin() { const u = document.getElementById('pUser').value.trim(); const p = document.getElementById('pPass').value.trim(); const success = await syncCloud(); if(success) { const user = db.personeller.find(x => x.user === u && x.pass === p); if(user) { localStorage.setItem('p_active_user', u); localStorage.setItem('p_login_time', new Date().getTime().toString()); currentUser = u; startSystem(); } } }
-        function toggleTheme() { const isDark = document.documentElement.classList.toggle('dark'); localStorage.setItem('p_theme', isDark ? 'dark' : 'light'); updateThemeIcon(isDark); }
-        function updateThemeIcon(isDark) { const icon = document.getElementById('themeIcon'); if(icon) icon.className = isDark ? "fas fa-sun text-yellow-400" : "fas fa-moon text-slate-600"; }
+        
+        async function handleLogin() { 
+            const u = document.getElementById('pUser').value.trim(); 
+            const p = document.getElementById('pPass').value.trim(); 
+            const loginCard = document.getElementById('loginCard');
+            const errorDisplay = document.getElementById('errorDisplay');
+            const errorText = document.getElementById('errorText');
+            
+            errorDisplay.classList.add('hidden');
+            loginCard.classList.remove('shake');
+
+            const success = await syncCloud(); 
+            if(success) { 
+                const user = db.personeller.find(x => x.user === u && x.pass === p); 
+                if(user) { 
+                    localStorage.setItem('p_active_user', u); 
+                    localStorage.setItem('p_login_time', new Date().getTime().toString()); 
+                    currentUser = u; 
+                    startSystem(); 
+                } else { showError("Kullanıcı adı veya şifre hatalı!"); }
+            } else { showError("Bulut bağlantısı hatası!"); }
+        }
+
+        function showError(msg) {
+            const loginCard = document.getElementById('loginCard');
+            const errorDisplay = document.getElementById('errorDisplay');
+            const errorText = document.getElementById('errorText');
+            errorText.innerText = msg;
+            errorDisplay.classList.remove('hidden');
+            loginCard.classList.add('shake');
+            setTimeout(() => loginCard.classList.remove('shake'), 400);
+            document.getElementById('pPass').value = "";
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('p_theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            if(icon) icon.className = isDark ? "fas fa-sun text-yellow-400" : "fas fa-moon text-slate-600";
+        }
+
         function logOut() { localStorage.removeItem('p_active_user'); localStorage.removeItem('p_login_time'); location.reload(); }
         function openSetup() { document.getElementById('setupScreen').classList.remove('hidden'); }
         function saveSetup() { localStorage.setItem('p_o', document.getElementById('ghOwner').value.trim()); localStorage.setItem('p_r', document.getElementById('ghRepo').value.trim()); localStorage.setItem('p_t', b64e(document.getElementById('ghToken').value.trim())); location.reload(); }
