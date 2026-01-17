@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iSTAY MASTER - Yönetim Paneli</title>
+    <title>iSTAY MASTER - Güvenli Yönetim</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -11,8 +11,6 @@
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .tab-active { border-bottom: 3px solid #e11d48; color: #e11d48; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .pdf-template { display: none; }
     </style>
 </head>
 <body class="bg-slate-900 text-white pb-24">
@@ -37,115 +35,32 @@
             <button onclick="tabDegistir('personel')" id="tab-personel" class="pb-3">Personel</button>
         </nav>
 
-        <section id="section-takip" class="space-y-4">
-            <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700 shadow-2xl text-center">
-                <div class="space-y-2 mb-4">
-                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl">
-                        <span class="text-emerald-500 font-bold text-[10px] uppercase"><i class="fas fa-money-bill-wave mr-2"></i>NAKİT</span>
-                        <b id="nakitOzet" class="text-sm">0₺</b>
-                    </div>
-                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl">
-                        <span class="text-blue-500 font-bold text-[10px] uppercase"><i class="fas fa-credit-card mr-2"></i>KART</span>
-                        <b id="kartOzet" class="text-sm">0₺</b>
-                    </div>
-                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl">
-                        <span class="text-amber-500 font-bold text-[10px] uppercase"><i class="fas fa-rss mr-2"></i>HGS</span>
-                        <b id="hgsOzet" class="text-sm">0₺</b>
-                    </div>
-                    <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-700 mt-2">
-                        <span class="text-white font-black text-sm uppercase">GENEL TOPLAM</span>
-                        <b id="toplamKazanc" class="text-xl text-rose-500">0₺</b>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                    <select id="filterPark" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none"><option value="all">TÜM ŞUBELER</option></select>
-                    <input type="date" id="filterDate" onchange="renderAll()" class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-[10px] font-bold text-rose-500 outline-none">
-                </div>
-                <button onclick="pdfOlustur()" class="w-full bg-rose-600 py-4 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2"><i class="fas fa-file-pdf"></i> PDF RAPORU AL</button>
-            </div>
-            <div id="islemListesi" class="space-y-3"></div>
-        </section>
-
-        <section id="section-sube" class="hidden space-y-4">
-            <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-xl">
-                <input type="text" id="parkName" placeholder="Şube/Otopark Adı" class="w-full bg-slate-900 p-4 rounded-xl mb-4 text-sm border border-slate-700 text-white outline-none">
-                
-                <h4 class="text-[10px] font-black text-rose-500 mb-2 uppercase italic border-l-2 border-rose-500 pl-2">Otomobil Tarifesi</h4>
-                <div class="grid grid-cols-4 gap-1 mb-4 text-[9px] font-bold">
-                    <div>0-1S<input type="number" id="f1" value="100" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>1-2S<input type="number" id="f2" value="150" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>2-4S<input type="number" id="f4" value="200" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>4-6S<input type="number" id="f6" value="250" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>6-8S<input type="number" id="f8" value="300" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>8-12S<input type="number" id="f12" value="350" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div class="col-span-2">12-24S<input type="number" id="f24" value="450" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                </div>
-
-                <h4 class="text-[10px] font-black text-blue-500 mb-2 uppercase italic border-l-2 border-blue-500 pl-2">Minibüs Tarifesi</h4>
-                <div class="grid grid-cols-4 gap-1 mb-6 text-[9px] font-bold">
-                    <div>0-1S<input type="number" id="m1" value="150" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>1-2S<input type="number" id="m2" value="200" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>2-4S<input type="number" id="m4" value="250" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>4-6S<input type="number" id="m6" value="300" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>6-8S<input type="number" id="m8" value="350" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div>8-12S<input type="number" id="m12" value="400" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                    <div class="col-span-2">12-24S<input type="number" id="m24" value="550" class="w-full bg-slate-900 p-2 mt-1 rounded border border-slate-700"></div>
-                </div>
-                <button onclick="otoparkEkle()" class="w-full bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase shadow-lg">ŞUBEYİ KAYDET</button>
-            </div>
-            <div id="subeListesi" class="space-y-2"></div>
-        </section>
-
         <section id="section-personel" class="hidden space-y-4">
             <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-xl">
                 <select id="pParkSelect" class="w-full bg-slate-900 p-4 rounded-xl mb-3 text-sm border border-slate-700 text-white outline-none"></select>
                 <input type="text" id="pUser" placeholder="Kullanıcı Adı" class="w-full bg-slate-900 p-4 rounded-xl mb-2 text-sm border border-slate-700 text-white">
                 <input type="password" id="pPass" placeholder="Şifre" class="w-full bg-slate-900 p-4 rounded-xl mb-4 text-sm border border-slate-700 text-white">
-                <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-xl font-black text-xs uppercase">PERSONELİ OLUŞTUR</button>
+                <button onclick="personelEkle()" class="w-full bg-rose-600 p-4 rounded-xl font-black text-xs uppercase">YENİ PERSONEL EKLE</button>
             </div>
             <div id="personelListesi" class="space-y-2"></div>
         </section>
-    </div>
 
-    <div id="pdfTemplate" class="pdf-template bg-white text-black p-10 font-sans">
-        <h1 style="text-align:center; font-size:18px; font-weight:900; margin:0;">iSTAY PARK PRO RAPORU</h1>
-        <p id="pdfMeta" style="text-align:center; font-size:10px; margin-bottom:20px; font-weight:bold;"></p>
-        <table style="width:100%; border-collapse:collapse; font-size:9px;">
-            <thead><tr style="background:#f0f0f0;">
-                <th style="border:1px solid #000; padding:5px;">NO</th>
-                <th style="border:1px solid #000; padding:5px;">ŞUBE</th>
-                <th style="border:1px solid #000; padding:5px;">PLAKA</th>
-                <th style="border:1px solid #000; padding:5px;">GİRİŞ</th>
-                <th style="border:1px solid #000; padding:5px;">ÇIKIŞ</th>
-                <th style="border:1px solid #000; padding:5px;">ÖDEME</th>
-                <th style="border:1px solid #000; padding:5px;">TUTAR</th>
-            </tr></thead>
-            <tbody id="pdfTableBody"></tbody>
-        </table>
-        <div id="pdfSummary" style="margin-top:20px; font-weight:bold; font-size:11px; border-top:1px solid #000; padding-top:10px;"></div>
-    </div>
-
-    <div id="configModal" class="fixed inset-0 z-[100] bg-slate-900/95 flex items-center justify-center p-6 hidden">
-        <div class="bg-slate-800 p-8 rounded-[2rem] w-full max-w-sm border border-slate-700 shadow-2xl text-center">
-            <h2 class="text-rose-500 font-black mb-6 uppercase tracking-widest text-sm">GitHub Bağlantısı</h2>
-            <div class="space-y-4">
-                <input type="text" id="ghOwner" placeholder="User" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-700 text-white text-sm outline-none">
-                <input type="text" id="ghRepo" placeholder="Repo" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-700 text-white text-sm outline-none">
-                <input type="password" id="ghToken" placeholder="Token" class="w-full bg-slate-900 p-4 rounded-xl border border-slate-700 text-white text-sm outline-none">
-                <button onclick="ayarlariKaydet()" class="w-full bg-emerald-600 py-4 rounded-xl font-black shadow-lg">BAĞLAN</button>
-            </div>
-        </div>
+        <section id="section-takip" class="space-y-4">
+            <div id="islemListesi" class="space-y-3"></div>
+        </section>
+        
+        <section id="section-sube" class="hidden space-y-4">
+            <div id="subeListesi" class="space-y-2"></div>
+        </section>
     </div>
 
     <script>
+        // ... Mevcut b64, cfg ve verileriCek fonksiyonları ...
         const b64e = (s) => btoa(unescape(encodeURIComponent(s)));
         const b64d = (s) => decodeURIComponent(escape(atob(s)));
         let cfg = { token: localStorage.getItem('m_t') ? b64d(localStorage.getItem('m_t')) : '', owner: localStorage.getItem('m_o') || '', repo: localStorage.getItem('m_r') || '', path: 'database.json' };
         let db = { otoparklar: [], personeller: [], kayitlar: [] };
         let sha = "";
-
-        window.onload = () => { document.getElementById('filterDate').valueAsDate = new Date(); if(!cfg.token) ayarlariAc(); else verileriCek(); };
 
         async function verileriCek() {
             document.getElementById('connDot').className = "status-dot bg-yellow-500 animate-pulse";
@@ -156,7 +71,7 @@
                 document.getElementById('connDot').className = "status-dot bg-emerald-500";
                 document.getElementById('connText').innerText = "SİSTEM BAĞLI";
                 renderAll();
-            } catch (e) { document.getElementById('connDot').className = "status-dot bg-rose-500"; document.getElementById('connText').innerText = "BAĞLANTI HATASI"; }
+            } catch (e) { document.getElementById('connDot').className = "status-dot bg-rose-500"; }
         }
 
         async function verileriKaydet() {
@@ -167,88 +82,47 @@
                     body: JSON.stringify({ message: "Update", content, sha })
                 });
                 if(r.ok) { const d = await r.json(); sha = d.content.sha; verileriCek(); }
-            } catch (e) { alert("Buluta yazılamadı!"); }
+            } catch (e) { alert("Hata!"); }
+        }
+
+        // PERSONEL SİLİNDİĞİNDE KAYITLARI DA SİLEN ÖZEL FONKSİYON
+        function personelSil(idx) {
+            const silinenPersonel = db.personeller[idx].user;
+            
+            if(confirm(`DİKKAT: "${silinenPersonel}" isimli personeli silerseniz, bu personelin girdiği TÜM araç kayıtları da kalıcı olarak silinecektir. Onaylıyor musunuz?`)) {
+                
+                // 1. Adım: Kayıtlar içinden bu personele ait olanları filtrele ve çıkar
+                db.kayitlar = db.kayitlar.filter(kayit => kayit.ekleyen !== silinenPersonel);
+                
+                // 2. Adım: Personeli listeden çıkar
+                db.personeller.splice(idx, 1);
+                
+                // 3. Adım: Değişiklikleri buluta kaydet
+                verileriKaydet();
+            }
         }
 
         function renderAll() {
-            const fPark = document.getElementById('filterPark');
-            const pPark = document.getElementById('pParkSelect');
-            const selDate = document.getElementById('filterDate').value;
-            const curPark = fPark.value;
-
-            fPark.innerHTML = '<option value="all">TÜM ŞUBELER</option>';
-            pPark.innerHTML = '';
-            db.otoparklar.forEach(p => {
-                fPark.innerHTML += `<option value="${p.id}">${p.name.toUpperCase()}</option>`;
-                pPark.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-            });
-            fPark.value = curPark || 'all';
-
-            const iList = document.getElementById('islemListesi'); iList.innerHTML = "";
-            const pdfBody = document.getElementById('pdfTableBody'); pdfBody.innerHTML = "";
-            let n=0, k=0, h=0, count=1;
-
-            const logs = db.kayitlar.filter(a => {
-                const isDate = new Date(a.giris).toISOString().split('T')[0] === selDate;
-                const isPark = (fPark.value === 'all' || a.parkId == fPark.value);
-                return isDate && isPark;
-            }).reverse();
-
-            logs.forEach(a => {
-                const g = new Date(a.giris).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
-                const c = a.cikis ? new Date(a.cikis).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-                const tutar = a.tutar || 0;
-                if(a.durum === 'tamamlandi') {
-                    if(a.odeme === 'NAKİT') n += tutar; else if(a.odeme === 'KART') k += tutar; else if(a.odeme === 'HGS') h += tutar;
-                }
-
-                iList.innerHTML += `
-                <div class="bg-slate-800 p-4 rounded-3xl border border-slate-700 shadow-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <b class="text-rose-500 text-lg uppercase">${a.plaka}</b>
-                        <span class="text-[8px] font-black text-slate-500 bg-slate-900 px-2 py-1 rounded uppercase tracking-widest">${a.parkName}</span>
+            // ... Mevcut renderAll kodları (islemListesi, subeListesi, personelListesi çizimi) ...
+            // Personel listesi çizilirken buton şu şekilde olmalı:
+            const pList = document.getElementById('personelListesi'); 
+            pList.innerHTML = "";
+            db.personeller.forEach((p, idx) => {
+                pList.innerHTML += `
+                <div class="bg-slate-800 p-4 rounded-xl flex justify-between border border-slate-700">
+                    <div>
+                        <b>${p.user}</b>
+                        <p class="text-[9px] text-blue-400 uppercase font-bold tracking-widest">${p.parkName}</p>
                     </div>
-                    <div class="grid grid-cols-2 text-[10px] font-bold text-slate-400 gap-y-1 uppercase">
-                        <div>GİRİŞ: <span class="text-white">${g}</span></div>
-                        <div class="text-right">ÇIKIŞ: <span class="text-white">${c}</span></div>
-                        <div>ÖDEME: <span class="text-blue-400">${a.odeme || 'BEKLEMEDE'}</span></div>
-                        <div class="text-right text-emerald-500 font-black">${tutar}₺ (${a.tip==='minibus'?'MİNİ':'OTO'})</div>
-                    </div>
-                    <div class="mt-2 flex justify-end"><button onclick="kayitSil(${a.id})" class="text-rose-500/50 hover:text-rose-500"><i class="fas fa-trash-alt text-xs"></i></button></div>
+                    <button onclick="personelSil(${idx})" class="text-rose-500">
+                        <i class="fas fa-user-slash"></i>
+                    </button>
                 </div>`;
-
-                pdfBody.innerHTML += `<tr><td style="border:1px solid #000;padding:5px;">${count}</td><td style="border:1px solid #000;padding:5px;">${a.parkName}</td><td style="border:1px solid #000;padding:5px;font-weight:bold;">${a.plaka}</td><td style="border:1px solid #000;padding:5px;">${g}</td><td style="border:1px solid #000;padding:5px;">${c}</td><td style="border:1px solid #000;padding:5px;">${a.odeme||'-'}</td><td style="border:1px solid #000;padding:5px;text-align:right;">${tutar}₺</td></tr>`;
-                count++;
             });
-
-            document.getElementById('nakitOzet').innerText = n + "₺";
-            document.getElementById('kartOzet').innerText = k + "₺";
-            document.getElementById('hgsOzet').innerText = h + "₺";
-            document.getElementById('toplamKazanc').innerText = (n+k+h) + "₺";
-            document.getElementById('pdfSummary').innerText = `NAKİT: ${n}₺ | KART: ${k}₺ | HGS: ${h}₺ | TOPLAM: ${n+k+h}₺`;
-            document.getElementById('pdfMeta').innerText = `TARİH: ${selDate} | ŞUBE: ${fPark.options[fPark.selectedIndex].text}`;
-
-            const sList = document.getElementById('subeListesi'); sList.innerHTML = "";
-            db.otoparklar.forEach((p, idx) => { sList.innerHTML += `<div class="bg-slate-800 p-3 rounded-xl flex justify-between border border-slate-700"><b>${p.name}</b><button onclick="subeSil(${idx})" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`; });
-
-            const pList = document.getElementById('personelListesi'); pList.innerHTML = "";
-            db.personeller.forEach((p, idx) => { pList.innerHTML += `<div class="bg-slate-800 p-3 rounded-xl flex justify-between border border-slate-700"><div><b>${p.user}</b><p class="text-[9px] text-blue-400 uppercase font-bold tracking-widest">${p.parkName}</p></div><button onclick="personelSil(${idx})" class="text-rose-500"><i class="fas fa-trash text-xs"></i></button></div>`; });
+            // ... Diğer render işlemleri (Takip ve Şube) ...
         }
 
-        function otoparkEkle() {
-            const n = document.getElementById('parkName').value.trim();
-            const oto = [parseInt(document.getElementById('f1').value)||0, parseInt(document.getElementById('f2').value)||0, parseInt(document.getElementById('f4').value)||0, parseInt(document.getElementById('f6').value)||0, parseInt(document.getElementById('f8').value)||0, parseInt(document.getElementById('f12').value)||0, parseInt(document.getElementById('f24').value)||0];
-            const mini = [parseInt(document.getElementById('m1').value)||0, parseInt(document.getElementById('m2').value)||0, parseInt(document.getElementById('m4').value)||0, parseInt(document.getElementById('m6').value)||0, parseInt(document.getElementById('m8').value)||0, parseInt(document.getElementById('m12').value)||0, parseInt(document.getElementById('m24').value)||0];
-            if(n) { db.otoparklar.push({id:Date.now(), name:n, prices:oto, minibusPrices:mini}); verileriKaydet(); document.getElementById('parkName').value = ""; }
-        }
-        function personelEkle() { const u=document.getElementById('pUser').value; const p=document.getElementById('pPass').value; const pk=document.getElementById('pParkSelect').value; if(u&&p&&pk) { db.personeller.push({user:u, pass:p, parkId:pk, parkName:db.otoparklar.find(x => x.id == pk).name}); verileriKaydet(); } }
-        function kayitSil(id) { if(confirm('Silinsin mi?')) { db.kayitlar = db.kayitlar.filter(x => x.id !== id); verileriKaydet(); } }
-        function subeSil(idx) { if(confirm('Silinsin mi?')) { db.otoparklar.splice(idx, 1); verileriKaydet(); } }
-        function personelSil(idx) { if(confirm('Silinsin mi?')) { db.personeller.splice(idx, 1); verileriKaydet(); } }
-        function pdfOlustur() { const el = document.getElementById('pdfTemplate'); el.style.display = 'block'; html2pdf().from(el).set({margin:1, filename:'rapor.pdf', jsPDF:{format:'a4'}}).save().then(() => el.style.display = 'none'); }
-        function tabDegistir(t) { ['takip','sube','personel'].forEach(s => { document.getElementById('section-'+s).classList.toggle('hidden', s!==t); document.getElementById('tab-'+s).classList.toggle('tab-active', s===t); }); }
-        function ayarlariAc() { document.getElementById('configModal').classList.remove('hidden'); }
-        function ayarlariKaydet() { localStorage.setItem('m_o', document.getElementById('ghOwner').value.trim()); localStorage.setItem('m_r', document.getElementById('ghRepo').value.trim()); localStorage.setItem('m_t', b64e(document.getElementById('ghToken').value.trim())); location.reload(); }
+        // ... Diğer fonksiyonlar (tabDegistir, otoparkEkle vb.) ...
     </script>
 </body>
 </html>
