@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="tr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iSTAY PARK PRO</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 500: '#e11d48', 600: '#be123c' },
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { -webkit-tap-highlight-color: transparent; transition: background-color 0.3s ease, color 0.3s ease; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .dark .glass { background: rgba(15, 23, 42, 0.85); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .park-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .park-card:active { transform: scale(0.98); }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        #pdfTemplate { width: 100%; background: white !important; color: black !important; display: none; padding: 30px; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .pdf-table th { background: #111; color: white; padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; }
+        .pdf-table td { border-bottom: 1px solid #eee; padding: 10px; font-size: 11px; color: #333; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-in { animation: slideIn 0.4s ease forwards; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-darkbg dark:text-slate-100 pb-24 selection:bg-brand-500 selection:text-white">
+
+    <header class="glass fixed top-0 w-full z-40 px-4 h-16 flex items-center justify-between no-print">
+        <div class="flex items-center gap-3">
+            <img src="1000067482.webp" alt="Logo" class="h-10 w-auto object-contain drop-shadow-sm">
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 flex items-center justify-center transition hover:scale-110">
+                <i id="themeIcon" class="fas fa-moon"></i>
+            </button>
+            <button onclick="raporuGoster()" class="bg-gradient-to-r from-brand-500 to-rose-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg shadow-rose-500/30 active:scale-95 flex items-center gap-2">
+                <i class="fas fa-chart-pie"></i> <span>RAPOR</span>
+            </button>
+        </div>
+    </header>
+
+    <div id="pdfContainer">
+        <div id="pdfTemplate">
+            <div style="border-bottom: 4px solid #e11d48; padding-bottom: 15px; margin-bottom: 25px;">
+                <h1 style="font-size: 26px; font-weight: 900; margin: 0; color:#000;">GÜNLÜK HASILAT RAPORU</h1>
+                <p id="pdfDate" style="margin: 5px 0; color: #555; font-size: 12px;"></p>
+            </div>
+            <table class="pdf-table">
+                <thead>
+                    <tr>
+                        <th>PLAKA</th><th>TİP</th><th>GİRİŞ</th><th>ÇIKIŞ</th><th>SÜRE</th><th>YÖNTEM</th><th>TUTAR</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfBody"></tbody>
+            </table>
+            <div id="pdfSummaryArea" style="margin-top: 30px;"></div>
+        </div>
+    </div>
+
+    <main class="max-w-lg mx-auto pt-24 px-4">
+        
+        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none mb-8 border border-white/50 dark:border-slate-700 no-print backdrop-blur-sm">
+            <div class="relative mb-5">
+                <input type="text" id="plakaInput" oninput="renderList()" placeholder="34 AB 123" 
+                    class="w-full h-16 bg-slate-100 dark:bg-slate-900/50 border-2 border-transparent focus:border-brand-500 dark:focus:border-brand-500 rounded-2xl text-center text-3xl font-black uppercase tracking-wider outline-none transition-all placeholder:text-slate-300 dark:text-white dark:placeholder:text-slate-600">
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <i class="fas fa-car-side"></i>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mb-5">
+                <button id="type_oto" onclick="setAracTipi('otomobil')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-brand-500 bg-brand-500 text-white transition shadow-lg shadow-rose-500/20">
+                    <i class="fas fa-car mr-1"></i> OTO
+                </button>
+                <button id="type_mini" onclick="setAracTipi('minibus')" class="flex-1 py-3 rounded-xl font-bold text-xs border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-transparent transition hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <i class="fas fa-shuttle-van mr-1"></i> MİNİBÜS
+                </button>
+            </div>
+            
+            <button onclick="aracGiris()" class="w-full bg-slate-900 dark:bg-white dark:text-black text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl active:scale-95 transition hover:shadow-2xl flex justify-center items-center gap-2">
+                <i class="fas fa-save"></i> Girişi Kaydet
+            </button>
+        </div>
+
+        <div class="flex items-center justify-between mb-4 px-2">
+            <h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest">Araç Listesi</h3>
+            <span id="aracSayisi" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-1 rounded-md">0 Araç</span>
+        </div>
+
+        <div id="aracListesi" class="space-y-4 pb-10"></div>
+    </main>
+
+    <div id="raporModal" class="hidden fixed inset-0 z-[60] flex items-end sm:items-center justify-center no-print">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="raporuKapat()"></div>
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg sm:rounded-3xl rounded-t-3xl overflow-hidden max-h-[90vh] flex flex-col relative z-10 shadow-2xl animate-slide-in">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0">
+                <div>
+                    <h2 id="modalTitle" class="font-black text-2xl dark:text-white">Özet</h2>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Günlük İşlemler</p>
+                </div>
+                <button onclick="raporuKapat()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-darkbg/50 flex-1">
+                <div id="raporGorunumu">
+                    <div id="ozetKartlari" class="grid grid-cols-3 gap-3 mb-6"></div>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Son İşlemler</h3>
+                            <button onclick="generatePDF()" class="text-[10px] font-bold text-brand-600 bg-rose-50 dark:bg-rose-900/20 px-3 py-1 rounded-full"><i class="fas fa-file-pdf mr-1"></i> PDF İNDİR</button>
+                        </div>
+                        <div id="raporTablo" class="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scroll"></div>
+                    </div>
+                    <div id="netCiroBox" class="bg-slate-900 dark:bg-black rounded-2xl p-6 text-white flex justify-between items-center shadow-lg mt-4 relative overflow-hidden"></div>
+                </div>
+                <div id="tarifeGorunumu" class="hidden animate-slide-in">
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-xl border border-yellow-200 dark:border-yellow-700/30 mb-4">
+                        <p class="text-[10px] text-yellow-700 dark:text-yellow-400 font-bold"><i class="fas fa-info-circle mr-1"></i> Fiyatları değiştirdikten sonra "KAYDET" butonuna basmayı unutmayın.</p>
+                    </div>
+                    <div id="oto_fiyat_list" class="grid grid-cols-2 gap-3 mb-6"></div>
+                    <div id="mini_fiyat_list" class="grid grid-cols-2 gap-3 mb-6"></div>
+                    <button onclick="tarifeleriKaydet()" class="w-full bg-brand-600 text-white py-4 rounded-xl font-bold uppercase shadow-lg shadow-brand-500/30">Fiyatları Güncelle</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <button id="btnTarife" onclick="toggleView('tarife')" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3 rounded-xl font-bold text-[10px] uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"><i class="fas fa-tag mr-1"></i> Fiyatlar</button>
+                    <button onclick="veriyiDisaAktar()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3 rounded-xl font-bold text-[10px] uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"><i class="fas fa-download mr-1"></i> Yedek Al</button>
+                    <label class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3 rounded-xl font-bold text-[10px] uppercase text-slate-600 dark:text-slate-300 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center"><i class="fas fa-upload mr-1"></i> Yükle <input type="file" id="importFile" class="hidden" onchange="veriyiIceriAktar(event)"></label>
+                    <button onclick="raporuSifirla()" class="bg-rose-50 dark:bg-rose-900/20 text-rose-600 border border-rose-100 dark:border-rose-900 py-3 rounded-xl font-bold text-[10px] uppercase hover:bg-rose-100 dark:hover:bg-rose-900/40 transition"><i class="fas fa-trash mr-1"></i> Sıfırla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="infoModal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-6 no-print">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeInfoModal()"></div>
+        <div class="bg-white dark:bg-darkcard w-full max-w-sm rounded-3xl p-6 shadow-2xl relative z-10 animate-slide-in">
+            <div class="text-center mb-6">
+                 <div id="infoIcon" class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 text-2xl transition-colors"></div>
+                 <h3 id="infoTitle" class="font-black text-slate-800 dark:text-white text-xl mb-2">Başlık</h3>
+                 <p id="infoMessage" class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Mesaj</p>
+            </div>
+            <div class="flex gap-3" id="infoButtons"></div>
+        </div>
+    </div>
+
+    <div id="editModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-6 no-print">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeEditModal()"></div>
+        <div class="bg-white dark:bg-darkcard w-full max-w-xs rounded-3xl p-6 shadow-2xl relative z-10 animate-slide-in">
+            <h3 class="font-black text-slate-800 dark:text-white mb-1 text-center text-lg">Giriş Saatini Düzelt</h3>
+            <input type="datetime-local" id="editDateTime" class="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-4 mb-6 mt-4 font-bold text-slate-700 dark:text-white outline-none focus:border-brand-500">
+            <div class="flex gap-3">
+                <button onclick="closeEditModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold text-slate-500 text-xs">VAZGEÇ</button>
+                <button id="saveEditBtn" class="flex-1 py-3 bg-brand-600 rounded-xl font-bold text-white text-xs shadow-lg shadow-rose-500/30">KAYDET</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TEMA
+        function initTheme() { if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun'); } else { document.documentElement.classList.remove('dark'); document.getElementById('themeIcon').classList.replace('fa-sun', 'fa-moon'); } }
+        function toggleTheme() { if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; document.getElementById('themeIcon').classList.replace('fa-sun', 'fa-moon'); } else { document.documentElement.classList.add('dark'); localStorage.theme = 'dark'; document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun'); } }
+        initTheme();
+
+        // --- YENİ POPUP SİSTEMİ ---
+        let modalActionCallback = null;
+        function showModal(title, message, type = 'error', callback = null) {
+            const m = document.getElementById('infoModal');
+            const icon = document.getElementById('infoIcon');
+            const btns = document.getElementById('infoButtons');
+            document.getElementById('infoTitle').innerText = title;
+            document.getElementById('infoMessage').innerText = message;
+            modalActionCallback = callback;
+
+            if (type === 'error') {
+                icon.className = "w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center mx-auto mb-4 text-2xl";
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                btns.innerHTML = `<button onclick="closeInfoModal()" class="w-full py-3.5 bg-slate-900 dark:bg-white dark:text-black text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg">Tamam</button>`;
+            } else if (type === 'success') {
+                icon.className = "w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center mx-auto mb-4 text-2xl";
+                icon.innerHTML = '<i class="fas fa-check"></i>';
+                btns.innerHTML = `<button onclick="closeInfoModal()" class="w-full py-3.5 bg-slate-900 dark:bg-white dark:text-black text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg">Süper</button>`;
+            } else if (type === 'confirm') {
+                icon.className = "w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center mx-auto mb-4 text-2xl";
+                icon.innerHTML = '<i class="fas fa-question"></i>';
+                btns.innerHTML = `
+                    <button onclick="closeInfoModal()" class="flex-1 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 rounded-xl font-bold uppercase tracking-wider text-xs hover:bg-slate-200 transition">Vazgeç</button>
+                    <button onclick="confirmModalAction()" class="flex-1 py-3.5 bg-brand-600 text-white rounded-xl font-bold uppercase tracking-wider text-xs shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition">Onayla</button>
+                `;
+            }
+            m.classList.remove('hidden');
+        }
+        function confirmModalAction() { if(modalActionCallback) modalActionCallback(); closeInfoModal(); }
+        function closeInfoModal() { document.getElementById('infoModal').classList.add('hidden'); }
+
+        // VERİ VE FONKSİYONLAR
+        let varsayilanTarife = { otomobil: [ { min: 0, max: 1, ucret: 170 }, { min: 1, max: 2, ucret: 210 }, { min: 2, max: 4, ucret: 290 }, { min: 4, max: 6, ucret: 360 }, { min: 6, max: 8, ucret: 420 }, { min: 8, max: 12, ucret: 500 }, { min: 12, max: 24, ucret: 600 } ], minibus: [ { min: 0, max: 1, ucret: 250 }, { min: 1, max: 2, ucret: 300 }, { min: 2, max: 4, ucret: 400 }, { min: 4, max: 6, ucret: 500 }, { min: 6, max: 8, ucret: 600 }, { min: 8, max: 12, ucret: 750 }, { min: 12, max: 24, ucret: 900 } ] };
+        let aktifTarife = JSON.parse(localStorage.getItem('istay_tarifeler')) || varsayilanTarife;
+        let araclar = JSON.parse(localStorage.getItem('istay_park_data')) || [];
+        let seciliAracTipi = 'otomobil';
+
+        function ucretHesapla(girisTarihi, tip) {
+            const farkMs = new Date() - new Date(girisTarihi);
+            if (farkMs / 60000 <= 4) return 0;
+            const toplamSaat = farkMs / 3600000;
+            const tamGun = Math.floor(toplamSaat / 24);
+            const kalanSaat = toplamSaat % 24;
+            const t = aktifTarife[tip] || aktifTarife.otomobil;
+            let u = tamGun * t[t.length - 1].ucret;
+            if (kalanSaat > 0) {
+                let ek = t[0].ucret; 
+                for (let k of t) { if (kalanSaat > k.min && kalanSaat <= k.max) { ek = k.ucret; break; } }
+                u += ek;
+            }
+            return u;
+        }
+
+        function renderList() {
+            const filtre = document.getElementById('plakaInput').value.toUpperCase();
+            const liste = document.getElementById('aracListesi');
+            liste.innerHTML = '';
+            
+            // 1. HER ZAMAN GÖSTERİLECEK OLAN AKTİF ARAÇLAR (Arama varsa filtrelenir)
+            let aktifler = araclar.filter(a => a.durum === 'aktif' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.giris) - new Date(a.giris));
+            
+            // 2. SADECE ARAMA YAPILINCA GÖSTERİLECEK OLAN ESKİ KAYITLAR
+            let tamamlananlar = [];
+            if(filtre.length > 0) {
+                tamamlananlar = araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.cikis) - new Date(a.cikis));
+            }
+
+            // Başlık Güncellemesi
+            if(filtre.length > 0) {
+                 document.getElementById('aracSayisi').innerText = (aktifler.length + tamamlananlar.length) + " Sonuç";
+            } else {
+                 // Sadece içerideki araç sayısını göster
+                 document.getElementById('aracSayisi').innerText = aktifler.length + " Aktif";
+            }
+
+            // Listeleri birleştir ve ekrana bas
+            [...aktifler, ...tamamlananlar].forEach(arac => {
+                const isComp = arac.durum === 'tamamlandi';
+                const ucret = isComp ? arac.tutar : ucretHesapla(arac.giris, arac.tip);
+                const isFree = ((isComp ? new Date(arac.cikis) : new Date()) - new Date(arac.giris)) / 60000 <= 4;
+                const sureStr = sureHesapla(arac.giris, isComp ? arac.cikis : new Date());
+                const card = document.createElement('div');
+                card.className = `park-card animate-slide-in relative p-5 rounded-3xl border border-transparent shadow-sm ${isComp ? 'bg-slate-100 dark:bg-slate-800/50 opacity-75' : 'bg-white dark:bg-darkcard shadow-lg shadow-slate-200/50 dark:shadow-none border-l-[6px] border-l-brand-500'}`;
+                const iconColor = arac.tip === 'minibus' ? 'text-blue-500' : 'text-brand-500';
+                const iconBg = arac.tip === 'minibus' ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-rose-50 dark:bg-rose-900/20';
+                const durumText = isComp 
+                    ? `<span class="text-slate-600 dark:text-slate-300 mr-1"><i class="far fa-clock"></i> ${sureStr}</span> • <span class="ml-1 ${arac.odemeYontemi==='NAKİT'?'text-amber-500':(arac.odemeYontemi==='KART'?'text-emerald-500':'text-blue-500')}">${arac.odemeYontemi}</span>` 
+                    : (isFree ? 'ÜCRETSİZ' : sureStr);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex gap-4 items-center">
+                             <div class="w-12 h-12 rounded-2xl ${iconBg} ${iconColor} flex items-center justify-center text-xl shadow-sm"><i class="fas ${arac.tip==='minibus' ? 'fa-shuttle-van' : 'fa-car'}"></i></div>
+                             <div>
+                                <h3 class="text-xl font-black text-slate-800 dark:text-white leading-none">${arac.plaka}</h3>
+                                <div onclick="openEditModal(${arac.id})" class="text-[11px] font-bold text-slate-400 mt-1 cursor-pointer hover:text-brand-500 transition flex items-center gap-1"><i class="far fa-calendar-alt"></i> ${new Date(arac.giris).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${!isComp ? '<span class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-[9px] ml-1">DÜZENLE</span>' : ''}</div>
+                             </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-black ${isComp ? 'text-slate-400' : (ucret===0?'text-emerald-500':'text-brand-600')} tracking-tight">${ucret}<small class="text-sm font-bold text-slate-400 ml-1">TL</small></div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-1 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md inline-flex items-center">${durumText}</div>
+                        </div>
+                    </div>
+                    ${!isComp ? `<div class="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                        <button onclick="cikisYap(${arac.id}, 'HGS')" class="py-2.5 rounded-xl font-bold text-[10px] text-white bg-blue-600 shadow-lg shadow-blue-500/30 hover:scale-105 transition active:scale-95">HGS</button>
+                        <button onclick="cikisYap(${arac.id}, 'KART')" class="py-2.5 rounded-xl font-bold text-[10px] text-white bg-emerald-600 shadow-lg shadow-emerald-500/30 hover:scale-105 transition active:scale-95">KART</button>
+                        <button onclick="cikisYap(${arac.id}, 'NAKİT')" class="py-2.5 rounded-xl font-bold text-[10px] text-white bg-amber-500 shadow-lg shadow-amber-500/30 hover:scale-105 transition active:scale-95">NAKİT</button>
+                    </div>` : `<div class="mt-3 flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-700"><span class="text-[10px] font-bold text-slate-400">Çıkış: ${new Date(arac.cikis).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`}
+                    <button onclick="sil(${arac.id})" class="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition z-10"><i class="fas fa-trash-alt text-xs"></i></button>
+                `;
+                liste.appendChild(card);
+            });
+        }
+
+        // ARAÇ GİRİŞ (Plaka Kontrolü Aktif, Başarı Popup'ı Kaldırıldı)
+        function aracGiris() { 
+            const inp = document.getElementById('plakaInput'); 
+            const plaka = inp.value.trim().toUpperCase(); 
+            if(!plaka) { showModal('Uyarı', 'Lütfen plaka girin!', 'error'); return; }
+
+            // Mükerrer Kayıt Kontrolü
+            const varMi = araclar.some(a => a.plaka === plaka && a.durum === 'aktif');
+            if(varMi) {
+                showModal('Zaten İçeride!', `${plaka} plakalı araç zaten otoparkta görünüyor.`, 'error');
+                inp.value = "";
+                return;
+            }
+
+            araclar.push({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' }); 
+            localStorage.setItem('istay_park_data', JSON.stringify(araclar)); 
+            inp.value = ""; 
+            renderList(); 
+            // BAŞARILI UYARISI BURADAN KALDIRILDI
+        }
+
+        function cikisYap(id, yontem) { 
+            const a = araclar.find(x => x.id === id); 
+            a.tutar = ucretHesapla(a.giris, a.tip); 
+            a.cikis = new Date().toISOString(); 
+            a.odemeYontemi = yontem; 
+            a.durum = 'tamamlandi'; 
+            localStorage.setItem('istay_park_data', JSON.stringify(araclar)); 
+            renderList(); 
+        }
+
+        function sil(id) { 
+            showModal('Silme Onayı', 'Bu kaydı tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.', 'confirm', () => {
+                araclar = araclar.filter(a => a.id !== id); 
+                localStorage.setItem('istay_park_data', JSON.stringify(araclar)); 
+                renderList(); 
+            });
+        }
+
+        function raporuSifirla() { 
+            showModal('Sıfırlama', 'Tüm geçmiş ve aktif araç verileri silinecek! Onaylıyor musunuz?', 'confirm', () => {
+                araclar = []; 
+                localStorage.setItem('istay_park_data', "[]"); 
+                renderList(); 
+                raporuKapat(); 
+            });
+        }
+
+        function tarifeleriKaydet() { 
+            document.querySelectorAll('.fiyat-input').forEach(input => { aktifTarife[input.dataset.tip][input.dataset.idx].ucret = parseInt(input.value); }); 
+            localStorage.setItem('istay_tarifeler', JSON.stringify(aktifTarife)); 
+            showModal('Başarılı', 'Fiyat tarifesi güncellendi.', 'success');
+            toggleView('rapor'); 
+            renderList(); 
+        }
+        
+        function veriyiIceriAktar(e) { 
+            const r = new FileReader(); 
+            r.onload = (v) => { 
+                try { 
+                    araclar = JSON.parse(v.target.result); 
+                    localStorage.setItem('istay_park_data', JSON.stringify(araclar)); 
+                    renderList(); 
+                    showModal('Yüklendi', 'Yedek dosyası başarıyla sisteme yüklendi.', 'success');
+                } catch(err) { 
+                    showModal('Hata', 'Yüklenen dosya formatı geçersiz!', 'error');
+                } 
+            }; 
+            r.readAsText(e.target.files[0]); 
+        }
+
+        // Diğer Yardımcı Fonksiyonlar
+        function raporuGoster() {
+            const bugun = new Date().toLocaleDateString('tr-TR');
+            const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun);
+            let hgs = 0, kart = 0, nakit = 0, tabloHtml = "";
+            bugunCikislar.forEach(a => {
+                if(a.odemeYontemi === 'HGS') hgs += a.tutar; else if(a.odemeYontemi === 'KART') kart += a.tutar; else if(a.odemeYontemi === 'NAKİT') nakit += a.tutar;
+                let icon = a.odemeYontemi === 'NAKİT' ? 'fa-coins text-amber-500' : (a.odemeYontemi === 'KART' ? 'fa-credit-card text-emerald-500' : 'fa-wifi text-blue-500');
+                const sure = sureHesapla(a.giris, a.cikis);
+                tabloHtml += `<div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm"><i class="fas ${icon} text-xs"></i></div>
+                            <div><div class="font-bold text-xs text-slate-800 dark:text-white">${a.plaka}</div><div class="text-[9px] font-bold text-slate-400">${sure} • ${new Date(a.cikis).toLocaleTimeString()}</div></div></div>
+                        <span class="font-black text-xs text-slate-800 dark:text-white">${a.tutar} TL</span></div>`;
+            });
+            const makeCard = (title, val, color) => `<div class="${color} p-4 rounded-2xl text-white shadow-lg relative overflow-hidden group"><div class="text-[9px] font-bold opacity-80 uppercase tracking-widest mb-1">${title}</div><div class="text-lg font-black">${val}</div><i class="fas fa-wallet absolute -bottom-2 -right-2 text-4xl opacity-20 group-hover:scale-110 transition"></i></div>`;
+            document.getElementById('ozetKartlari').innerHTML = makeCard('HGS', hgs, 'bg-blue-600') + makeCard('KART', kart, 'bg-emerald-600') + makeCard('NAKİT', nakit, 'bg-amber-500');
+            document.getElementById('raporTablo').innerHTML = tabloHtml || `<div class="text-center py-6 text-slate-400 text-xs font-bold flex flex-col items-center gap-2"><i class="fas fa-inbox text-2xl opacity-50"></i><span>Henüz işlem yok</span></div>`;
+            document.getElementById('netCiroBox').innerHTML = `<div class="relative z-10"><h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Toplam Ciro</h4><p class="text-3xl font-black text-white tracking-tight">${hgs+kart+nakit} TL</p></div><div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white text-xl relative z-10"><i class="fas fa-lira-sign"></i></div><div class="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>`;
+            document.getElementById('raporModal').classList.remove('hidden'); toggleView('rapor');
+        }
+
+        function generatePDF() {
+            const bugun = new Date().toLocaleDateString('tr-TR');
+            const bugunCikislar = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun);
+            document.getElementById('pdfDate').innerText = "Tarih: " + bugun + " - Saat: " + new Date().toLocaleTimeString();
+            let hgs = 0, kart = 0, nakit = 0, rows = "";
+            bugunCikislar.forEach(a => {
+                if(a.odemeYontemi==='HGS') hgs+=a.tutar; else if(a.odemeYontemi==='KART') kart+=a.tutar; else if(a.odemeYontemi==='NAKİT') nakit+=a.tutar;
+                const sure = sureHesapla(a.giris, a.cikis);
+                rows += `<tr><td>${a.plaka}</td><td>${a.tip.toUpperCase()}</td><td>${new Date(a.giris).toLocaleTimeString()}</td><td>${new Date(a.cikis).toLocaleTimeString()}</td><td>${sure}</td><td>${a.odemeYontemi}</td><td>${a.tutar} TL</td></tr>`;
+            });
+            document.getElementById('pdfBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;">İşlem yok.</td></tr>';
+            document.getElementById('pdfSummaryArea').innerHTML = `<div style="background:#f9f9f9; padding:15px; border-radius:8px; display:flex; justify-content:space-between;"><div><b>HGS:</b> ${hgs} TL &nbsp;|&nbsp; <b>KART:</b> ${kart} TL &nbsp;|&nbsp; <b>NAKİT:</b> ${nakit} TL</div><div style="font-size:16px; font-weight:bold; color:#e11d48;">TOPLAM: ${hgs+kart+nakit} TL</div></div>`;
+            const element = document.getElementById('pdfTemplate'); element.style.display = 'block';
+            html2pdf().set({ margin: 0.5, filename: `Gunluk_Rapor_${bugun}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(element).save().then(() => { element.style.display = 'none'; });
+        }
+
+        function toggleView(view) { const isTarife = view === 'tarife'; document.getElementById('raporGorunumu').style.display = isTarife ? 'none' : 'block'; document.getElementById('tarifeGorunumu').style.display = isTarife ? 'block' : 'none'; document.getElementById('modalTitle').innerText = isTarife ? 'Tarife Ayarları' : 'Özet'; document.getElementById('btnTarife').innerHTML = isTarife ? '<i class="fas fa-chart-pie mr-1"></i> Rapora Dön' : '<i class="fas fa-tag mr-1"></i> Fiyatlar'; document.getElementById('btnTarife').onclick = () => toggleView(isTarife ? 'rapor' : 'tarife'); if(isTarife) renderTarifeInputs(); }
+        function renderTarifeInputs() { const gen = (tip, target) => { let html = `<h4 class="col-span-2 font-black text-[10px] text-slate-400 uppercase mb-1">${tip} Fiyatlandırma</h4>`; aktifTarife[tip].forEach((k, i) => { html += `<div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm"><span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">${k.min}-${k.max} Saat:</span><div class="flex items-center gap-1"><input type="number" step="5" value="${k.ucret}" class="fiyat-input w-14 text-right font-black text-brand-600 bg-transparent outline-none border-b border-transparent focus:border-brand-500 transition" data-tip="${tip}" data-idx="${i}"><span class="text-[10px] font-bold text-slate-400">₺</span></div></div>`; }); document.getElementById(target).innerHTML = html; }; gen('otomobil', 'oto_fiyat_list'); gen('minibus', 'mini_fiyat_list'); }
+        function sureHesapla(g, c = new Date()) { const f = new Date(c) - new Date(g); return Math.floor(f/3600000) + "s " + Math.floor((f%3600000)/60000) + "dk"; }
+        function setAracTipi(t) { seciliAracTipi = t; const btnOto = document.getElementById('type_oto'); const btnMini = document.getElementById('type_mini'); if(t === 'otomobil') { btnOto.className = 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-brand-500 bg-brand-500 text-white transition shadow-lg shadow-rose-500/20'; btnMini.className = 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-transparent transition hover:bg-slate-50 dark:hover:bg-slate-800'; } else { btnOto.className = 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-transparent transition hover:bg-slate-50 dark:hover:bg-slate-800'; btnMini.className = 'flex-1 py-3 rounded-xl font-bold text-xs border-2 border-blue-600 bg-blue-600 text-white transition shadow-lg shadow-blue-500/20'; } }
+        function openEditModal(id) { const a = araclar.find(a => a.id === id); if(a.durum === 'tamamlandi') return; const g = new Date(a.giris); document.getElementById('editDateTime').value = new Date(g.getTime() - g.getTimezoneOffset() * 60000).toISOString().slice(0, 16); document.getElementById('editModal').classList.remove('hidden'); document.getElementById('saveEditBtn').onclick = () => { a.giris = new Date(document.getElementById('editDateTime').value).toISOString(); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); closeEditModal(); }; }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+        function raporuKapat() { document.getElementById('raporModal').classList.add('hidden'); }
+        function veriyiDisaAktar() { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(araclar)])); a.download = `istay_yedek_${new Date().toLocaleDateString()}.json`; a.click(); }
+
+        renderList();
+        setInterval(renderList, 30000);
+    </script>
+</body>
+</html>
