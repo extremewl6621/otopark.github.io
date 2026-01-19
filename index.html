@@ -139,12 +139,10 @@
         let araclar = JSON.parse(localStorage.getItem('istay_park_data')) || [];
         let seciliAracTipi = 'otomobil';
 
-        // Tema Yönetimi
         function initTheme() { if (localStorage.theme === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('themeIcon').className = 'fas fa-sun'; } }
         function toggleTheme() { if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; document.getElementById('themeIcon').className = 'fas fa-moon'; } else { document.documentElement.classList.add('dark'); localStorage.theme = 'dark'; document.getElementById('themeIcon').className = 'fas fa-sun'; } }
         initTheme();
 
-        // Ücret Hesaplama
         function ucretHesapla(giris, tip) {
             const farkMs = new Date() - new Date(giris);
             if (farkMs / 60000 <= 4) return 0;
@@ -161,19 +159,21 @@
             return u;
         }
 
-        // Liste Render
+        function formatFullDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleDateString('tr-TR', {day:'2-digit', month:'long'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        }
+
         function renderList() {
             const filtre = document.getElementById('plakaInput').value.toUpperCase();
             const liste = document.getElementById('aracListesi');
             liste.innerHTML = '';
             
-            // Aktifler ve Pasifleri (Tamamlananları) ayır
             let aktifler = araclar.filter(a => a.durum === 'aktif' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.giris) - new Date(a.giris));
             let pasifler = araclar.filter(a => a.durum === 'tamamlandi' && a.plaka.includes(filtre)).sort((a, b) => new Date(b.cikis) - new Date(a.cikis));
 
             document.getElementById('aracSayisi').innerText = `${aktifler.length} Aktif / ${pasifler.length} Çıkış`;
 
-            // Hepsini birleştirip bas (Aktifler her zaman en üstte)
             [...aktifler, ...pasifler].forEach(arac => {
                 const isComp = arac.durum === 'tamamlandi';
                 const ucret = isComp ? arac.tutar : ucretHesapla(arac.giris, arac.tip);
@@ -190,8 +190,8 @@
                              <div>
                                 <h3 class="text-xl font-black text-slate-800 dark:text-white leading-none">${arac.plaka}</h3>
                                 <div onclick="openEditModal(${arac.id})" class="text-[10px] font-bold text-slate-400 mt-2 uppercase cursor-pointer hover:text-brand-500 transition">
-                                    <i class="far fa-calendar-alt"></i> Giriş: ${new Date(arac.giris).toLocaleDateString('tr-TR', {day:'2-digit', month:'long'})} ${new Date(arac.giris).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-                                    ${isComp ? `<br><i class="fas fa-check"></i> Çıkış: ${new Date(arac.cikis).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : ' <span class="bg-slate-100 dark:bg-slate-700 px-1 rounded text-[8px]">DÜZENLE</span>'}
+                                    <i class="far fa-calendar-alt"></i> Giriş: ${formatFullDate(arac.giris)}
+                                    ${isComp ? `<br><i class="fas fa-check"></i> Çıkış: ${formatFullDate(arac.cikis)}` : ' <span class="bg-slate-100 dark:bg-slate-700 px-1 rounded text-[8px]">DÜZENLE</span>'}
                                 </div>
                              </div>
                         </div>
@@ -213,7 +213,6 @@
             });
         }
 
-        // Giriş ve Düzenleme Fonksiyonları
         function aracGiris() { 
             const inp = document.getElementById('plakaInput'); const plaka = inp.value.trim().toUpperCase(); if(!plaka) return;
             araclar.unshift({ id: Date.now(), plaka, tip: seciliAracTipi, giris: new Date().toISOString(), cikis: null, odemeYontemi: null, tutar: 0, durum: 'aktif' }); 
@@ -230,10 +229,9 @@
 
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
         function cikisYap(id, y) { const a = araclar.find(x => x.id === id); a.tutar = ucretHesapla(a.giris, a.tip); a.cikis = new Date().toISOString(); a.odemeYontemi = y; a.durum = 'tamamlandi'; localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); }
-        function sil(id) { if(confirm('Bu kaydı tamamen silmek istediğinize emin misiniz?')) { araclar = araclar.filter(a => a.id !== id); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); } }
-        function raporuSifirla() { if(confirm('TÜM veriler sıfırlansın mı?')) { araclar = []; localStorage.setItem('istay_park_data', "[]"); renderList(); raporuKapat(); } }
+        function sil(id) { if(confirm('Silinsin mi?')) { araclar = araclar.filter(a => a.id !== id); localStorage.setItem('istay_park_data', JSON.stringify(araclar)); renderList(); } }
+        function raporuSifirla() { if(confirm('Sıfırlansın mı?')) { araclar = []; localStorage.setItem('istay_park_data', "[]"); renderList(); raporuKapat(); } }
 
-        // PDF Rapor Üretimi
         function generatePDF() {
             const bugun = new Date().toLocaleDateString('tr-TR');
             const c = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun);
@@ -243,13 +241,12 @@
                 if(a.odemeYontemi==='HGS') hgs+=a.tutar; else if(a.odemeYontemi==='KART') kart+=a.tutar; else if(a.odemeYontemi==='NAKİT') nakit+=a.tutar;
                 rows += `<tr><td>${a.plaka}</td><td>${a.tip.toUpperCase()}</td><td>${new Date(a.giris).toLocaleTimeString()}</td><td>${new Date(a.cikis).toLocaleTimeString()}</td><td>${sureHesapla(a.giris, a.cikis)}</td><td>${a.odemeYontemi}</td><td>${a.tutar} TL</td></tr>`;
             });
-            document.getElementById('pdfBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;">Bugün henüz ödeme alınmış araç yok.</td></tr>';
+            document.getElementById('pdfBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;">İşlem yok.</td></tr>';
             document.getElementById('pdfSummaryArea').innerHTML = `<div style="background:#f9f9f9; padding:15px; border-radius:8px; display:flex; justify-content:space-between; border: 1px solid #ddd;"><div><b>HGS:</b> ${hgs} TL &nbsp;|&nbsp; <b>KART:</b> ${kart} TL &nbsp;|&nbsp; <b>NAKİT:</b> ${nakit} TL</div><div style="font-size:16px; font-weight:bold; color:#e11d48;">TOPLAM: ${hgs+kart+nakit} TL</div></div>`;
             const element = document.getElementById('pdfTemplate'); element.style.display = 'block';
             html2pdf().set({ margin: 0.3, filename: `Rapor_${bugun}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(element).save().then(() => element.style.display = 'none');
         }
 
-        // Rapor ve Diğer Fonksiyonlar
         function raporuGoster() {
             const bugun = new Date().toLocaleDateString('tr-TR');
             const c = araclar.filter(a => a.durum === 'tamamlandi' && new Date(a.cikis).toLocaleDateString('tr-TR') === bugun);
