@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TwinPrint // Çiftli POS İstasyonu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        
+        body {
+            background-color: #1e222b;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 10px;
+            color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h2 {
+            margin: 10px 0 5px 0;
+            color: #4dadf7;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        p.subtitle {
+            margin: 0 0 15px 0;
+            color: #adb5bd;
+            font-size: 12px;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        /* ÇALIŞMA ALANI */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin: 0 auto 20px auto;
+            max-width: 100%;
+            width: auto;
+        }
+        
+        .receipt-container {
+            background: #2b303c;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .receipt-label {
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #ced4da;
+            background: #343a40;
+            padding: 5px 0;
+            border-radius: 4px;
+            width: 55mm;
+        }
+
+        /* 🔒 55mm x 80mm Sabit Çıktı Kalıbı (Görünüm ve Baskı İçin) 🔒 */
+        .receipt-box {
+            background-color: #ffffff;
+            width: 55mm !important;
+            height: 80mm !important;
+            min-width: 55mm !important;
+            max-width: 55mm !important;
+            min-height: 80mm !important;
+            max-height: 80mm !important;
+            padding: 6mm 4mm;
+            color: #000000;
+            
+            font-family: 'Consolas', 'Courier New', monospace !important;
+            font-weight: 600 !important; 
+            font-size: 11px !important;
+            letter-spacing: 0.2px !important;
+            line-height: 1.35 !important;
+            
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* Yıldızları Küçültme ve Hizalama Ayarı */
+        .star {
+            font-size: 9px;
+            font-weight: normal;
+            display: inline-block;
+            vertical-align: 1px;
+            margin-right: -1px;
+        }
+
+        /* Mf Logosu için Özel Ayar */
+        .mf-style {
+            font-style: italic; 
+            font-family: Georgia, serif; 
+            font-size: 8px; 
+            font-weight: normal; 
+            display: inline-block;
+            vertical-align: 0px;
+        }
+
+        .text-center { text-align: center; }
+        .flex-space {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .grid-three {
+            display: grid;
+            grid-template-columns: 1.2fr 0.6fr 1.2fr;
+            width: 100%;
+        }
+        .grid-three :nth-child(2) { text-align: center; }
+        .grid-three :nth-child(3) { text-align: right; }
+
+        .dotted-line {
+            border-top: 1px dashed #000000;
+            margin: 6px 0;
+            width: 100%;
+        }
+        .spacer { height: 10px; }
+
+        /* 📱 GÖRSEL_1 DEKİ GİBİ TAM EKRAN DÜZENLEME FORMU PANELİ */
+        .edit-form-panel {
+            display: none;
+            width: 100%;
+            max-width: 450px;
+            background: #2b303c;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            color: #ff9800;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            background-color: #fffbf2;
+            border: 2px solid #ff9800;
+            border-radius: 6px;
+            padding: 10px;
+            color: #000;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .form-control:focus {
+            outline: none;
+            background-color: #fff;
+            border-color: #4dadf7;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 70px;
+            line-height: 1.4;
+        }
+
+        /* BUTON GRUPLARI */
+        .sub-btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 55mm;
+        }
+
+        .control-panel {
+            width: 100%;
+            max-width: 55mm;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 12px 4px;
+            color: white;
+            font-weight: bold;
+            font-family: sans-serif;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            user-select: none;
+            text-align: center;
+        }
+        
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
+
+        .btn-edit { background-color: #ff9800; color: #fff; }
+        .btn-save-img { background-color: #51cf66; }
+        .btn-both { background-color: #845ef7; }
+        .btn-clear { background-color: #e03131; }
+        .btn-print { background-color: #339af0; }
+        .btn-pdf { background-color: #fa5252; }
+        
+        .btn-large-save {
+            background-color: #51cf66;
+            padding: 15px;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(81,207,102,0.3);
+        }
+
+        @media (min-width: 650px) {
+            .workspace { flex-direction: row; }
+            .control-panel { max-width: 120mm; }
+            .sub-btn-group { width: 55mm; }
+        }
+
+        /* 📄 PDF VE YAZDIRMA AYARLARI */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block !important;
+            }
+            .control-panel, h2, p.subtitle, .receipt-label, .sub-btn-group, .edit-form-panel, script {
+                display: none !important;
+            }
+            .receipt-container {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: inline-block !important;
+                margin-right: 15mm;
+                width: auto !important;
+            }
+            .workspace {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                position: absolute !important;
+                top: 20mm;  
+                left: 20mm; 
+                display: flex !important;
+                flex-direction: row !important;
+                width: auto !important;
+            }
+            .receipt-box {
+                box-shadow: none !important;
+                border: 1px dashed #bbbbbb !important; 
+                width: 55mm !important;
+                height: 80mm !important;
+                min-width: 55mm !important;
+                max-width: 55mm !important;
+                min-height: 80mm !important;
+                max-height: 80mm !important;
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2 id="main-title">TwinPrint // Çiftli Fiş İstasyonu</h2>
+    <p class="subtitle" id="main-subtitle">Düzenleme ekranı mobil cihazlar için tam ekran form yapısına kavuşturulmuştur.</p>
+
+    <!-- 🔧 DÜZENLEME PANELİ (GÖRSEL 1'DEKİ GİBİ BÜYÜK INPUT KUTULARI) -->
+    <div class="edit-form-panel" id="edit-panel">
+        <h3 id="edit-panel-title" style="color:#ff9800; font-size:15px; margin-top:0; text-align:center;">FİŞİ DÜZENLE</h3>
+        
+        <div class="form-group">
+            <label>Üst Başlık Bilgileri:</label>
+            <textarea class="form-control" id="inp-header"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Tarih ve Saat:</label>
+            <div class="form-row">
+                <input type="text" class="form-control" id="inp-date">
+                <input type="text" class="form-control" id="inp-time">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Fiş Numarası:</label>
+            <input type="text" class="form-control" id="inp-no">
+        </div>
+        
+        <div class="form-group">
+            <label>Ürün Satış (Ad - KDV - Fiyat):</label>
+            <div class="form-row">
+                <input type="text" class="form-control" id="inp-pname" style="flex: 1.2;">
+                <input type="text" class="form-control" id="inp-pkdv" style="flex: 0.6; text-align:center;">
+                <input type="text" class="form-control" id="inp-pprice" style="flex: 1.2; text-align:right;">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>KDV Tutarı:</label>
+            <input type="text" class="form-control" id="inp-kdvtutar" style="text-align:right;">
+        </div>
+        
+        <div class="form-group">
+            <label>Genel Toplam:</label>
+            <input type="text" class="form-control" id="inp-toplam" style="text-align:right;">
+        </div>
+        
+        <div class="form-group">
+            <label>Ödeme Türü ve Tutan:</label>
+            <div class="form-row">
+                <input type="text" class="form-control" id="inp-ometod">
+                <input type="text" class="form-control" id="inp-otutar" style="text-align:right;">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Z No ve EKÜ No:</label>
+            <div class="form-row">
+                <input type="text" class="form-control" id="inp-zno">
+                <input type="text" class="form-control" id="inp-ekuno">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Mali Sicil (Mf) Numarası:</label>
+            <input type="text" class="form-control" id="inp-mfno">
+        </div>
+
+        <button class="btn btn-large-save" onclick="saveFormValues()">💾 DEĞİŞİKLİKLERİ KAYDET</button>
+    </div>
+
+    <!-- ANA ÇALIŞMA ALANI -->
+    <div class="workspace" id="print-area">
+        
+        <!-- 1. FİŞ BÖLÜMÜ -->
+        <div class="receipt-container" id="container-left">
+            <div class="receipt-label">SOL FİŞ (1. KOPYA)</div>
+            <div class="receipt-box" id="receipt-left"></div>
+            <div class="sub-btn-group">
+                <button class="btn btn-edit" onclick="openEditForm('left')">✏️ Düzenle</button>
+                <button class="btn btn-save-img" onclick="downloadSingle('left')">💾 1. Fişi Kaydet</button>
+            </div>
+        </div>
+
+        <!-- 2. FİŞ BÖLÜMÜ -->
+        <div class="receipt-container" id="container-right">
+            <div class="receipt-label">SAĞ FİŞ (2. KOPYA)</div>
+            <div class="receipt-box" id="receipt-right"></div>
+            <div class="sub-btn-group">
+                <button class="btn btn-edit" onclick="openEditForm('right')">✏️ Düzenle</button>
+                <button class="btn btn-save-img" onclick="downloadSingle('right')">💾 2. Fişi Kaydet</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="control-panel" id="main-controls">
+        <div class="sub-btn-group" style="width: 100%;">
+            <button class="btn btn-both" onclick="downloadBothAsOne()">💾 İkisini Kaydet</button>
+            <button class="btn btn-clear" onclick="clearAllToDefault()">🗑️ Orijinale Dön</button>
+        </div>
+        <div class="sub-btn-group" style="width: 100%;">
+            <button class="btn btn-print" onclick="window.print()">🖨️ A4 Yazdır</button>
+            <button class="btn btn-pdf" onclick="saveAsA4PDF()">📄 A4 PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // Veri Modeli Yapısı (Arka planda nizamı korumak için saf objeler kullanıyoruz)
+        let receiptData = {
+            left: {
+                header: "ANAR KÖFTECİSİ\nMİMAR KEMALETTİN MAH.\nASMA KANDİL SK. NO:3\nBeyazıt VD 0680195026",
+                date: "01.07.2026", time: "13:25", fisNo: "0023",
+                pName: "YİYECEK", pKdv: "%10", pPrice: "*100,00",
+                kdvTutar: "*9,09", toplam: "*100,00",
+                oMetod: "Nakit", oTutar: "*100,00",
+                zNo: "1477", ekuNo: "0001", mfNo: "SD0024088625"
+            },
+            right: {
+                header: "ANAR KÖFTECİSİ\nMİMAR KEMALETTİN MAH.\nASMA KANDİL SK. NO:3\nBeyazıt VD 0680195026",
+                date: "01.07.2026", time: "13:25", fisNo: "0024",
+                pName: "YİYECEK", pKdv: "%10", pPrice: "*100,00",
+                kdvTutar: "*9,09", toplam: "*100,00",
+                oMetod: "Nakit", oTutar: "*100,00",
+                zNo: "1477", ekuNo: "0001", mfNo: "SD0024088625"
+            }
+        };
+
+        const defaultData = JSON.stringify(receiptData);
+        let activeEditSide = null;
+
+        window.onload = function() {
+            const saved = localStorage.getItem('twin_pos_data_v6');
+            if (saved) {
+                receiptData = JSON.parse(saved);
+            }
+            renderReceipts();
+        };
+
+        // Verileri şablona basan fonksiyon (Senin font, yıldız nizamın milimetrik korunur)
+        function renderReceipts() {
+            ['left', 'right'].forEach(side => {
+                const d = receiptData[side];
+                const box = document.getElementById(`receipt-${side}`);
+                
+                // Yıldız kontrolü ve inject kuralları
+                let priceHTML = d.pPrice.startsWith('*') ? `<span class="star">*</span>${d.pPrice.substring(1)}` : d.pPrice;
+                let kdvHTML = d.kdvTutar.startsWith('*') ? `<span class="star">*</span>${d.kdvTutar.substring(1)}` : d.kdvTutar;
+                let topHTML = d.toplam.startsWith('*') ? `<span class="star">*</span>${d.toplam.substring(1)}` : d.toplam;
+                let otutarHTML = d.oTutar.startsWith('*') ? `<span class="star">*</span>${d.oTutar.substring(1)}` : d.oTutar;
+
+                box.innerHTML = `
+                    <div class="text-center header-area">${d.header.replace(/\n/g, '<br>')}</div>
+                    <div class="spacer"></div>
+                    <div class="flex-space"><span>${d.date}</span><span>Saat: ${d.time}</span></div>
+                    <div class="flex-space"><span>Fiş No: ${d.fisNo}</span></div>
+                    <div class="spacer"></div>
+                    <div class="grid-three"><span>${d.pName}</span><span>${d.pKdv}</span><span>${priceHTML}</span></div>
+                    <div class="dotted-line"></div>
+                    <div class="flex-space"><span>KDV</span><span>${kdvHTML}</span></div>
+                    <div class="flex-space"><span>TOPLAM</span><span>${topHTML}</span></div>
+                    <div class="dotted-line"></div>
+                    <div class="flex-space"><span>${d.oMetod}</span><span>${otutarHTML}</span></div>
+                    <div class="dotted-line"></div>
+                    <div class="flex-space"><span>Z No: ${d.zNo}</span><span>EKÜ No: ${d.ekuNo}</span></div>
+                    <div class="spacer"></div>
+                    <div class="text-center"><span class="mf-style">Mf</span> <span>${d.mfNo}</span></div>
+                `;
+            });
+        }
+
+        // BÜYÜK TAM EKRAN DÜZENLEME PANELİNİ AÇAN FONKSİYON
+        function openEditForm(side) {
+            activeEditSide = side;
+            const d = receiptData[side];
+            
+            // Tüm alanları form kutularına dolduruyoruz
+            document.getElementById('inp-header').value = d.header;
+            document.getElementById('inp-date').value = d.date;
+            document.getElementById('inp-time').value = d.time;
+            document.getElementById('inp-no').value = d.fisNo;
+            document.getElementById('inp-pname').value = d.pName;
+            document.getElementById('inp-pkdv').value = d.pKdv;
+            document.getElementById('inp-pprice').value = d.pPrice;
+            document.getElementById('inp-kdvtutar').value = d.kdvTutar;
+            document.getElementById('inp-toplam').value = d.toplam;
+            document.getElementById('inp-ometod').value = d.oMetod;
+            document.getElementById('inp-otutar').value = d.oTutar;
+            document.getElementById('inp-zno').value = d.zNo;
+            document.getElementById('inp-ekuno').value = d.ekuNo;
+            document.getElementById('inp-mfno').value = d.mfNo;
+
+            document.getElementById('edit-panel-title').innerText = `${side === 'left' ? 'SOL FİŞ (1. KOPYA)' : 'SAĞ FİŞ (2. KOPYA)'} DÜZENLEME EKRANI`;
+
+            // Arayüz Değişiklikleri: İş alanını gizle, formu devasa olarak aç
+            document.getElementById('print-area').style.display = 'none';
+            document.getElementById('main-controls').style.display = 'none';
+            document.getElementById('main-title').style.display = 'none';
+            document.getElementById('main-subtitle').style.display = 'none';
+            
+            document.getElementById('edit-panel').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        // EN ALTTTAKİ BÜYÜK BUTONA BASINCA DEĞERLERİ ALIP KALE GİBİ SAKLAYAN FONKSİYON
+        function saveFormValues() {
+            if(!activeEditSide) return;
+            
+            const side = activeEditSide;
+            receiptData[side] = {
+                header: document.getElementById('inp-header').value.toUpperCase(),
+                date: document.getElementById('inp-date').value,
+                time: document.getElementById('inp-time').value,
+                fisNo: document.getElementById('inp-no').value,
+                pName: document.getElementById('inp-pname').value.toUpperCase(),
+                pKdv: document.getElementById('inp-pkdv').value,
+                pPrice: document.getElementById('inp-pprice').value,
+                kdvTutar: document.getElementById('inp-kdvtutar').value,
+                toplam: document.getElementById('inp-toplam').value,
+                oMetod: document.getElementById('inp-ometod').value.toUpperCase(),
+                oTutar: document.getElementById('inp-otutar').value,
+                zNo: document.getElementById('inp-zno').value,
+                ekuNo: document.getElementById('inp-ekuno').value,
+                mfNo: document.getElementById('inp-mfno').value.toUpperCase()
+            };
+
+            localStorage.setItem('twin_pos_data_v6', JSON.stringify(receiptData));
+            renderReceipts();
+
+            // Formu gizle, ana ekranı geri getir
+            document.getElementById('edit-panel').style.display = 'none';
+            document.getElementById('print-area').style.display = 'flex';
+            document.getElementById('main-controls').style.display = 'flex';
+            document.getElementById('main-title').style.display = 'block';
+            document.getElementById('main-subtitle').style.display = 'block';
+            
+            activeEditSide = null;
+        }
+
+        function downloadSingle(side) {
+            const element = document.getElementById(`receipt-${side}`);
+            html2canvas(element, { scale: 4, backgroundColor: "#ffffff" }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `termal_fis_${side === 'left' ? '1' : '2'}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function downloadBothAsOne() {
+            const workspace = document.getElementById('print-area');
+            const containers = document.querySelectorAll('.receipt-container');
+            const labels = document.querySelectorAll('.receipt-label');
+            const subBtns = document.querySelectorAll('.sub-btn-group');
+
+            const oldFlex = workspace.style.flexDirection;
+            workspace.style.flexDirection = 'row';
+            
+            labels.forEach(l => l.style.display = 'none');
+            subBtns.forEach(b => b.style.display = 'none');
+            containers.forEach(c => {
+                c.style.background = 'transparent';
+                c.style.boxShadow = 'none';
+                c.style.padding = '0';
+            });
+
+            html2canvas(workspace, { scale: 4, backgroundColor: "#1e222b" }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `yanyana_ciftli_fis.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                workspace.style.flexDirection = oldFlex;
+                labels.forEach(l => l.style.display = 'block');
+                subBtns.forEach(b => b.style.display = 'grid');
+                containers.forEach(c => {
+                    c.style.background = '#2b303c';
+                    c.style.boxShadow = '0 8px 30px rgba(0,0,0,0.5)';
+                    c.style.padding = '15px';
+                });
+            });
+        }
+
+        function clearAllToDefault() {
+            if (confirm("Değişiklikler silinecek ve şablon sıfırlanacak. Onaylıyor musunuz?")) {
+                receiptData = JSON.parse(defaultData);
+                localStorage.setItem('twin_pos_data_v6', JSON.stringify(receiptData));
+                renderReceipts();
+                document.getElementById('edit-panel').style.display = 'none';
+                document.getElementById('print-area').style.display = 'flex';
+                document.getElementById('main-controls').style.display = 'flex';
+                document.getElementById('main-title').style.display = 'block';
+                document.getElementById('main-subtitle').style.display = 'block';
+                activeEditSide = null;
+            }
+        }
+
+        function saveAsA4PDF() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
